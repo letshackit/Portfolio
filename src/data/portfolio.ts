@@ -39,6 +39,7 @@ export const portfolioData = {
     emailHref: "mailto:saraogiharshal@gmail.com",
     location: "Delhi NCR, India",
     locationHref: "https://www.google.com/maps/search/Delhi+NCR+India",
+    linkedinHref: "https://www.linkedin.com/in/harshal-saraogi-b07260194/",
     resumePath: "/Harshal_Saraogi_Resume.pdf",
   },
   landing: {

@@ -6,6 +6,7 @@ import {
   MdMailOutline,
   MdPhoneInTalk,
 } from "react-icons/md";
+import { FaLinkedinIn } from "react-icons/fa";
 import "./styles/Contact.css";
 import { portfolioData } from "../data/portfolio";
 
@@ -105,6 +106,24 @@ const Contact = () => {
                     <div className="contact-method-copy">
                       <strong>Location</strong>
                       <small>{meta.location}</small>
+                    </div>
+                  </div>
+                  <MdArrowOutward className="contact-method-arrow" />
+                </a>
+                <a
+                  href={meta.linkedinHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="contact-method"
+                  data-cursor="disable"
+                >
+                  <div className="contact-method-main">
+                    <span className="contact-method-icon">
+                      <FaLinkedinIn />
+                    </span>
+                    <div className="contact-method-copy">
+                      <strong>LinkedIn</strong>
+                      <small>{meta.name}</small>
                     </div>
                   </div>
                   <MdArrowOutward className="contact-method-arrow" />
