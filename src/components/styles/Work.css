@@ -1,0 +1,624 @@
+/* ═══════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════ */
+
+/* Section entrance — slides up from below */
+@keyframes sectionReveal {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Heading underline grows left → right */
+@keyframes lineGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Accent glow pulse on the heading line */
+@keyframes linePulse {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; }
+}
+
+/* Slide number — counts up with a blur-clear */
+@keyframes numReveal {
+  0%   { opacity: 0;    filter: blur(8px);  transform: translateY(16px); }
+  60%  { opacity: 0.25; filter: blur(0px);  transform: translateY(0); }
+  100% { opacity: 0.18; filter: blur(0px);  transform: translateY(0); }
+}
+
+/* Generic upward fade used on text rows */
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* Panel entrance — scale + fade from slightly below */
+@keyframes panelEnter {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Metric card pop in */
+@keyframes metricPop {
+  0%   { opacity: 0; transform: scale(0.88) translateY(12px); }
+  70%  { transform: scale(1.03) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Subtle floating glow on the panel */
+@keyframes panelGlow {
+  0%, 100% { box-shadow: 0 4px 36px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 0 rgba(94,234,212,0); }
+  50%       { box-shadow: 0 4px 36px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 40px rgba(94,234,212,0.08); }
+}
+
+/* Arrow icon bounce */
+@keyframes arrowBounceRight {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(3px); }
+}
+@keyframes arrowBounceLeft {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(-3px); }
+}
+
+/* Progress fill shimmer */
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+
+/* ═══════════════════════════════════════════
+   UTILITY ANIMATION CLASSES
+═══════════════════════════════════════════ */
+
+.slide-in-up {
+  opacity: 0;
+  animation: slideInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.fade-in-up {
+  opacity: 0;
+  animation: slideInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.num-animate {
+  animation: numReveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.delay-1  { animation-delay: 0.05s; }
+.delay-2  { animation-delay: 0.12s; }
+.delay-3  { animation-delay: 0.2s;  }
+.delay-4  { animation-delay: 0.28s; }
+.delay-5  { animation-delay: 0.36s; }
+
+/* ═══════════════════════════════════════════
+   WORK SECTION
+═══════════════════════════════════════════ */
+
+.work-section {
+  position: relative;
+  z-index: 1;
+  background-color: var(--backgroundColor);
+  padding: 100px 0 120px;
+  /* section is invisible until .work-entered is added by IntersectionObserver */
+  opacity: 0;
+  transform: translateY(48px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.work-section.work-entered {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Heading ── */
+.work-heading-wrap {
+  margin-bottom: 60px;
+  position: relative;
+  display: inline-block;
+}
+
+.work-heading {
+  font-size: 70px;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1;
+}
+
+.work-heading > span {
+  color: var(--accentColor);
+}
+
+/* Animated underline beneath the heading */
+.work-heading-line {
+  margin-top: 14px;
+  height: 2px;
+  border-radius: 99px;
+  background: linear-gradient(
+    90deg,
+    var(--accentColor),
+    rgba(94, 234, 212, 0.3),
+    transparent
+  );
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: none;
+}
+
+/* Once section enters view, grow the line */
+.work-entered .work-heading-line {
+  animation: lineGrow 0.8s 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+             linePulse 3s 1.2s ease-in-out infinite;
+}
+
+.work-container {
+  margin: auto;
+}
+
+/* ═══════════════════════════════════════════
+   CAROUSEL
+═══════════════════════════════════════════ */
+
+.carousel-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.carousel-track-container {
+  width: 100%;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.52s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-slide {
+  min-width: 100%;
+  width: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 60px 0;
+}
+
+/* Two-column grid */
+.carousel-content {
+  display: grid;
+  grid-template-columns: 1fr 1.45fr;
+  align-items: start;
+  gap: 48px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Left column ── */
+.carousel-info {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.carousel-number h3 {
+  font-size: 68px;
+  line-height: 1;
+  margin: 0;
+  font-weight: 700;
+  color: var(--accentColor);
+  opacity: 0.18;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.carousel-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.carousel-details h4 {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.15;
+  letter-spacing: -0.4px;
+}
+
+.carousel-category {
+  font-weight: 300;
+  color: rgba(234, 229, 236, 0.5);
+  margin: 0;
+  font-size: 14px;
+}
+
+.carousel-tools {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: border-color 0.3s ease;
+}
+
+.carousel-tools:hover {
+  border-color: rgba(94, 234, 212, 0.18);
+}
+
+.carousel-tools .tools-label {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.45;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.carousel-tools p {
+  font-weight: 300;
+  color: rgba(234, 229, 236, 0.65);
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* ── Navigation controls ── */
+.carousel-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.carousel-arrow {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #eae5ec;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease,
+              color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.carousel-arrow:hover {
+  background: rgba(94, 234, 212, 0.12);
+  border-color: var(--accentColor);
+  color: var(--accentColor);
+  box-shadow: 0 0 18px rgba(94, 234, 212, 0.2);
+  transform: scale(1.08);
+}
+
+/* Arrow icon bounce animation on hover */
+.carousel-arrow:first-child:hover svg {
+  animation: arrowBounceLeft 0.5s ease infinite;
+}
+.carousel-arrow:last-of-type:hover svg {
+  animation: arrowBounceRight 0.5s ease infinite;
+}
+
+.carousel-arrow:active {
+  transform: scale(0.93);
+}
+
+.carousel-counter {
+  font-size: 12px;
+  color: rgba(234, 229, 236, 0.4);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* ── Dot indicators ── */
+.carousel-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.carousel-dot {
+  height: 4px;
+  border-radius: 99px;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: background 0.3s ease, width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s ease;
+  padding: 0;
+  width: 20px;
+}
+
+.carousel-dot:hover {
+  background: rgba(94, 234, 212, 0.45);
+}
+
+.carousel-dot-active {
+  background: var(--accentColor);
+  box-shadow: 0 0 10px rgba(94, 234, 212, 0.55);
+  width: 40px;
+}
+
+/* ═══════════════════════════════════════════
+   RIGHT PANEL + INNER ANIMATIONS
+═══════════════════════════════════════════ */
+
+.carousel-panel {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 30px;
+  background:
+    radial-gradient(circle at top right, rgba(94, 234, 212, 0.09), transparent 38%),
+    linear-gradient(145deg, rgba(12, 18, 35, 0.95), rgba(10, 22, 30, 0.88));
+  box-shadow:
+    0 4px 36px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  min-width: 0;
+  transition: border-color 0.4s ease;
+}
+
+.carousel-panel:hover {
+  border-color: rgba(94, 234, 212, 0.18);
+}
+
+/* Panel enters with scale + fade, then slowly glows */
+.carousel-panel.panel-enter {
+  animation:
+    panelEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    panelGlow  4s 0.6s ease-in-out infinite;
+}
+
+.carousel-summary {
+  margin: 0 0 24px;
+  font-size: 16px;
+  line-height: 1.75;
+  color: rgba(234, 229, 236, 0.82);
+}
+
+/* ── Metrics ── */
+.carousel-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.carousel-metric {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(8, 14, 28, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.carousel-metric:hover {
+  border-color: rgba(94, 234, 212, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Cards pop in with spring */
+.carousel-metric.metric-pop {
+  opacity: 0;
+  animation: metricPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.carousel-metric.metric-pop.delay-1 { animation-delay: 0.1s; }
+.carousel-metric.metric-pop.delay-2 { animation-delay: 0.18s; }
+.carousel-metric.metric-pop.delay-3 { animation-delay: 0.26s; }
+.carousel-metric.metric-pop.delay-4 { animation-delay: 0.34s; }
+
+.carousel-metric strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accentColor);
+  letter-spacing: -0.2px;
+}
+
+.carousel-metric span {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: rgba(203, 213, 225, 0.6);
+  line-height: 1.4;
+}
+
+/* ── Bullet list ── */
+.carousel-highlights {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 9px;
+}
+
+.carousel-highlights li {
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(226, 232, 240, 0.78);
+  padding-left: 20px;
+  position: relative;
+  transition: color 0.2s ease, padding-left 0.2s ease;
+}
+
+.carousel-highlights li:hover {
+  color: rgba(226, 232, 240, 1);
+  padding-left: 24px;
+}
+
+.carousel-highlights li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--accentColor);
+  opacity: 0.65;
+  font-size: 11px;
+  top: 3px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.carousel-highlights li:hover::before {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+/* ── Progress bar ── */
+.carousel-progress {
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+  margin-top: 36px;
+  overflow: hidden;
+}
+
+.carousel-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  /* Animated shimmer on the fill */
+  background: linear-gradient(
+    90deg,
+    var(--accentColor) 0%,
+    rgba(94, 234, 212, 0.55) 40%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(94, 234, 212, 0.55) 60%,
+    var(--accentColor) 100%
+  );
+  background-size: 200% auto;
+  animation: shimmer 2.5s linear infinite;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+
+@media only screen and (max-width: 1400px) {
+  .work-heading {
+    font-size: 56px;
+  }
+
+  .carousel-details h4 {
+    font-size: 24px;
+  }
+
+  .carousel-number h3 {
+    font-size: 54px;
+  }
+
+  .carousel-content {
+    gap: 32px;
+  }
+
+  .carousel-panel {
+    padding: 24px;
+  }
+
+  .carousel-metric strong {
+    font-size: 18px;
+  }
+}
+
+@media only screen and (max-width: 1025px) {
+  .carousel-content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .carousel-panel {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media only screen and (max-width: 900px) {
+  .work-section {
+    padding: 60px 0 80px;
+  }
+
+  .work-heading {
+    font-size: 40px;
+  }
+
+  .work-heading-wrap {
+    margin-bottom: 32px;
+  }
+
+  .carousel-number h3 {
+    font-size: 40px;
+  }
+
+  .carousel-details h4 {
+    font-size: 20px;
+  }
+
+  .carousel-slide {
+    padding: 30px 0;
+  }
+
+  .carousel-panel {
+    padding: 18px;
+  }
+
+  .carousel-summary {
+    font-size: 14px;
+  }
+
+  .carousel-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .carousel-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .carousel-nav {
+    gap: 8px;
+  }
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .work-section,
+  .work-entered .work-heading-line,
+  .num-animate,
+  .slide-in-up,
+  .fade-in-up,
+  .panel-enter,
+  .metric-pop,
+  .carousel-progress-fill {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .work-section {
+    opacity: 1;
+    transform: none;
+  }
+}
