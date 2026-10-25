@@ -42,7 +42,7 @@ describe('content integrity', () => {
   it('contains no forbidden strings and no testimonial contact details', () => {
     const blob = JSON.stringify(content);
     // Built from parts so the forbidden strings never appear in source.
-    for (const bad of [['People', 'Strong'].join(''), ['Ab', 'ha'].join(''), ['Sin', 'ha'].join('')]) {
+    for (const bad of [[...'gnortSelpoeP'].reverse().join(''), [...'ahbA'].reverse().join(''), [...'ahniS'].reverse().join('')]) {
       expect(blob.toLowerCase()).not.toContain(bad.toLowerCase());
     }
     for (const q of content.recognition.quotes) {

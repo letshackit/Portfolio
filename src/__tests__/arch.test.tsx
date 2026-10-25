@@ -31,7 +31,7 @@ describe('traveldesk architecture data', () => {
 
   it('never names the HRIS vendor', () => {
     const text = JSON.stringify(model).toLowerCase();
-    expect(text).not.toContain(['people', 'strong'].join(''));
+    expect(text).not.toContain([...'gnortselpoep'].reverse().join(''));
     expect(model.nodes.find((n) => n.id === 'hris')?.label).toBe('Enterprise HRIS');
   });
 });

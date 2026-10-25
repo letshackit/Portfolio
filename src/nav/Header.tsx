@@ -50,12 +50,12 @@ export function Header() {
         <a
           className="site-header__brand"
           href={`#${ANCHORS.top}`}
-          aria-label={content.meta.name}
+          aria-label={`${content.ui.monogram} ${content.meta.name}`}
           onClick={(event) => go(event, ANCHORS.top)}
         >
           <span className="site-header__mark" aria-hidden="true">
             {content.ui.monogram}
-          </span>
+          </span>{' '}
           <span className="site-header__name">{content.meta.name}</span>
         </a>
         <nav className="site-header__nav" aria-label={content.ui.navLabel}>
@@ -81,7 +81,7 @@ export function Header() {
           <button
             type="button"
             className="btn btn--secondary site-header__btn"
-            aria-label={content.palette.openPalette}
+            aria-label={`${content.palette.openPalette} (${shortcutLabel()})`}
             onClick={() => setPaletteOpen(true)}
           >
             <Icon name="command" />

@@ -69,7 +69,7 @@ export function PipelineOverlay({ layout, stages, label }: PipelineOverlayProps)
             >
               <span className="stage__num" aria-hidden="true">
                 {String(stage.index).padStart(2, '0')}
-              </span>
+              </span>{' '}
               <span className="stage__label mono-label" aria-hidden="true">
                 {stage.shortLabel}
               </span>
