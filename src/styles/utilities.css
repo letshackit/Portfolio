@@ -1,0 +1,77 @@
+/* Small shared classes for type roles and the console-panel signature (B.2, B.3). */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-label);
+  font-weight: var(--w-medium);
+  line-height: var(--lh-mono-label);
+  letter-spacing: var(--ls-mono-label);
+  text-transform: uppercase;
+  color: var(--t-3);
+}
+
+.mono-caption {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-caption);
+  font-weight: var(--w-regular);
+  line-height: var(--lh-mono-caption);
+  letter-spacing: var(--ls-mono-caption);
+  color: var(--t-3);
+}
+
+.mono-value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-value);
+  font-weight: var(--w-regular);
+  line-height: var(--lh-mono-value);
+  color: var(--t-1);
+}
+
+.mono-metric {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-metric);
+  font-weight: var(--w-medium);
+  line-height: var(--lh-mono-metric);
+  letter-spacing: var(--ls-mono-metric);
+  color: var(--t-1);
+}
+
+.lead {
+  max-width: var(--measure-lead);
+  font-size: var(--fs-lead);
+  line-height: var(--lh-lead);
+  color: var(--t-2);
+}
+
+/* Four L-shaped ticks outside the panel corners, drawn with two pseudo-elements and four gradients each */
+.corner-ticks {
+  position: relative;
+}
+
+.corner-ticks::before,
+.corner-ticks::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top left / var(--tick) 1px no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top left / 1px var(--tick) no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top right / var(--tick) 1px no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top right / 1px var(--tick) no-repeat;
+}
+
+.corner-ticks::after {
+  transform: scaleY(-1);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

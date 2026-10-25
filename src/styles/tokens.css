@@ -1,0 +1,161 @@
+/*
+ * Design tokens (architecture B.1 to B.5). The only file that may contain colour literals,
+ * pixel sizes for the type scale, durations and easings. Components use the semantic aliases.
+ * Breakpoints (768 / 1024 / 1280) are mirrored by hand in src/config.ts; media queries cannot read custom properties.
+ */
+:root {
+  /* Graphite base ramp: neutral, slightly cool, never blue */
+  --g-0: #0b0c0e; /* page background */
+  --g-1: #121417; /* cards, panels, boot screen, palette */
+  --g-2: #191c20; /* raised: card hover, highlighted row */
+  --g-3: #22262b; /* inset: chip background, neutral badge */
+  --g-4: #2c3137; /* strong hairline, divider on raised surfaces */
+
+  /* Text ramp. --t-3 is the floor; never add a dimmer text token */
+  --t-1: #eceef0; /* headings, emphasised body, quote text */
+  --t-2: #a9b0b8; /* body paragraphs, descriptions */
+  --t-3: #8a929c; /* mono captions, eyebrows, hints */
+
+  /* Cyan: structure (lines, edges, borders, diagrams, data, controls) */
+  --cyan-400: #67e8f9; /* cyan as text */
+  --cyan-500: #22d3ee; /* lines, strokes, primary button fill */
+  --cyan-600: #0891b2; /* control borders, subdued strokes */
+
+  /* Amber: agent activity ONLY (live badges, live dots, packets, "[ run]") */
+  --amber-400: #fbbf24; /* amber as text */
+  --amber-500: #f59e0b; /* packets, live dots */
+  --amber-600: #d97706; /* packet trail, dim */
+
+  /* Lines and fills (alpha, decoration only) */
+  --line-1: rgba(255, 255, 255, 0.08); /* hairline card borders, dividers */
+  --line-2: rgba(34, 211, 238, 0.25); /* cyan structural lines */
+  --line-3: rgba(34, 211, 238, 0.45); /* cyan line, highlighted / hover */
+  --line-amber: rgba(245, 158, 11, 0.35); /* live badge border */
+  --fill-cyan: rgba(34, 211, 238, 0.1); /* chip background, secondary button hover */
+  --fill-amber: rgba(245, 158, 11, 0.14); /* live badge background */
+  --grid-minor: rgba(255, 255, 255, 0.035);
+  --grid-major: rgba(255, 255, 255, 0.06);
+  --shadow-float: rgba(0, 0, 0, 0.6); /* palette and mobile menu only */
+  --mask-solid: #000; /* alpha mask source, never painted */
+
+  /* Semantic aliases: components use these, not the ramp names */
+  --bg: var(--g-0);
+  --surface: var(--g-1);
+  --surface-raised: var(--g-2);
+  --surface-inset: var(--g-3);
+  --border-control: var(--cyan-600);
+  --focus: var(--cyan-400);
+  --link: var(--cyan-400);
+
+  /* Font families (faces declared in fonts.css) */
+  --font-sans: "Geist", "Geist Fallback", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, Menlo, Consolas, monospace;
+
+  /* Weights: the design uses only these three */
+  --w-regular: 400;
+  --w-medium: 500;
+  --w-semibold: 600;
+
+  /* Type scale (B.2). Sizes are fluid; line height and tracking travel with the role */
+  --fs-display: clamp(2.25rem, 1.35rem + 4vw, 4.5rem);
+  --lh-display: 1.05;
+  --ls-display: -0.022em;
+  --fs-h2: clamp(1.75rem, 1.3rem + 2vw, 2.75rem);
+  --lh-h2: 1.1;
+  --ls-h2: -0.015em;
+  --fs-h3: clamp(1.25rem, 1.15rem + 0.4vw, 1.375rem);
+  --lh-h3: 1.25;
+  --ls-h3: -0.01em;
+  --fs-lead: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  --lh-lead: 1.5;
+  --fs-body: clamp(1rem, 0.95rem + 0.2vw, 1.0625rem);
+  --lh-body: 1.6;
+  --fs-mono-label: 0.75rem; /* 13 px from 1280, see media query below */
+  --lh-mono-label: 1.2;
+  --ls-mono-label: 0.08em;
+  --fs-mono-caption: 0.8125rem;
+  --lh-mono-caption: 1.5;
+  --ls-mono-caption: 0.02em;
+  --fs-mono-value: 0.875rem; /* 15 px from 1280 */
+  --lh-mono-value: 1.5;
+  --fs-mono-metric: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --lh-mono-metric: 1.1;
+  --ls-mono-metric: -0.01em;
+  --fs-mono-code: 0.875rem; /* 15 px from 768 */
+  --lh-mono-code: 1.65;
+  --fs-button: 0.8125rem;
+  --ls-button: 0.06em;
+  --fs-nav: 0.75rem;
+  --ls-nav: 0.08em;
+  --measure-body: 64ch;
+  --measure-lead: 40ch;
+
+  /* Spacing (B.3) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+  --s-10: 128px;
+  --section-pad: var(--s-8); /* 96 from 768, 128 from 1280 */
+  --gutter: 20px; /* 32 from 768, 48 from 1280 */
+  --grid-gap: var(--s-5); /* 24 from 768, 32 from 1280 */
+  --container: 1280px;
+  --header-h: 56px;
+  --tap: 44px; /* minimum interactive size on touch (NFR-20) */
+  --r-1: 4px;
+  --r-2: 8px;
+  --r-3: 12px;
+  --r-pill: 999px;
+  --hairline: 1px solid var(--line-1);
+  --rule: 1px solid var(--line-2);
+  --grid-cell: 24px;
+  --grid-cell-major: 120px;
+  --tick: 10px; /* corner tick arm length */
+
+  /* Motion (B.5) */
+  --d-fast: 120ms; /* colour and opacity on hover/focus */
+  --d-base: 200ms; /* open/close, panel swap, toast, tooltip */
+  --d-slow: 400ms; /* reveal on scroll, SVG to 3D crossfade */
+  --e-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --e-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --section-pad: var(--s-9);
+    --gutter: 32px;
+    --grid-gap: var(--s-6);
+    --fs-mono-code: 0.9375rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --section-pad: var(--s-10);
+    --gutter: 48px;
+    --fs-mono-label: 0.8125rem;
+    --fs-mono-value: 0.9375rem;
+  }
+}
+
+/* One reduced-motion override for the whole site (FR-6, NFR-18). Nothing moves; every final state is rendered. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --d-fast: 0ms;
+    --d-base: 0ms;
+    --d-slow: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

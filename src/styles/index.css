@@ -1,0 +1,6 @@
+/* Cascade order is fixed (ADR-003). Component CSS is imported by each component after this file. */
+@import "./fonts.css";
+@import "./tokens.css";
+@import "./base.css";
+@import "./grid.css";
+@import "./utilities.css";

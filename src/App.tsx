@@ -1,24 +1,12 @@
-import { lazy, Suspense } from "react";
-import "./App.css";
+import { content } from './data/content';
 
-const CharacterModel = lazy(() => import("./components/Character"));
-const MainContainer = lazy(() => import("./components/MainContainer"));
-import { LoadingProvider } from "./context/LoadingProvider";
-
-const App = () => {
+/** Step 0 placeholder: an empty main over the schematic grid, so fonts and tokens are visible. */
+export function App() {
   return (
-    <>
-      <LoadingProvider>
-        <Suspense>
-          <MainContainer>
-            <Suspense>
-              <CharacterModel />
-            </Suspense>
-          </MainContainer>
-        </Suspense>
-      </LoadingProvider>
-    </>
+    <main id="main" className="container" style={{ paddingBlock: 'var(--section-pad)' }}>
+      <p className="mono-label">{content.hero.eyebrow}</p>
+      <p className="lead">{content.hero.subline}</p>
+      <p className="mono-value">{content.hero.strip[1]?.value}</p>
+    </main>
   );
-};
-
-export default App;
+}

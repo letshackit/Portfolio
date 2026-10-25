@@ -1,0 +1,127 @@
+/* Reset, document defaults, headings, links, focus ring, noscript block. Focus ring is declared once, never overridden. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: var(--header-h);
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: clip;
+  background: var(--bg);
+  color: var(--t-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  font-weight: var(--w-regular);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--t-1);
+  font-weight: var(--w-semibold);
+}
+
+h1 {
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+}
+
+h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-h2);
+}
+
+h3 {
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  letter-spacing: var(--ls-h3);
+}
+
+strong,
+b {
+  color: var(--t-1);
+  font-weight: var(--w-medium);
+}
+
+a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-3);
+  transition: text-decoration-color var(--d-fast) var(--e-out);
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+img,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+::selection {
+  background: var(--fill-cyan);
+  color: var(--t-1);
+}
+
+/* Text version shown when JavaScript is off (FR-128). Styles load regardless of JS. */
+.noscript {
+  width: min(100% - 2 * var(--gutter), 40rem);
+  margin: var(--s-9) auto;
+  display: grid;
+  gap: var(--s-4);
+}

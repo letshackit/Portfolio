@@ -1,0 +1,37 @@
+/* Layout primitives and the fixed schematic background (B.3). The grid never moves (FR-14). */
+.container {
+  width: min(100% - 2 * var(--gutter), var(--container));
+  margin-inline: auto;
+}
+
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--grid-gap);
+}
+
+@media (min-width: 768px) {
+  .grid-12 {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px);
+  background-size:
+    var(--grid-cell) var(--grid-cell),
+    var(--grid-cell) var(--grid-cell),
+    var(--grid-cell-major) var(--grid-cell-major),
+    var(--grid-cell-major) var(--grid-cell-major);
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, var(--mask-solid) 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, var(--mask-solid) 30%, transparent 100%);
+}

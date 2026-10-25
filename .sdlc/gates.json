@@ -1,0 +1,43 @@
+{
+  "story": "revamp",
+  "gates": {
+    "requirements": {
+      "status": "passed",
+      "by": "orchestrator (auto-until-PR; owner reviews with finished work)",
+      "at": "2026-10-25T10:13Z",
+      "report": ".sdlc/00-prd.md"
+    },
+    "architecture": {
+      "status": "passed",
+      "by": "orchestrator (auto-until-PR; owner reviews with finished work)",
+      "at": "2026-10-25T10:13Z",
+      "report": ".sdlc/01-architecture.md",
+      "adrs": 8
+    },
+    "contracts": {
+      "status": "n/a",
+      "note": "static site, no API or database"
+    },
+    "build": {
+      "status": "pending"
+    },
+    "code_review": {
+      "status": "pending"
+    },
+    "security": {
+      "status": "pending"
+    },
+    "qa": {
+      "status": "pending"
+    },
+    "ux": {
+      "status": "pending"
+    },
+    "pr": {
+      "status": "pending"
+    },
+    "deploy": {
+      "status": "pending"
+    }
+  }
+}
