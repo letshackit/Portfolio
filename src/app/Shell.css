@@ -1,0 +1,4 @@
+/* Focus sentinel at the very start of the page (architecture E.1). Programmatic focus only; no ring. */
+.page-start:focus {
+  outline: none;
+}

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { content } from '../data/content';
 import type { Deployment } from '../data/content.types';
 import { anchorHref } from '../lib/anchors';
+import { refresh } from '../lib/scroll';
 import { Button } from '../ui/Button';
 import { Chip } from '../ui/Chip';
 import { badgeVariantFor } from '../ui/badgeVariant';
@@ -20,6 +21,12 @@ export function DeploymentCard({ deployment, index, primary = false }: Deploymen
   const { ui, deployments } = content;
   const regionId = `deploy-${deployment.id}-details`;
   const buttonId = `deploy-${deployment.id}-toggle`;
+
+  // The page grows or shrinks when details toggle; tell the smoother and scroll triggers once the expand has settled.
+  useEffect(() => {
+    const timer = window.setTimeout(refresh, 250);
+    return () => window.clearTimeout(timer);
+  }, [open]);
 
   return (
     <article className={primary ? 'deploy-card deploy-card--primary corner-ticks' : 'deploy-card'}>

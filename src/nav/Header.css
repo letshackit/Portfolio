@@ -1,4 +1,4 @@
-/* Skip link and fixed header (B.7.9). Links are plain anchors in step 1. */
+/* Skip link, fixed header, mobile menu (B.7.9). */
 .skip-link {
   position: fixed;
   top: var(--s-2);
@@ -66,24 +66,18 @@
 }
 
 .site-header__nav {
+  display: none;
   flex: 1;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.site-header__nav::-webkit-scrollbar {
-  display: none;
+  justify-content: center;
 }
 
 .site-header__list {
   display: flex;
-  justify-content: flex-start;
-  width: max-content;
-  margin-inline-start: auto;
 }
 
 .site-header__link {
+  position: relative;
   display: inline-flex;
   align-items: center;
   height: var(--header-h);
@@ -96,8 +90,61 @@
   white-space: nowrap;
 }
 
-.site-header__link:hover {
+.site-header__link:hover,
+.site-header__link[aria-current="location"] {
   color: var(--t-1);
+}
+
+.site-header__link[aria-current="location"]::after {
+  content: "";
+  position: absolute;
+  inset: auto var(--s-3) 0;
+  height: 2px;
+  background: var(--cyan-500);
+}
+
+.site-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-inline-start: auto;
+}
+
+.site-header__btn {
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+}
+
+.site-header__shortcut {
+  display: none;
+}
+
+.mobile-menu {
+  position: fixed;
+  inset: var(--header-h) 0 auto 0;
+  max-height: calc(100svh - var(--header-h));
+  overflow-y: auto;
+  background: var(--surface);
+  border-bottom: var(--rule);
+  box-shadow: 0 var(--s-4) var(--s-6) var(--shadow-float);
+}
+
+.mobile-menu__row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--row-h);
+  padding: 0 var(--gutter);
+  background: transparent;
+  border: 0;
+  border-bottom: var(--hairline);
+  color: var(--t-1);
+  text-align: start;
+  text-decoration: none;
+}
+
+.mobile-menu__row[aria-current="location"] {
+  box-shadow: inset 2px 0 0 var(--cyan-500);
 }
 
 @media (min-width: 768px) {
@@ -106,13 +153,22 @@
   }
 }
 
-@media (min-width: 1100px) {
-  .site-header__list {
+@media (min-width: 900px) {
+  .site-header__nav {
+    display: flex;
+  }
+
+  .site-header__actions {
     margin-inline-start: 0;
   }
 
-  .site-header__nav {
-    display: flex;
-    justify-content: center;
+  .site-header__menu-btn {
+    display: none;
+  }
+
+  .site-header__shortcut {
+    display: inline;
+    font-family: var(--font-mono);
+    font-size: var(--fs-nav);
   }
 }

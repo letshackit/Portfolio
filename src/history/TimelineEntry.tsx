@@ -10,7 +10,9 @@ export function TimelineEntry({ entry }: { readonly entry: HistoryEntry }) {
           <p key={role.id}>{role.dates}</p>
         ))}
       </div>
-      <div className="timeline-entry__spine" aria-hidden="true" />
+      <div className="timeline-entry__spine" aria-hidden="true">
+        <span className="timeline-entry__line" />
+      </div>
       <article className="timeline-entry__body">
         {entry.roles.map((role) => (
           <h3 key={role.id}>{role.title}</h3>

@@ -65,6 +65,8 @@
 .pipeline-frame__caption {
   padding: var(--s-3) var(--s-4);
   align-self: start;
+  /* Phone: right-aligned so it clears the first node, which sits at the top left */
+  justify-self: end;
 }
 
 @media (min-width: 768px) {
@@ -76,6 +78,10 @@
   .pipeline-frame {
     max-width: none;
     aspect-ratio: 1000 / 340;
+  }
+
+  .pipeline-frame__caption {
+    justify-self: start;
   }
 }
 
@@ -107,5 +113,46 @@
   .pipeline-frame {
     max-height: var(--frame-max-h);
     max-width: var(--frame-max-w);
+  }
+}
+
+/* Entrance after the boot (architecture B.5). Text is visible without it: the keyframes only run once
+   App sets data-entered, and never under reduced motion (FR-7, FR-6). */
+@media (prefers-reduced-motion: no-preference) {
+  .hero[data-entered] .hero__text > *,
+  .hero[data-entered] .pipeline-frame {
+    animation: hero-enter var(--d-slow) var(--e-out) backwards;
+  }
+
+  .hero[data-entered] .hero__text > :nth-child(2) {
+    animation-delay: var(--stagger);
+  }
+
+  .hero[data-entered] .hero__text > :nth-child(3) {
+    animation-delay: calc(var(--stagger) * 2);
+  }
+
+  .hero[data-entered] .hero__text > :nth-child(4) {
+    animation-delay: calc(var(--stagger) * 3);
+  }
+
+  .hero[data-entered] .hero__text > :nth-child(5) {
+    animation-delay: calc(var(--stagger) * 4);
+  }
+
+  .hero[data-entered] .pipeline-frame {
+    animation-delay: calc(var(--stagger) * 5);
+  }
+}
+
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-3));
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
   }
 }

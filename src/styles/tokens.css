@@ -148,6 +148,7 @@
   --d-slow: 400ms; /* reveal on scroll, SVG to 3D crossfade */
   --e-out: cubic-bezier(0.2, 0.7, 0.2, 1);
   --e-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --stagger: 70ms; /* hero entrance step */
 }
 
 @media (min-width: 768px) {

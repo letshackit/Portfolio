@@ -1,0 +1,25 @@
+.toast {
+  position: fixed;
+  inset: auto 0 var(--s-5) 0;
+  z-index: 70;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--gutter);
+  pointer-events: none;
+}
+
+.toast__text {
+  padding: var(--s-3) var(--s-4);
+  background: var(--surface-raised);
+  border: var(--rule);
+  border-radius: var(--r-2);
+  box-shadow: 0 var(--s-2) var(--s-5) var(--shadow-float);
+  animation: toast-in var(--d-base) var(--e-out);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-2));
+  }
+}

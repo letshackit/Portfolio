@@ -1,0 +1,147 @@
+/**
+ * The motion chunk (ADR-007). Loaded by `useMotion()` after first paint and never under reduced motion.
+ * Owns: ScrollSmoother (desktop + fine pointer only, ADR-002), `[data-reveal]` reveals, the career timeline
+ * draw, and ScrollTrigger refresh. Every from-state is set here, at the moment of animating (FR-7).
+ */
+import { gsap } from 'gsap';
+import { ScrollSmoother } from 'gsap/ScrollSmoother';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
+import { BREAKPOINTS } from '../config';
+import { attachSmoother } from './scroll';
+import { REVEAL_SELECTOR, type MotionHandle, type MotionOptions, type RevealKind } from './reveal';
+import { isPastLine } from './visibility';
+
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother, SplitText);
+
+/** ScrollSmoother lag in seconds (ADR-002; the old site used 1.7, which felt heavy). */
+const SMOOTH = 0.8;
+/** Reveals start when the element's top reaches this fraction of the viewport (B.5: top 85%). */
+const REVEAL_START = 0.85;
+const LINE_STAGGER = 0.06;
+const BLOCK_OFFSET_PX = 8;
+const TIMELINE_START = 'top 70%';
+const TIMELINE_END = 'bottom 30%';
+const REVEAL_EASE = 'power3.out';
+
+function matches(query: string): boolean {
+  return typeof window.matchMedia === 'function' && window.matchMedia(query).matches;
+}
+
+/** `--d-slow` from the tokens, in seconds, so the CSS stays the single source of durations. */
+function slowSeconds(): number {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue('--d-slow').trim();
+  const ms = Number.parseFloat(raw);
+  return Number.isFinite(ms) && ms > 0 ? ms / 1000 : 0.4;
+}
+
+function smootherEligible(): boolean {
+  return (
+    matches(`(min-width: ${BREAKPOINTS.desktop}px)`) &&
+    matches('(pointer: fine)') &&
+    !matches('(prefers-reduced-motion: reduce)') &&
+    document.querySelector('#smooth-wrapper') !== null &&
+    document.querySelector('#smooth-content') !== null
+  );
+}
+
+function revealKind(el: Element): RevealKind | null {
+  const value = el.getAttribute('data-reveal');
+  return value === 'lines' || value === 'block' ? value : null;
+}
+
+function revealLines(el: HTMLElement, duration: number): void {
+  SplitText.create(el, {
+    type: 'lines',
+    linesClass: 'reveal-line',
+    mask: 'lines',
+    autoSplit: true,
+    onSplit: (self) =>
+      gsap.from(self.lines, {
+        yPercent: 100,
+        duration,
+        ease: REVEAL_EASE,
+        stagger: LINE_STAGGER,
+        onComplete: () => self.revert(),
+      }),
+  });
+}
+
+function revealBlock(el: HTMLElement, duration: number): void {
+  gsap.fromTo(
+    el,
+    { opacity: 0, y: BLOCK_OFFSET_PX },
+    { opacity: 1, y: 0, duration, ease: REVEAL_EASE, clearProps: 'opacity,transform' },
+  );
+}
+
+/** One trigger per `[data-reveal]` element. Elements already on screen when we load are left alone. */
+function bindReveals(duration: number): void {
+  document.querySelectorAll<HTMLElement>(REVEAL_SELECTOR).forEach((el) => {
+    const kind = revealKind(el);
+    if (!kind || isPastLine(el, REVEAL_START)) return;
+    ScrollTrigger.create({
+      trigger: el,
+      start: `top ${REVEAL_START * 100}%`,
+      once: true,
+      onEnter: () => (kind === 'lines' ? revealLines(el, duration) : revealBlock(el, duration)),
+    });
+  });
+}
+
+/** Each entry's spine line draws from the top as the visitor scrolls through that entry (B.5, FR-102). */
+function bindTimeline(): void {
+  document.querySelectorAll<HTMLElement>('.timeline-entry').forEach((entry) => {
+    const line = entry.querySelector<HTMLElement>('.timeline-entry__line');
+    if (!line) return;
+    gsap.fromTo(
+      line,
+      { scaleY: 0, transformOrigin: 'top' },
+      {
+        scaleY: 1,
+        ease: 'none',
+        scrollTrigger: { trigger: entry, start: TIMELINE_START, end: TIMELINE_END, scrub: true },
+      },
+    );
+  });
+}
+
+export function startMotion(options: MotionOptions): MotionHandle {
+  let smoother: ScrollSmoother | null = null;
+  const ctx = gsap.context(() => {
+    if (smootherEligible()) {
+      smoother = ScrollSmoother.create({
+        wrapper: '#smooth-wrapper',
+        content: '#smooth-content',
+        smooth: SMOOTH,
+        effects: false,
+        normalizeScroll: false,
+        ignoreMobileResize: true,
+        onFocusIn: () => options.allowFocusScroll(),
+      });
+      attachSmoother(smoother, () => ScrollTrigger.refresh());
+    }
+    bindReveals(slowSeconds());
+    bindTimeline();
+  });
+
+  let live = true;
+  const onFontsReady = () => {
+    if (live) ScrollTrigger.refresh();
+  };
+  if ('fonts' in document) void document.fonts.ready.then(onFontsReady);
+  window.addEventListener('load', onFontsReady, { once: true });
+
+  return {
+    dispose() {
+      live = false;
+      window.removeEventListener('load', onFontsReady);
+      ctx.revert();
+      if (smoother) {
+        smoother.kill();
+        smoother = null;
+        attachSmoother(null);
+      }
+    },
+  };
+}

@@ -1,4 +1,5 @@
 import { content } from '../data/content';
+import { CopyEmailButton } from '../palette/CopyEmailButton';
 import { Button } from '../ui/Button';
 import { ExternalLink } from '../ui/ExternalLink';
 import { Section } from '../ui/Section';
@@ -63,6 +64,7 @@ export function Contact() {
           <Button variant="secondary" href={contact.linkedin} external>
             {ui.openLinkedin}
           </Button>
+          <CopyEmailButton />
           <p className="mono-caption">{contact.resumeMeta}</p>
         </div>
       </div>

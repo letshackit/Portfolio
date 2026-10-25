@@ -1,0 +1,130 @@
+/* Command palette (B.7.9). Backdrop, dialog, input row, grouped rows, footer. */
+.palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: var(--s-2);
+  background: color-mix(in srgb, var(--g-0) 60%, transparent);
+}
+
+.palette {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100svh - var(--s-4));
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--r-3);
+  box-shadow: 0 var(--s-4) var(--s-8) var(--shadow-float);
+}
+
+@media (min-width: 768px) {
+  .palette-backdrop {
+    padding-top: 15vh;
+  }
+
+  .palette {
+    width: min(560px, 100% - var(--s-4));
+    max-height: 70vh;
+  }
+}
+
+.palette__input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--row-h);
+  padding: 0 var(--s-4);
+  border-bottom: var(--hairline);
+  color: var(--cyan-400);
+}
+
+.palette__prompt .icon {
+  transform: rotate(-90deg);
+}
+
+.palette__input,
+.palette__email {
+  flex: 1;
+  min-width: 0;
+  height: var(--tap);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--t-1);
+}
+
+.palette__input::placeholder {
+  color: var(--t-3);
+}
+
+.palette__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--s-2) 0;
+}
+
+.palette__group {
+  padding: var(--s-2) var(--s-4);
+}
+
+.palette__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--icon) 1fr auto;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  padding: 0 var(--s-4);
+  color: var(--t-1);
+  cursor: pointer;
+}
+
+.palette__row[data-active] {
+  background: var(--surface-raised);
+}
+
+.palette__row[data-active]::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--cyan-500);
+}
+
+.palette__label {
+  font-size: var(--fs-name);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.palette__hint {
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette__empty {
+  padding: var(--s-4);
+}
+
+.palette__fallback {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+}
+
+.palette__email {
+  border: var(--rule);
+  border-radius: var(--r-2);
+  padding: 0 var(--s-3);
+}
+
+.palette__footer {
+  padding: var(--s-3) var(--s-4);
+  border-top: var(--hairline);
+}

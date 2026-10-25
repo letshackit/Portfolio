@@ -8,7 +8,7 @@ interface SectionProps {
   readonly className?: string;
 }
 
-/** Page section: id from ANCHORS, labelled by its heading. Offscreen pause and reveal hooks arrive in later steps. */
+/** Page section: id from ANCHORS, labelled by its heading. Reveals bind to [data-reveal] (see lib/reveal.ts); the heading and lead carry them. */
 export function Section({ anchor, children, className }: SectionProps) {
   const id = ANCHORS[anchor];
   return (

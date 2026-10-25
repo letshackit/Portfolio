@@ -92,3 +92,81 @@
     align-self: start;
   }
 }
+
+/* Tabs mode (wide screens): rail of seven tabs on a cyan rule, one panel below (B.7.2). */
+.stepper-tabs {
+  margin-top: var(--s-6);
+}
+
+.stepper-tabs__rail {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: var(--rule);
+}
+
+.stepper-tabs__tab {
+  position: relative;
+  display: grid;
+  gap: var(--s-1);
+  justify-items: start;
+  min-height: var(--tap);
+  padding: var(--s-4) var(--s-2) var(--s-4) 0;
+  border: 0;
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+}
+
+.stepper-tabs__tab:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.stepper-tabs__name {
+  white-space: normal;
+}
+
+.stepper-tabs__tab[aria-selected="true"] .stepper-tabs__name,
+.stepper-tabs__tab[aria-selected="true"] .stepper-tabs__num {
+  color: var(--t-1);
+}
+
+.stepper-tabs__dot {
+  position: absolute;
+  bottom: calc(var(--dot-lg) / -2);
+  left: 0;
+  width: var(--dot-lg);
+  height: var(--dot-lg);
+  border: 1px solid var(--cyan-600);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+}
+
+.stepper-tabs__tab[aria-selected="true"] .stepper-tabs__dot {
+  background: var(--cyan-500);
+  border-color: var(--cyan-500);
+  box-shadow: 0 0 0 var(--s-1) var(--fill-cyan);
+}
+
+.stepper-tabs__panel {
+  min-height: calc(var(--s-10) * 2 + var(--s-5));
+  margin-top: var(--s-7);
+  animation: panel-in var(--d-base) var(--e-out);
+}
+
+.stepper-tabs__panel:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: var(--s-2);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-1));
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

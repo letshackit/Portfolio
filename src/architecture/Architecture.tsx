@@ -2,7 +2,10 @@ import { content } from '../data/content';
 import { travelDeskArchitecture } from '../data/traveldesk-architecture';
 import { Section } from '../ui/Section';
 import { SectionHeading } from '../ui/SectionHeading';
-import { ArchNodeList } from './ArchNodeList';
+import { ArchDiagram, ArchLegend } from './ArchDiagram';
+import { archCopy } from './archCopy';
+import { connectionLabels } from '../lib/archLayout';
+import { useArchSelection } from './useArchSelection';
 import './Architecture.css';
 
 /** "Front end: Next.js." becomes label "Front end", value "Next.js." (facts are authored as one string each). */
@@ -14,7 +17,13 @@ function splitFact(fact: string): { readonly label: string; readonly value: stri
 
 export function Architecture() {
   const { architecture, ui } = content;
-  const proposed = travelDeskArchitecture.status === 'proposed';
+  const model = travelDeskArchitecture;
+  const proposed = model.status === 'proposed';
+  const selection = useArchSelection();
+  const activeNode = model.nodes.find((n) => n.id === selection.active);
+  const caption = activeNode
+    ? `${activeNode.label} — ${activeNode.role} · ${archCopy.captionConnects}: ${connectionLabels(model, activeNode.id).join(', ')}`
+    : archCopy.captionDefault;
   return (
     <Section anchor="architecture">
       <SectionHeading anchor="architecture" heading={architecture.heading} />
@@ -34,7 +43,9 @@ export function Architecture() {
           {architecture.proposedBanner}
         </p>
       ) : null}
-      <ArchNodeList model={travelDeskArchitecture} />
+      <ArchDiagram model={model} selection={selection} />
+      <p className="arch-caption mono-caption">{caption}</p>
+      <ArchLegend />
     </Section>
   );
 }

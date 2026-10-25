@@ -22,7 +22,14 @@
   position: relative;
   justify-self: center;
   width: 1px;
+}
+
+/* The drawn line is its own element so motion.ts can scaleY it without stretching the dot. Fully drawn by default (FR-102). */
+.timeline-entry__line {
+  position: absolute;
+  inset: 0;
   background: var(--cyan-500);
+  transform-origin: top;
 }
 
 .timeline-entry__spine::before {

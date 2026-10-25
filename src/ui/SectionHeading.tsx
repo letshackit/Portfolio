@@ -1,4 +1,5 @@
 import { ANCHORS } from '../config';
+import { revealProps } from '../lib/reveal';
 import { content } from '../data/content';
 import type { AnchorKey } from '../data/content.types';
 
@@ -21,10 +22,10 @@ export function SectionHeading({ anchor, heading, lead }: SectionHeadingProps) {
           {number} / {item.label}
         </p>
       ) : null}
-      <h2 id={`${ANCHORS[anchor]}-heading`} tabIndex={-1}>
+      <h2 id={`${ANCHORS[anchor]}-heading`} tabIndex={-1} {...revealProps('lines')}>
         {heading}
       </h2>
-      {lead ? <p className="section-heading__lead lead">{lead}</p> : null}
+      {lead ? <p className="section-heading__lead lead" {...revealProps('block')}>{lead}</p> : null}
     </div>
   );
 }

@@ -1,0 +1,55 @@
+/* Reticle follows the pointer (B.7.9). Never hides the system cursor. */
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 90;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--d-base) var(--e-out);
+}
+
+.cursor[data-visible] {
+  opacity: 1;
+}
+
+.cursor__ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--s-5);
+  height: var(--s-5);
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--cyan-500);
+  border-radius: var(--r-pill);
+  opacity: 0.8;
+  transition:
+    width var(--d-base) var(--e-out),
+    height var(--d-base) var(--e-out),
+    background-color var(--d-base) var(--e-out);
+}
+
+.cursor__ring::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: calc(var(--s-1) / 2);
+  height: calc(var(--s-1) / 2);
+  transform: translate(-50%, -50%);
+  border-radius: var(--r-pill);
+  background: var(--cyan-500);
+}
+
+.cursor.is-target .cursor__ring {
+  width: var(--s-6);
+  height: var(--s-6);
+  background: var(--fill-cyan);
+}
+
+.cursor.is-text .cursor__ring {
+  width: var(--s-1);
+  height: var(--s-1);
+  background: var(--cyan-500);
+}

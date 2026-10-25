@@ -212,6 +212,7 @@ export interface UiLabels {
   readonly metricsLabel: string;
   readonly artifactLabel: string;
   readonly stageListLabel: string;
+  readonly heroStagesLabel: string;
   readonly connectsTo: string;
   readonly proofLabel: string;
   readonly degreesHeading: string;
@@ -226,9 +227,41 @@ export interface UiLabels {
   readonly openLinkedin: string;
 }
 
+/** Strings for the boot screen, header controls, command palette and toast. */
+export interface PaletteLabels {
+  readonly dialogLabel: string;
+  readonly inputLabel: string;
+  readonly placeholder: string;
+  readonly empty: string;
+  readonly groupNavigate: string;
+  readonly groupActions: string;
+  readonly goTo: string;
+  readonly goToTop: string;
+  readonly topHint: string;
+  readonly resume: string;
+  readonly resumeHint: string;
+  readonly copyEmail: string;
+  readonly linkedinHint: string;
+  readonly emailCopied: string;
+  readonly copyBlocked: string;
+  readonly copyFallbackLead: string;
+  readonly writeEmail: string;
+  readonly footerHint: string;
+  readonly openPalette: string;
+  readonly menu: string;
+  readonly menuClose: string;
+  readonly menuPalette: string;
+  readonly copyButton: string;
+  readonly bootLabel: string;
+  readonly bootAnnounce: string;
+  readonly skip: string;
+  readonly skipHint: string;
+}
+
 export interface SiteContent {
   readonly meta: SiteMeta;
   readonly ui: UiLabels;
+  readonly palette: PaletteLabels;
   readonly nav: readonly NavItem[];
   readonly hero: HeroContent;
   readonly boot: readonly BootLine[];

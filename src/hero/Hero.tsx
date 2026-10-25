@@ -14,7 +14,7 @@ export function Hero() {
       <div className="container">
         <div className="hero__text">
           <p className="hero__eyebrow mono-label">
-            <LiveDot tone="amber" />
+            <LiveDot tone="amber" live />
             {hero.eyebrow}
           </p>
           <h1 id={`${ANCHORS.top}-heading`}>{hero.headline}</h1>

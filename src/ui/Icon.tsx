@@ -5,7 +5,8 @@ export type IconName =
   | 'copy'
   | 'check'
   | 'command'
-  | 'chevron-down';
+  | 'chevron-down'
+  | 'download';
 
 const PATHS: Record<IconName, string> = {
   'arrow-right': 'M3 8h10M9 4l4 4-4 4',
@@ -15,6 +16,7 @@ const PATHS: Record<IconName, string> = {
   check: 'M3 8.5l3.5 3.5L13 4.5',
   command: 'M6 6h4v4H6zM6 6V4a2 2 0 1 0-2 2h2zM10 6h2a2 2 0 1 0-2-2v2zM6 10H4a2 2 0 1 0 2 2v-2zM10 10h2a2 2 0 1 1-2 2v-2z',
   'chevron-down': 'M4 6l4 4 4-4',
+  download: 'M8 2v8M4.5 6.5L8 10l3.5-3.5M3 13h10',
 };
 
 /** Decorative inline icon, drawn rather than typed (ADR-004). Always aria-hidden. */
