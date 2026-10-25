@@ -1,0 +1,257 @@
+/*
+ * "The human behind the console": glass portrait card. Tilt, sheen and sweep are transform/opacity only.
+ * Nothing here hides the portrait unless the component arms the veil (data-scan), so no-JS and
+ * reduced-motion visitors always see the finished, fully lit card.
+ */
+.portrait-card {
+  --pc-glass: rgba(18, 20, 23, 0.55);
+  --pc-strip: rgba(11, 12, 14, 0.62);
+  --pc-glow: color-mix(in srgb, var(--cyan-500) 30%, transparent);
+  --pc-sweep: 1500ms;
+  --pc-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+
+  display: grid;
+  gap: var(--s-3);
+  width: 100%;
+  max-width: 30rem;
+  margin: 0;
+}
+
+.portrait-card__stage {
+  perspective: 1100px;
+}
+
+.portrait-card__tilt {
+  position: relative;
+  border-radius: var(--r-2);
+  transform-origin: 50% 50%;
+}
+
+.portrait-card__stage[data-active] .portrait-card__tilt {
+  will-change: transform;
+}
+
+.portrait-card__frame {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--pc-glass);
+  border: var(--rule);
+  border-radius: var(--r-2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 40px 80px -40px var(--shadow-float);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+
+/* Cyan bloom behind the head over a faint schematic grid that fades toward the edges */
+.portrait-card__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 62% 48% at 50% 36%, var(--pc-glow), transparent 72%),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px) 0 0 / var(--grid-cell) var(--grid-cell),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px) 0 0 / var(--grid-cell) var(--grid-cell),
+    linear-gradient(180deg, var(--g-1), var(--g-0));
+  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 45%, var(--mask-solid) 55%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 90% at 50% 45%, var(--mask-solid) 55%, transparent 100%);
+}
+
+.portrait-card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 100%;
+  user-select: none;
+  -webkit-mask-image: linear-gradient(180deg, var(--mask-solid) 72%, transparent 100%);
+  mask-image: linear-gradient(180deg, var(--mask-solid) 72%, transparent 100%);
+}
+
+.portrait-card__sheen {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.12), transparent 42%);
+  mix-blend-mode: soft-light;
+}
+
+/* Static film grain plus faint scan lines, one layer */
+.portrait-card__grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.1;
+  mix-blend-mode: overlay;
+  background:
+    var(--pc-grain) 0 0 / 160px 160px,
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0 1px, transparent 1px 3px);
+}
+
+.portrait-card__hud {
+  position: absolute;
+  inset: var(--s-4) var(--s-4) auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.portrait-card .portrait-card__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--cyan-400);
+}
+
+.portrait-card .portrait-card__tag::before {
+  content: "";
+  width: var(--dot);
+  height: var(--dot);
+  border: 1px solid var(--cyan-500);
+}
+
+.portrait-card__caption {
+  position: absolute;
+  inset: auto var(--s-3) var(--s-3);
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-3) var(--s-4);
+  background: var(--pc-strip);
+  border: var(--hairline);
+  border-radius: var(--r-1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.portrait-card .portrait-card__name {
+  color: var(--t-1);
+  text-wrap: balance;
+}
+
+.portrait-card .portrait-card__status {
+  color: var(--cyan-400);
+  text-wrap: balance;
+}
+
+.portrait-card__credit {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin: 0;
+}
+
+.portrait-card__credit::before {
+  content: "";
+  width: var(--s-6);
+  height: 1px;
+  background: var(--line-3);
+}
+
+/* Scan reveal. The veil only exists while the component has armed it. Its top edge is the amber scan line. */
+.portrait-card__veil {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(var(--grid-minor) 1px, transparent 1px) 0 0 / var(--grid-cell) var(--grid-cell),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px) 0 0 / var(--grid-cell) var(--grid-cell),
+    var(--g-0);
+}
+
+.portrait-card__scanline {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--amber-500);
+  box-shadow: 0 0 18px 2px var(--line-amber);
+}
+
+.portrait-card__scanline::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 100%;
+  height: var(--s-8);
+  background: linear-gradient(0deg, var(--fill-amber), transparent);
+}
+
+.portrait-card[data-scan="armed"] .portrait-card__veil,
+.portrait-card[data-scan="run"] .portrait-card__veil {
+  display: block;
+}
+
+.portrait-card[data-scan="run"] .portrait-card__veil {
+  animation: portrait-sweep var(--pc-sweep) var(--e-in-out) forwards;
+}
+
+.portrait-card[data-scan="armed"] .portrait-card__hud,
+.portrait-card[data-scan="armed"] .portrait-card__caption {
+  opacity: 0;
+}
+
+.portrait-card[data-scan="run"] .portrait-card__hud,
+.portrait-card[data-scan="run"] .portrait-card__caption {
+  opacity: 1;
+  transition: opacity var(--d-slow) var(--e-out) calc(var(--pc-sweep) * 0.7);
+}
+
+@keyframes portrait-sweep {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portrait-card__veil {
+    display: none !important;
+  }
+
+  .portrait-card__hud,
+  .portrait-card__caption {
+    opacity: 1 !important;
+  }
+}
+
+/* Contact section layout: portrait left, the existing contact panel right (mounted in Contact.tsx) */
+.contact-stage {
+  display: grid;
+  gap: var(--s-6);
+  align-items: start;
+}
+
+.contact-stage .portrait-card {
+  justify-self: center;
+}
+
+@media (max-width: 767px) {
+  .portrait-card__frame {
+    aspect-ratio: 5 / 6;
+  }
+}
+
+@media (min-width: 1024px) {
+  .contact-stage {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--s-7);
+  }
+
+  .contact-stage .portrait-card {
+    justify-self: start;
+  }
+
+  .contact-stage .contact-panel {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-6);
+    padding: var(--s-6);
+  }
+}

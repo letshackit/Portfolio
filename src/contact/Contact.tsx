@@ -2,6 +2,7 @@ import { content } from '../data/content';
 import { CopyEmailButton } from '../palette/CopyEmailButton';
 import { Button } from '../ui/Button';
 import { ExternalLink } from '../ui/ExternalLink';
+import { PortraitCard } from '../portrait/PortraitCard';
 import { Section } from '../ui/Section';
 import { SectionHeading } from '../ui/SectionHeading';
 import { StatusBadge } from '../ui/StatusBadge';
@@ -17,6 +18,8 @@ export function Contact() {
   return (
     <Section anchor="contact">
       <SectionHeading anchor="contact" heading={contact.heading} lead={contact.lead} />
+      <div className="contact-stage">
+      <PortraitCard />
       <div className="contact-panel corner-ticks">
         <div className="contact-panel__main">
           <StatusBadge variant="live" size="lg">
@@ -67,6 +70,7 @@ export function Contact() {
           <CopyEmailButton />
           <p className="mono-caption">{contact.resumeMeta}</p>
         </div>
+      </div>
       </div>
     </Section>
   );
