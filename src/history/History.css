@@ -1,157 +1,325 @@
-/* Deployment history (B.7.6). 360: [spine 16][entry], each role's dates under its title. 768+: [dates 180][spine 24][entry];
-   the dates sit in the left column on the same row as the role they belong to (subgrid), so every date is paired with its title. */
-.timeline {
-  display: grid;
-  gap: var(--s-7);
-}
-
-.timeline-entry {
-  display: grid;
-  grid-template-columns: var(--spine-col-narrow) minmax(0, 1fr);
-  column-gap: var(--s-3);
-}
-
-.timeline-entry__role {
-  display: grid;
-  gap: var(--s-1);
-}
-
-/* Narrow: dates above the title (FR-101); the DOM keeps title first for reading order. */
-.timeline-entry__dates {
-  order: -1;
-}
-
-.timeline-entry__spine {
-  grid-column: 1;
-  grid-row: 1;
+/* Deployment history: a cyan rail that draws itself on scroll; each employer is a glass node that lights amber when the
+   line reaches it. Defaults are fully drawn and fully lit, so no scripting or reduced motion still shows everything. */
+.hist-section {
+  --hist-ink: #07080a;
+  --hist-glass: rgba(14, 20, 25, 0.55);
+  --hist-hi: rgba(255, 255, 255, 0.07);
+  --hist-display: clamp(2.75rem, 1rem + 6.2vw, 6.5rem);
+  --hist-rail-x: 11px;
+  --hist-rail-col: 40px;
   position: relative;
-  justify-self: center;
-  width: 1px;
+  isolation: isolate;
+  overflow-x: clip;
+  background: var(--hist-ink);
 }
 
-/* The drawn line is its own element so motion.ts can scaleY it without stretching the dot. Fully drawn by default (FR-102). */
-.timeline-entry__line {
-  position: absolute;
-  inset: 0;
-  background: var(--cyan-500);
-  transform-origin: top;
-}
-
-.timeline-entry__spine::before {
+.hist-section::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 50%;
-  width: calc(var(--dot) + var(--s-1));
-  height: calc(var(--dot) + var(--s-1));
-  translate: -50% 0;
-  background: var(--cyan-500);
-  border: 2px solid var(--g-0);
-  border-radius: var(--r-pill);
-  box-sizing: content-box;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(45% 35% at 8% 45%, rgba(34, 211, 238, 0.09), transparent 70%),
+    radial-gradient(40% 30% at 92% 15%, rgba(245, 158, 11, 0.05), transparent 70%),
+    linear-gradient(to right, var(--grid-minor) 1px, transparent 1px) 0 0 / var(--grid-cell) var(--grid-cell),
+    linear-gradient(to bottom, var(--grid-minor) 1px, transparent 1px) 0 0 / var(--grid-cell) var(--grid-cell);
+  mask-image: radial-gradient(ellipse 85% 75% at 30% 50%, var(--mask-solid) 25%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 30% 50%, var(--mask-solid) 25%, transparent 100%);
 }
 
-.timeline-entry__body {
-  grid-column: 2;
-  grid-row: 1;
+.hist-section .section-heading h2 {
+  max-width: 12ch;
+  font-size: var(--hist-display);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+/* ---- Rail ---- */
+.tl {
+  position: relative;
+}
+
+.tl__rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  translate: var(--hist-rail-x) 0;
+}
+
+.tl__rail line {
+  fill: none;
+  stroke: var(--cyan-500);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+/* A wider, softer copy under the line gives it a lit-fibre look without a filter. */
+.tl__rail-glow {
+  stroke-width: 8;
+  opacity: 0.16;
+}
+
+.tl__list {
+  display: grid;
+  gap: var(--s-7);
+  padding-left: var(--hist-rail-col);
+}
+
+.tl__entry {
+  position: relative;
+}
+
+/* ---- Node dot on the rail ---- */
+.tl__dot {
+  position: absolute;
+  top: var(--s-6);
+  left: calc(var(--hist-rail-x) - var(--hist-rail-col) - 6px);
+  width: 14px;
+  height: 14px;
+  border-radius: var(--r-pill);
+  background: var(--hist-ink);
+  border: 2px solid var(--cyan-500);
+}
+
+.tl__dot::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: var(--amber-500);
+  box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.18), 0 0 24px rgba(245, 158, 11, 0.6);
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity var(--d-base) var(--e-out),
+    transform var(--d-base) var(--e-out);
+}
+
+.tl__entry[data-lit] .tl__dot::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Armed (the draw is running): unlit nodes sit dim until the line gets there. */
+.tl[data-armed] .tl__entry:not([data-lit]) .tl__card {
+  opacity: 0.55;
+}
+
+/* ---- Glass card ---- */
+.tl__card {
+  position: relative;
   display: grid;
   gap: var(--s-3);
   align-content: start;
+  padding: var(--s-5);
+  background: var(--hist-glass);
+  border: var(--hairline);
+  border-radius: var(--r-3);
+  box-shadow: inset 0 1px 0 var(--hist-hi);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  transition: opacity var(--d-slow) var(--e-out);
 }
 
-.timeline-entry__marker {
+/* The amber edge lives on a pseudo-element so lighting a node animates opacity, not paint. */
+.tl__card::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--line-amber);
+  border-radius: inherit;
+  box-shadow: 0 0 60px -20px rgba(245, 158, 11, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--d-slow) var(--e-out);
+}
+
+.tl__entry[data-lit] .tl__card::after {
+  opacity: 1;
+}
+
+.tl__index {
+  color: var(--amber-400);
+}
+
+.tl__company {
+  max-width: 18ch;
+  font-size: clamp(2rem, 1.2rem + 3.4vw, 4.25rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.tl__where {
+  margin-top: calc(var(--s-1) * -1);
+}
+
+.tl__promo {
   display: inline-flex;
   align-items: center;
   justify-self: start;
   gap: var(--s-2);
   padding: var(--s-1) var(--s-3);
-  background: var(--surface-inset);
-  border: var(--rule);
+  background: var(--fill-amber);
+  border: 1px solid var(--line-amber);
   border-radius: var(--r-pill);
+  color: var(--amber-400);
+  text-transform: uppercase;
+}
+
+.tl__roles {
+  display: grid;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+  padding-top: var(--s-4);
+  border-top: var(--hairline);
+}
+
+.tl__role {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.tl__role-title {
+  color: var(--t-1);
+  font-weight: var(--w-medium);
+  line-height: 1.35;
+}
+
+.tl__dates {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
   color: var(--cyan-400);
 }
 
-.education {
+.tl__now {
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: var(--r-pill);
+  background: var(--amber-500);
+  animation: tl-now 1700ms var(--e-out) infinite;
+}
+
+@keyframes tl-now {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+.tl__bullets {
+  margin-top: var(--s-2);
+}
+
+/* ---- Education and certifications as mono chips ---- */
+.edu {
   display: grid;
   gap: var(--s-5);
-  margin-top: var(--s-8);
+  margin-top: var(--s-9);
   padding-top: var(--s-6);
   border-top: var(--hairline);
 }
 
-.education__grid {
-  display: grid;
-  gap: var(--s-4);
+.edu__heading {
+  font-size: clamp(1.75rem, 1.1rem + 2.4vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
 }
 
-.edu-card {
-  display: grid;
-  gap: var(--s-3);
-  align-content: start;
-  padding: var(--s-5);
-  background: var(--surface);
-  border: var(--hairline);
-  border-radius: var(--r-2);
-}
-
-.edu-card__list {
+.edu__group {
   display: grid;
   gap: var(--s-3);
 }
 
-.edu-card__title {
+.edu__group h4 {
+  color: var(--cyan-500);
+}
+
+.edu__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.edu__chip {
+  display: grid;
+  gap: 2px;
+  max-width: 100%;
+  padding: var(--s-2) var(--s-4);
+  background: rgba(34, 211, 238, 0.06);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  box-shadow: inset 0 1px 0 var(--hist-hi);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-caption);
+  line-height: 1.4;
+}
+
+.edu__chip-title {
   color: var(--t-1);
 }
 
-.edu-card__link {
+.edu__chip-meta {
+  color: var(--t-3);
+}
+
+.edu__link {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
   min-height: var(--tap);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-caption);
 }
 
 @media (min-width: 768px) {
-  .timeline-entry {
-    grid-template-columns: var(--date-col) var(--spine-col) minmax(0, 1fr);
-    column-gap: var(--s-4);
+  .hist-section {
+    --hist-rail-x: 15px;
+    --hist-rail-col: 72px;
   }
 
-  .timeline-entry__spine {
-    grid-column: 2;
+  .tl__card {
+    padding: var(--s-7);
   }
 
-  .timeline-entry__body {
-    grid-column: 1 / -1;
-    grid-template-columns: subgrid;
-    column-gap: var(--s-4);
+  .tl__dot {
+    top: var(--s-7);
   }
 
-  .timeline-entry__role {
-    grid-column: 1 / -1;
-    grid-template-columns: subgrid;
-    align-items: baseline;
-    gap: 0 var(--s-4);
+  .tl__dot {
+    width: 18px;
+    height: 18px;
+    left: calc(var(--hist-rail-x) - var(--hist-rail-col) - 8px);
   }
 
-  .timeline-entry__role h3 {
-    grid-column: 3;
-    grid-row: 1;
-  }
-
-  .timeline-entry__dates {
-    grid-column: 1;
-    grid-row: 1;
-    text-align: end;
-  }
-
-  .timeline-entry__body > :not(.timeline-entry__role) {
-    grid-column: 3;
+  .tl__roles {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: var(--s-5);
   }
 }
 
-@media (min-width: 1024px) {
-  .education__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--s-5);
+@media (min-width: 1280px) {
+  .hist-section {
+    --hist-rail-col: 96px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl__now {
+    animation: none;
   }
 }

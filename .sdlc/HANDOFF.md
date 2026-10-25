@@ -671,3 +671,8 @@ npm test -> Test Files 13 passed (13), Tests 107 passed (107)
 - New global-ish CSS classes `.stage-world`, `.split-title`, `.fade-up`, `.section-intro` live in src/how/sectionIntro.css (shared by both sections; color-mix over tokens, no literals). Other sections can reuse `SectionIntro` from src/how/SplitTitle.tsx.
 - How I work journey needs ScrollSmoother present first (journeyMotion waits up to 10 s); tabpanel is one `role=tabpanel` viewport (pipelineStepper tests rely on it). `<header>` must not be used inside sections (landmark test).
 - Not installed: @react-three/drei (neither section needs 3D). Not verified: Safari, real GPU, touch devices.
+### 2026-10-25 — [v2] architecture / recognition / history / contact re-skin
+- Merge: owns src/architecture/**, src/recognition/**, src/history/**, src/contact/**, src/__tests__/arch3d.test.ts; adds dep `@react-three/drei@^9` (package.json + lock) and a lazy chunk `ArchStage3D` (3D arch on desktop only; SVG fallback on reduced motion / no WebGL / save-data / <1024 px).
+- Contact: `<div class="contact-portrait-slot">` is empty and hides itself (:empty); mount PortraitCard inside it and the grid becomes 5fr/7fr on desktop. Contact h2 is now "Let's deploy." (visually-hidden prefix keeps "Contact:" in the accessible name); copy lives in src/contact/contactCopy.ts.
+- Recognition marquee duplicates are cloned into the DOM at runtime (aria-hidden), so tests/screen readers see each quote once; History's rail draw uses its own ScrollTrigger (lib/motion.ts bindTimeline is now a no-op because `.timeline-entry` no longer exists, safe to delete).
+- Architecture labels are canvas textures (Geist Mono from the page), not drei Text: troika's blob worker hangs in headless and would be blocked by the CSP.
