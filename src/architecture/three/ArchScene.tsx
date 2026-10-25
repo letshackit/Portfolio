@@ -20,7 +20,7 @@ import {
   type LineDashedMaterial,
 } from 'three';
 import type { Highlight } from '../../lib/archLayout';
-import { createWatchdog } from '../../hero/three/FrameWatchdog';
+import { createWatchdog } from '../../lib/frameWatchdog';
 import type { Block3D, Layout3D, Route3D } from './layout3d';
 import { fontsReady, makeLabelTexture } from './labelTexture';
 import { createPacketSim } from './packets3d';

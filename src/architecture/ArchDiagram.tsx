@@ -7,7 +7,7 @@ import { supportsWebGL } from '../lib/webgl';
 import { useOffscreenPause } from '../lib/useOffscreenPause';
 import { archCopy } from './archCopy';
 import { ArchNodeList, type NodeRect } from './ArchNodeList';
-import { ThreeBoundary } from '../hero/three/ThreeBoundary';
+import { ThreeBoundary } from '../lib/ThreeBoundary';
 import { layout3d } from './three/layout3d';
 import { blockRect, fitProjection } from './three/projection';
 import type { ArchStage3DProps } from './three/ArchStage3D';

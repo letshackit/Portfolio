@@ -1,13 +1,15 @@
 /**
  * The motion chunk (ADR-007). Loaded by `useMotion()` after first paint and never under reduced motion.
- * Owns: ScrollSmoother (desktop + fine pointer only, ADR-002), `[data-reveal]` reveals, and ScrollTrigger refresh
- * (fonts, images, layout changes). The pinned How journey and the History rail run their own triggers. Every from-state is set here, at the moment of animating (FR-7).
+ * Owns: ScrollSmoother (desktop + fine pointer only, ADR-002), `[data-reveal]` reveals, the hero's scroll beat, and
+ * ScrollTrigger refresh (fonts, images, layout changes). The pinned How journey and the History rail run their own triggers.
+ * Every from-state is set here, at the moment of animating (FR-7).
  */
 import { gsap } from 'gsap';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { BREAKPOINTS } from '../config';
+import { bindHeroBeat } from '../hero/v2/beat';
 import { attachSmoother } from './scroll';
 import { REVEAL_SELECTOR, type MotionHandle, type MotionOptions, type RevealKind } from './reveal';
 import { isPastLine } from './visibility';
@@ -126,6 +128,7 @@ function watchLayout(isLive: () => boolean): () => void {
 
 export function startMotion(options: MotionOptions): MotionHandle {
   let smoother: ScrollSmoother | null = null;
+  let unbindHero: () => void = () => undefined;
   const ctx = gsap.context(() => {
     if (smootherEligible()) {
       smoother = ScrollSmoother.create({
@@ -140,6 +143,8 @@ export function startMotion(options: MotionOptions): MotionHandle {
       attachSmoother(smoother, () => ScrollTrigger.refresh());
     }
     bindReveals(slowSeconds());
+    // After the smoother: the hero pins its stage through it.
+    unbindHero = bindHeroBeat();
   });
 
   let live = true;
@@ -155,6 +160,7 @@ export function startMotion(options: MotionOptions): MotionHandle {
       live = false;
       stopWatching();
       window.removeEventListener('load', onFontsReady);
+      unbindHero();
       ctx.revert();
       if (smoother) {
         smoother.kill();

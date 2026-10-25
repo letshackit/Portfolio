@@ -1,0 +1,708 @@
+/*
+ * Hero v2 "forward-deployed engineer's stage". Colours, fonts, easings and durations come from tokens.css; this file
+ * only adds layout. Every piece of text is real DOM and visible from first paint: the animations below start from a
+ * from-state that only exists while they run (FR-7), and reduced motion removes them all (tokens.css).
+ */
+.hv2 {
+  --inset: 14px;
+  --gut: clamp(20px, 3.4vw, 56px);
+  --top: calc(var(--header-h) + 10px);
+  --bar-h: 38px;
+  /* Length of the scroll beat, on top of the one-screen stage. */
+  --beat: clamp(800px, 120svh, 1300px);
+  position: relative;
+  height: calc(100vh + var(--beat));
+  height: calc(100svh + var(--beat));
+  background: #07080a;
+  color: var(--t-1);
+  font-family: var(--font-mono);
+}
+
+/* No scroll beat under reduced motion: one still screen, the scene already lit. */
+@media (prefers-reduced-motion: reduce) {
+  .hv2 {
+    height: 100vh;
+    height: 100svh;
+  }
+
+  .hv2__stage {
+    position: relative;
+  }
+}
+
+/* Native scroll: the stage sticks. With ScrollSmoother sticky cannot work, so beat.ts pins it with ScrollTrigger. */
+.hv2__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hv2[data-pinned] .hv2__stage {
+  position: relative;
+}
+
+/* Static poster: the same dark field and cyan/amber glow as the lit scene, so the 3D fades in over it without a jump. */
+.hv2__poster {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 38% 46% at 66% 48%, rgba(34, 211, 238, 0.14), transparent 70%),
+    radial-gradient(ellipse 30% 40% at 18% 58%, rgba(245, 158, 11, 0.08), transparent 70%),
+    #07080a;
+}
+
+.hv2__canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.7s var(--e-out);
+}
+
+.hv2[data-stage="ready"] .hv2__canvas {
+  opacity: 1;
+}
+
+.hv2__canvas canvas {
+  display: block;
+}
+
+/* Soft edge darkening so the HUD copy always sits on a calm field. */
+.hv2__scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(7, 8, 10, 0.8) 0%, rgba(7, 8, 10, 0.42) 26%, rgba(7, 8, 10, 0) 46%),
+    linear-gradient(0deg, rgba(7, 8, 10, 0.72) 0%, rgba(7, 8, 10, 0) 24%),
+    linear-gradient(180deg, rgba(7, 8, 10, 0.6) 0%, rgba(7, 8, 10, 0) 16%);
+}
+
+/* End of the beat: the stage resolves to the page background, so the next section starts on clean dark. */
+.hv2__veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  background: linear-gradient(180deg, rgba(11, 12, 14, 0.82) 0%, var(--bg) 70%);
+}
+
+.hv2__hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hv2__hud a {
+  pointer-events: auto;
+}
+
+/* ---------- Frame: hairline, corner ticks, edge rulers, registration marks ---------- */
+.hv2__frame {
+  position: absolute;
+  top: var(--top);
+  left: var(--inset);
+  right: var(--inset);
+  bottom: var(--inset);
+  border: 1px solid rgba(34, 211, 238, 0.16);
+}
+
+.hv2__tick {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 0 solid var(--cyan-500);
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.7));
+}
+.hv2__tick--tl { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
+.hv2__tick--tr { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
+.hv2__tick--bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
+.hv2__tick--br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+
+.hv2__ruler {
+  position: absolute;
+  top: 34px;
+  bottom: 34px;
+  width: 9px;
+  opacity: 0.5;
+  background:
+    repeating-linear-gradient(180deg, rgba(34, 211, 238, 0.55) 0 1px, transparent 1px 12px) 0 0 / 5px 100% no-repeat,
+    repeating-linear-gradient(180deg, rgba(34, 211, 238, 0.9) 0 1px, transparent 1px 60px) 0 0 / 9px 100% no-repeat;
+}
+.hv2__ruler--l { left: -1px; }
+.hv2__ruler--r { right: -1px; transform: scaleX(-1); }
+
+.hv2__reg {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  opacity: 0.6;
+}
+.hv2__reg::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -7px;
+  height: 14px;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+}
+.hv2__reg--l { left: 18px; }
+.hv2__reg--r { right: 18px; }
+
+/* ---------- Dots ---------- */
+.hv2__dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+.hv2__dot--amber {
+  background: var(--amber-500);
+  box-shadow: 0 0 10px 2px rgba(245, 158, 11, 0.7);
+  animation: hv2-pulse 1.6s ease-in-out infinite;
+}
+@keyframes hv2-pulse {
+  50% { opacity: 0.35; }
+}
+
+/* ---------- Headline block (left third) ---------- */
+.hv2__copy {
+  position: absolute;
+  left: calc(var(--inset) + var(--gut));
+  top: 0;
+  bottom: 0;
+  width: min(36vw, 600px);
+  /* Centred without a CSS transform: the scroll beat tweens this element's transform. */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--top) 0 64px;
+}
+
+.hv2__eyebrow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 clamp(16px, 2.6vh, 28px);
+  max-width: 440px;
+  text-wrap: balance;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  letter-spacing: 0.16em;
+  color: var(--cyan-400);
+}
+.hv2__eyebrow .hv2__dot { margin-top: 5px; }
+
+.hv2__name {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--w-semibold);
+  font-size: clamp(3.1rem, 6.7vw, 7.4rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  color: var(--t-1);
+  filter: drop-shadow(0 0 28px rgba(34, 211, 238, 0.22));
+}
+
+/* Each name is a masked line of characters: the entrance slides them up from under the line. */
+.hv2__word {
+  display: block;
+  overflow: hidden;
+  padding: 0.04em 0.06em 0.02em 0;
+  margin-bottom: -0.02em;
+  white-space: nowrap;
+}
+.hv2__word--last {
+  color: transparent;
+  -webkit-text-stroke: 1.4px var(--cyan-500);
+}
+.hv2__ch {
+  display: inline-block;
+}
+
+.hv2__tag {
+  margin: clamp(18px, 3vh, 32px) 0 0;
+  font-family: var(--font-sans);
+  font-weight: var(--w-medium);
+  font-size: clamp(1.25rem, 2vw, 2.15rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--t-1);
+}
+.hv2__tag span { display: block; }
+.hv2__tag span:last-child { color: var(--amber-400); }
+
+/* ---------- Operator ID badge (how he actually looks) ---------- */
+.hv2__badge {
+  --d: 96px;
+  position: absolute;
+  top: calc(var(--top) + 22px);
+  right: calc(var(--inset) + var(--gut));
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px 14px 14px;
+  background: linear-gradient(135deg, rgba(18, 20, 23, 0.72), rgba(11, 12, 14, 0.55));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--line-2);
+}
+.hv2__badge .hv2__tick { width: 10px; height: 10px; filter: none; }
+
+.hv2__badge-photo {
+  position: relative;
+  width: var(--d);
+  height: var(--d);
+  flex: none;
+  border-radius: 50%;
+  background: var(--g-1);
+  box-shadow: 0 0 0 2px #07080a, 0 0 0 3px var(--cyan-500), 0 0 28px rgba(34, 211, 238, 0.45);
+}
+.hv2__badge-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.hv2__badge-live {
+  position: absolute;
+  right: 4px;
+  bottom: 6px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--amber-500);
+  box-shadow: 0 0 0 2px #07080a, 0 0 12px 3px rgba(245, 158, 11, 0.75);
+  animation: hv2-pulse 1.6s ease-in-out infinite;
+}
+
+.hv2__badge-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  color: var(--t-3);
+}
+.hv2__badge-meta b {
+  font-size: 0.8125rem;
+  font-weight: var(--w-medium);
+  color: var(--t-1);
+  letter-spacing: 0.1em;
+}
+.hv2__badge-links {
+  display: flex;
+  gap: 14px;
+  margin-top: 2px;
+}
+.hv2__badge-links a {
+  color: var(--cyan-400);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-2);
+}
+.hv2__badge-links a:hover {
+  text-decoration-color: var(--cyan-400);
+}
+.hv2__sep {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin: 0 6px;
+  border-radius: 50%;
+  background: var(--cyan-500);
+  vertical-align: middle;
+}
+
+/* ---------- Terminals: the agent console (bottom-left) and the DEPLOY pane (right edge) ---------- */
+.hv2__console,
+.hv2__pane {
+  position: absolute;
+  background: linear-gradient(180deg, rgba(14, 16, 19, 0.8), rgba(9, 10, 12, 0.74));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55), inset 0 0 40px rgba(34, 211, 238, 0.04);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+.hv2__console::before,
+.hv2__pane::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid var(--cyan-500);
+  border-left: 2px solid var(--cyan-500);
+}
+.hv2__console::after,
+.hv2__pane::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 14px;
+  height: 14px;
+  border-bottom: 2px solid var(--cyan-500);
+  border-right: 2px solid var(--cyan-500);
+}
+
+.hv2__console {
+  left: calc(var(--inset) + var(--gut));
+  bottom: calc(var(--inset) + var(--bar-h) + 16px);
+  width: min(31vw, 470px);
+  min-width: 300px;
+}
+
+.hv2__pane {
+  right: calc(var(--inset) + 20px);
+  /* Below the badge (its bottom edge is about 232px down on any screen), else a quarter of the way down. */
+  top: max(26%, 232px);
+  width: clamp(270px, 21vw, 312px);
+  font-size: 0.75rem;
+}
+
+.hv2__term-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line-1);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  color: var(--t-3);
+  white-space: nowrap;
+}
+.hv2__term-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--amber-400);
+}
+.hv2__term-body {
+  padding: 12px 14px 14px;
+  overflow: hidden;
+  /* Newest row stays put at the bottom; if the box is short it is the oldest rows that clip. */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  /* A row that is only partly in the box fades out instead of being sliced. */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 16px);
+  mask-image: linear-gradient(180deg, transparent 0, #000 16px);
+}
+.hv2__console .hv2__term-body {
+  height: calc(7 * 1.55em + 26px);
+}
+.hv2__pane .hv2__term-body {
+  height: calc(8 * 1.55em + 26px);
+}
+.hv2__term-foot {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line-1);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  color: var(--t-3);
+}
+.hv2__term-foot b {
+  font-weight: var(--w-regular);
+  color: var(--amber-400);
+}
+
+.hv2__row {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  color: var(--t-1);
+}
+.hv2__row--cmd {
+  color: var(--t-3);
+  margin-bottom: 4px;
+}
+.hv2__prompt {
+  width: 7px;
+  height: 7px;
+  align-self: center;
+  border-right: 2px solid var(--amber-500);
+  border-bottom: 2px solid var(--amber-500);
+  transform: rotate(-45deg) scale(0.8);
+  margin-right: 3px;
+}
+.hv2__rtag {
+  min-width: 9.5ch;
+  color: var(--cyan-400);
+}
+.hv2__pane .hv2__rtag {
+  min-width: 8ch;
+}
+.hv2__chev {
+  width: 0;
+  height: 0;
+  align-self: center;
+  border-left: 5px solid var(--amber-500);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+.hv2__rtext {
+  overflow: hidden;
+  text-overflow: clip;
+}
+.hv2__ok {
+  width: 5px;
+  height: 9px;
+  align-self: center;
+  margin-left: 4px;
+  border-right: 2px solid var(--amber-400);
+  border-bottom: 2px solid var(--amber-400);
+  transform: rotate(40deg) translateY(-2px);
+}
+.hv2__caret {
+  width: 8px;
+  height: 1.05em;
+  align-self: center;
+  background: var(--amber-500);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
+  animation: hv2-blink 1s steps(1) infinite;
+}
+@keyframes hv2-blink {
+  50% { opacity: 0; }
+}
+
+/* ---------- Scroll beat: caption strip and the scroll cue ---------- */
+.hv2__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--inset) + var(--bar-h) + 30px);
+  width: fit-content;
+  margin-inline: auto;
+  padding: 12px 22px;
+  border: 1px solid var(--line-2);
+  background: rgba(10, 11, 13, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 0.8125rem;
+  letter-spacing: 0.22em;
+  color: var(--t-1);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+}
+.hv2__caption b {
+  font-weight: var(--w-regular);
+  color: var(--amber-400);
+}
+
+.hv2__cue {
+  position: absolute;
+  right: calc(var(--inset) + var(--gut));
+  bottom: calc(var(--inset) + var(--bar-h) + 18px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  color: var(--t-3);
+}
+.hv2__cue-line {
+  position: relative;
+  width: 56px;
+  height: 1px;
+  background: var(--line-3);
+  overflow: hidden;
+}
+.hv2__cue-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 18px;
+  background: var(--amber-500);
+  animation: hv2-scan 1.8s var(--e-in-out) infinite;
+}
+@keyframes hv2-scan {
+  from { transform: translateX(-20px); }
+  to { transform: translateX(60px); }
+}
+
+/* ---------- Bottom status bar ---------- */
+.hv2__bar {
+  position: absolute;
+  left: var(--inset);
+  right: var(--inset);
+  bottom: var(--inset);
+  height: var(--bar-h);
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  padding: 0 var(--gut) 0 20px;
+  border-top: 1px solid var(--line-1);
+  background: linear-gradient(0deg, rgba(7, 8, 10, 0.78), rgba(7, 8, 10, 0));
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  color: var(--t-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.hv2__cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.hv2__cell b {
+  font-weight: var(--w-medium);
+  color: var(--t-1);
+}
+.hv2__cell em {
+  font-style: normal;
+  color: var(--t-3);
+}
+.hv2__cell--end {
+  margin-left: auto;
+  color: var(--t-1);
+}
+.hv2__cell--live b {
+  color: var(--amber-400);
+}
+
+/* ---------- Entrance (after the boot): CSS only, keyed on data-entered; the final state is the resting state ----------
+   The panels wipe in with clip-path, and nothing else: the scroll beat tweens their opacity and transform, and a tween
+   that binds while an entrance animates opacity or transform would capture the entrance's first frame as its start. */
+.hv2[data-entered] .hv2__frame {
+  animation: hv2-open 1.2s var(--e-out) backwards;
+}
+.hv2[data-entered] .hv2__bar {
+  animation: hv2-wipe-x 1s var(--e-out) 0.1s backwards;
+}
+.hv2[data-entered] .hv2__eyebrow {
+  animation: hv2-left 0.9s var(--e-out) 0.2s backwards;
+}
+.hv2[data-entered] .hv2__ch {
+  animation: hv2-char 1.1s var(--e-out) backwards;
+  animation-delay: calc(0.3s + var(--i) * 0.04s);
+}
+.hv2[data-entered] .hv2__tag span {
+  animation: hv2-word 0.9s var(--e-out) backwards;
+}
+.hv2[data-entered] .hv2__tag span:first-child { animation-delay: 0.85s; }
+.hv2[data-entered] .hv2__tag span:last-child { animation-delay: 0.98s; }
+.hv2[data-entered] .hv2__console {
+  animation: hv2-wipe-up 0.9s var(--e-out) 1.1s backwards;
+}
+.hv2[data-entered] .hv2__pane {
+  animation: hv2-wipe-left 0.9s var(--e-out) 1.3s backwards;
+}
+.hv2[data-entered] .hv2__badge {
+  animation: hv2-wipe-left 0.9s var(--e-out) 1.2s backwards;
+}
+.hv2[data-entered] .hv2__cue {
+  animation: hv2-wipe-x 0.8s ease 1.7s backwards;
+}
+
+@keyframes hv2-open { from { clip-path: inset(50% 50% 50% 50%); } }
+@keyframes hv2-wipe-x { from { clip-path: inset(0 100% 0 0); } }
+@keyframes hv2-wipe-up { from { clip-path: inset(100% 0 0 0); } }
+@keyframes hv2-wipe-left { from { clip-path: inset(0 0 0 100%); } }
+@keyframes hv2-left { from { opacity: 0; transform: translateX(-24px); } }
+@keyframes hv2-char { from { opacity: 0; transform: translateY(115%) rotate(6deg); } }
+@keyframes hv2-word { from { opacity: 0; transform: translateY(70%); } }
+
+/* Short laptop screens: a smaller name and a shorter console, so the headline never meets it. */
+@media (min-width: 901px) and (max-height: 820px) {
+  .hv2__name { font-size: min(6.7vw, 11vh); }
+  .hv2__console .hv2__term-body { height: calc(5 * 1.55em + 24px); }
+  .hv2__copy { padding-bottom: 96px; }
+  .hv2__pane .hv2__term-body { height: calc(7 * 1.55em + 24px); }
+}
+
+/* ---------- Narrow screens: headline above, avatar in the lower 60 %, compact console, no badge or pane ---------- */
+@media (max-width: 1100px) {
+  .hv2__pane { display: none; }
+  .hv2__copy { width: min(46vw, 520px); }
+  .hv2__console { width: min(44vw, 440px); }
+  .hv2__cell--mid { display: none; }
+
+  /* The operator stands further left here, so the badge shrinks to photo and name to stay clear of his face. */
+  .hv2__badge { --d: 64px; gap: 12px; padding: 10px 14px 10px 10px; }
+  .hv2__badge-meta { gap: 3px; }
+  .hv2__badge-meta span:nth-child(3), .hv2__badge-links { display: none; }
+}
+
+@media (max-width: 900px) {
+  .hv2__ruler, .hv2__reg { display: none; }
+  .hv2__cell--wide { display: none; }
+
+  .hv2__copy {
+    bottom: auto;
+    justify-content: flex-start;
+    padding: calc(var(--top) + 14px) 0 0;
+    width: calc(100% - 2 * (var(--inset) + var(--gut)));
+  }
+  .hv2__eyebrow { font-size: 0.625rem; margin-bottom: 12px; max-width: 30ch; }
+  .hv2__name { font-size: clamp(2.6rem, 14.5vw, 4.4rem); }
+  .hv2__tag { font-size: clamp(1.1rem, 5.2vw, 1.5rem); margin-top: 12px; }
+
+  .hv2__badge {
+    --d: 56px;
+    top: auto;
+    bottom: calc(var(--inset) + var(--bar-h) + 150px);
+    padding: 8px 12px 8px 8px;
+    gap: 10px;
+  }
+  .hv2__badge-meta { font-size: 0.5625rem; gap: 3px; }
+  .hv2__badge-meta b { font-size: 0.6875rem; }
+  .hv2__badge-meta span:nth-child(3), .hv2__badge-links { display: none; }
+
+  .hv2__console {
+    left: calc(var(--inset) + 12px);
+    right: calc(var(--inset) + 12px);
+    bottom: calc(var(--inset) + var(--bar-h) + 10px);
+    width: auto;
+    min-width: 0;
+    font-size: 0.6875rem;
+  }
+  .hv2__console .hv2__term-body { height: calc(4 * 1.55em + 18px); padding: 8px 12px 10px; }
+  .hv2__term-meta { display: none; }
+  .hv2__cue { display: none; }
+
+  .hv2__caption {
+    bottom: calc(var(--inset) + var(--bar-h) + 24px);
+    max-width: calc(100% - 40px);
+    padding: 10px 14px;
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 700px) {
+  .hv2__badge { display: none; }
+}
+
+@media (max-width: 520px) {
+  .hv2__bar { gap: 14px; padding: 0 14px; font-size: 0.5625rem; letter-spacing: 0.08em; }
+  .hv2__badge { display: none; }
+  .hv2__console { font-size: 0.625rem; }
+  .hv2__rtag { min-width: 8ch; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hv2__dot--amber, .hv2__badge-live, .hv2__caret, .hv2__cue-line::after { animation: none !important; }
+  .hv2__canvas { transition: none; }
+}

@@ -18,7 +18,7 @@ export class ThreeBoundary extends Component<ThreeBoundaryProps, ThreeBoundarySt
   }
 
   componentDidCatch(error: unknown): void {
-    if (import.meta.env.DEV) console.warn('3D hero failed, using the SVG', error);
+    if (import.meta.env.DEV) console.warn('3D scene failed, using the fallback', error);
     this.props.onError();
   }
 
