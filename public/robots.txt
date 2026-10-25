@@ -1,6 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /models/
-Disallow: /draco/
 
-Sitemap: /sitemap.xml
+Sitemap: https://harshalsaraogi.com/sitemap.xml

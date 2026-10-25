@@ -1,176 +1,64 @@
-# 3D Portfolio Website
+# harshalsaraogi.com
 
-This repository contains the source code for a personal 3D portfolio built with React, TypeScript, Three.js, React Three Fiber, and GSAP. It includes animated page sections, a character scene, custom cursor interactions, and smooth transitions designed for a modern portfolio experience.
+Personal site of Harshal Saraogi, an AI-native builder and Product Manager open to Forward Deployed Engineer roles. Live site: [https://harshalsaraogi.com](https://harshalsaraogi.com).
 
-Live site: [https://letshackit.netlify.app/](https://letshackit.netlify.app/)
+The page is built as a "mission control" console: a hero pipeline (seven stages, from research to deploy) with moving packets, a stepper, deployment cards, an interactive TravelDesk architecture diagram, capabilities, history, recognition and contact. One page, no backend, no analytics, no cookies.
 
-![Portfolio Preview](public/images/preview1.png)
+## Stack
 
-## Table of Contents
+- React 18 and TypeScript (strict), built with Vite.
+- Plain CSS with design tokens (`src/styles/tokens.css`); no CSS framework.
+- React Three Fiber and Three.js for the 3D hero on capable desktops, loaded as a separate chunk. Phones, reduced-motion visitors and browsers without WebGL get the SVG version.
+- GSAP, loaded only when motion is allowed.
+- Geist and Geist Mono, self-hosted in `public/fonts`.
+- Vitest and Testing Library for unit and DOM tests.
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Available Scripts](#available-scripts)
-- [GSAP License Note](#gsap-license-note)
-- [Customization Guide](#customization-guide)
-- [Troubleshooting](#troubleshooting)
-- [Deployment](#deployment)
-- [License](#license)
+## Getting started
 
-## Features
-
-- Responsive one-page portfolio layout with reusable section components.
-- 3D character scene rendering powered by React Three Fiber and Three.js.
-- GSAP-powered animations and transitions for interactive storytelling.
-- Custom cursor, hover interactions, and scroll-driven visual effects.
-- Organized component architecture with dedicated utilities and style modules.
-
-## Tech Stack
-
-### Core
-
-- React 18
-- TypeScript
-- Vite
-
-### Animation and 3D
-
-- GSAP + `@gsap/react`
-- Three.js
-- `@react-three/fiber`
-- `@react-three/drei`
-- `@react-three/postprocessing`
-- `@react-three/cannon`
-- `@react-three/rapier`
-
-### Supporting Libraries
-
-- `react-icons`
-- `react-fast-marquee`
-- `@vercel/analytics`
-
-## Project Structure
-
-```text
-.
-├── public/                    # Static assets
-├── src/
-│   ├── assets/                # Local media/assets
-│   ├── components/
-│   │   ├── Character/         # 3D scene + character logic/utilities
-│   │   ├── styles/            # Section/component CSS files
-│   │   ├── About.tsx
-│   │   ├── Career.tsx
-│   │   ├── Contact.tsx
-│   │   ├── Landing.tsx
-│   │   ├── MainContainer.tsx  # Main page composition
-│   │   ├── Navbar.tsx
-│   │   ├── TechStack.tsx
-│   │   ├── WhatIDo.tsx
-│   │   └── Work.tsx
-│   ├── context/               # Global providers (loading state, etc.)
-│   ├── data/                  # Static data/content definitions
-│   ├── App.tsx
-│   └── main.tsx
-├── package.json
-└── vite.config.ts
+```sh
+npm install
+npm run dev        # http://localhost:5173
 ```
 
-## Getting Started
+## Scripts
 
-### Prerequisites
+| Script | What it does |
+|---|---|
+| `npm run dev` | Vite dev server. |
+| `npm run lint` | ESLint. |
+| `npm run typecheck` | `tsc -b`. |
+| `npm run build` | Type-check and production build into `dist/`. |
+| `npm test` | Vitest, once. |
+| `npm run budgets` | Gzip size budgets on `dist/` (`scripts/check-budgets.mjs`). |
+| `npm run sitemap` | Writes `sitemap.xml` (one address, today as `lastmod`) into `public/` and `dist/`. |
+| `npm run check:confidential` | Launch gate: scans `src/`, `scripts/`, `index.html`, `public/` and `dist/` for confidential strings, the retired host name and tracker or secret patterns. The résumé PDF is excluded by owner decision. Add `--launch` (`sh scripts/check-confidential.sh --launch`) to also fail while the architecture is still proposed. |
+| `npm run verify` | Lint, type-check, build, sitemap, budgets and the confidentiality check, in that order. |
+| `npm run lighthouse` | Builds to a scratch folder, serves it with `vite preview` and runs Lighthouse (mobile). Needs Chrome. Reports go to `.sdlc/reports/`. The local score is a proxy; judge on the live URL. |
+| `sh scripts/make-og.sh` | Re-renders `public/og-image.png` (from `scripts/og-image.svg`) and `public/apple-touch-icon.png` with headless Chrome. Only needed when the artwork changes. |
 
-- Node.js 18+ (recommended)
-- npm 9+ (or compatible)
+## Editing the content
 
-### Installation
+All copy lives in one typed file, `src/data/content.ts`, written from the résumé. Every number on the site must also appear in the résumé. The `<title>`, meta description, Open Graph tags, JSON-LD and the `<noscript>` text in `index.html` are kept in step with it by hand.
 
-1. Clone the repository:
+The résumé PDF is `public/Harshal_Saraogi_Resume.pdf` and ships exactly as supplied.
 
-   ```bash
-   git clone https://github.com/letshackit/3d-portfolio.git
-   cd 3d-portfolio
-   ```
+## The "service names proposed" banner
 
-2. Install dependencies:
+The résumé gives the TravelDesk counts (a front end, a gateway, 16 domain services, 3 live and 2 Phase-2 integrations) but not the service names or the connections. The names in `src/data/traveldesk-architecture.ts` are a proposal derived from the résumé's scope list, and while `status: 'proposed'` the architecture section shows an amber banner: "SERVICE NAMES PROPOSED — PENDING CONFIRMATION". See `.sdlc/01-adr/ADR-005-proposed-traveldesk-service-decomposition.md`.
 
-   ```bash
-   npm install
-   ```
+To confirm: edit the node names and edges in that file to match the real system, set `status: 'confirmed'`, and run `sh scripts/check-confidential.sh --launch`. The banner disappears and the launch gate passes. The layout adapts to any node count.
 
-3. Start the local development server:
+## Deploy
 
-   ```bash
-   npm run dev
-   ```
+The site is the static `dist/` folder, so any static host works.
 
-4. Open the URL shown in the terminal (typically `http://localhost:5173`).
+1. `npm run verify` (and `npm test`).
+2. Deploy `dist/`. `public/_headers` carries the security and cache headers for Netlify and Cloudflare Pages (use `vercel.json` `headers` on Vercel). `public/404.html` is served with a 404 status for unknown paths; do not add a single-page-app rewrite, because the site has one route.
+3. On the host: point `harshalsaraogi.com` at it, enable HTTPS, and redirect `www` to the apex.
+4. Run Lighthouse (mobile) against the live URL. Targets: Performance 90, Accessibility 95, Best Practices 95, SEO 100.
 
-## Available Scripts
+Deploying is a human action; nothing in this repository deploys itself.
 
-- `npm run dev`  
-  Starts Vite dev server and exposes host for local network testing.
+## Licence
 
-- `npm run build`  
-  Type-checks and builds a production-ready bundle.
-
-- `npm run preview`  
-  Serves the production build locally for verification.
-
-- `npm run lint`  
-  Runs ESLint checks across the project.
-
-## GSAP License Note
-
-This project uses the standard `gsap` package, including bonus plugins now available in the core package.
-
-- Install dependencies with `npm install`.
-- If migrating from older setups, remove `gsap-trial` from your project.
-
-Read official installation guidance here: [GSAP Installation Docs](https://gsap.com/docs/v3/Installation/)
-
-## Customization Guide
-
-You can adapt this portfolio to your own profile by updating the following areas:
-
-- **Content sections**: Edit files in `src/components/` such as `About.tsx`, `Career.tsx`, `WhatIDo.tsx`, and `Work.tsx`.
-- **Data source**: Update static values in files under `src/data/`.
-- **Styling**: Modify component styles in `src/components/styles/` and global styles in `src/index.css` / `src/App.css`.
-- **3D scene behavior**: Adjust scene logic in `src/components/Character/` and related utilities.
-- **Animations**: Tweak GSAP utilities under `src/components/utils/`.
-
-## Troubleshooting
-
-- **Blank screen in development**  
-  Check browser console for module import errors and verify all dependencies are installed.
-
-- **3D performance issues on low-end devices**  
-  Reduce scene complexity and post-processing effects in the character/scene utilities.
-
-- **GSAP plugin errors**  
-  Ensure you have the correct plugin package and license configuration for your target environment.
-
-- **TypeScript build failures**  
-  Run `npm run build` and address reported type errors before deploying.
-
-## Deployment
-
-1. Create a production build:
-
-   ```bash
-   npm run build
-   ```
-
-2. Validate locally:
-
-   ```bash
-   npm run preview
-   ```
-
-3. Deploy the generated `dist/` folder to your hosting provider (for example Vercel, Netlify, or Cloudflare Pages).
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
+See `LICENSE`.
