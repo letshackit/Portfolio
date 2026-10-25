@@ -24,8 +24,10 @@ const ui: UiContextValue = {
   showToast: () => undefined,
 };
 
+let layoutCallback: (() => void) | undefined;
+
 function Probe() {
-  useMotion();
+  useMotion(true, layoutCallback);
   return null;
 }
 
@@ -58,6 +60,17 @@ describe('useMotion loading (ADR-007)', () => {
     mount({ ...defaultPrefs, reducedMotion: false });
     await flushFrames();
     expect(startMotion).toHaveBeenCalledTimes(1);
+  });
+
+  it('forwards layout refreshes to the caller (hash landing is redone once pins settle)', async () => {
+    const onLayout = vi.fn();
+    layoutCallback = onLayout;
+    mount({ ...defaultPrefs, reducedMotion: false });
+    await flushFrames();
+    const options = (startMotion.mock.calls as unknown as [{ onLayout: () => void }][])[0]?.[0];
+    options?.onLayout();
+    layoutCallback = undefined;
+    expect(onLayout).toHaveBeenCalledTimes(1);
   });
 
   it('disposes on unmount', async () => {

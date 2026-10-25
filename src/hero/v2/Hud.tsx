@@ -1,5 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { ANCHORS } from '../../config';
 import { content } from '../../data/content';
+import { onAnchorClick } from '../../lib/scroll';
 import { ExternalLink } from '../../ui/ExternalLink';
 import { AGENT_COUNT, CAPTION, EYEBROW, firstName, lastName, SERVICE_COUNT, TAGLINE_A, TAGLINE_B } from './copy';
 import { store } from './store';
@@ -19,7 +21,7 @@ function Chars({ text, offset = 0 }: { text: string; offset?: number }) {
 
 /** Eyebrow, the name, and the one line that says what he is. The name is the only h1. */
 export function Headline({ headingId }: { headingId: string }) {
-  const { hero } = content;
+  const { hero, contact } = content;
   return (
     <div className="hv2__copy">
       <p className="hv2__eyebrow">
@@ -39,6 +41,14 @@ export function Headline({ headingId }: { headingId: string }) {
         <span>{TAGLINE_A}</span>
         <span>{TAGLINE_B}</span>
       </p>
+      <div className="hv2__cta">
+        <a className="hv2__btn" href={`#${ANCHORS.deployments}`} onClick={onAnchorClick}>
+          {hero.primaryCta} <span aria-hidden="true">↓</span>
+        </a>
+        <a className="hv2__btn" href={contact.resumePath} download={contact.resumeFileName}>
+          {hero.secondaryCta}
+        </a>
+      </div>
       <p className="visually-hidden">
         {hero.headline} {hero.subline}
       </p>

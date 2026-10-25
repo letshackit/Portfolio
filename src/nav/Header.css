@@ -24,9 +24,11 @@
   inset: 0 0 auto 0;
   z-index: 50;
   height: var(--header-h);
-  background: color-mix(in srgb, var(--g-0) 85%, transparent);
-  backdrop-filter: blur(8px);
-  border-bottom: var(--hairline);
+  /* Glass over the hero stage, matching its HUD panels: dark tint, blur, cyan hairline. */
+  background: linear-gradient(180deg, rgba(7, 8, 10, 0.66), rgba(7, 8, 10, 0.4));
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  backdrop-filter: blur(14px) saturate(1.15);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.16);
 }
 
 .site-header__inner {
@@ -115,6 +117,18 @@
   padding: 0 var(--s-3);
 }
 
+/* Hairline glass buttons, like the HUD panels. */
+.site-header .site-header__btn {
+  background: rgba(10, 11, 13, 0.35);
+  border-color: var(--line-2);
+  font-family: var(--font-mono);
+}
+
+.site-header .site-header__btn:hover {
+  background: var(--fill-cyan);
+  border-color: var(--line-3);
+}
+
 .site-header__shortcut {
   display: none;
 }
@@ -147,7 +161,8 @@
   box-shadow: inset 2px 0 0 var(--cyan-500);
 }
 
-@media (min-width: 768px) {
+/* The name shows where the menu button stands in for the links, and again once the links have room beside it. */
+@media (min-width: 380px) and (max-width: 899px), (min-width: 1180px) {
   .site-header__name {
     display: inline;
   }
@@ -164,6 +179,11 @@
 
   .site-header .site-header__menu-btn {
     display: none;
+  }
+
+  /* Slim glass bar: fine pointers get a shorter palette button (the 44 px tap size stays below 900 px). */
+  .site-header .site-header__btn {
+    min-height: 34px;
   }
 
   .site-header__shortcut {

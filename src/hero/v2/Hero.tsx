@@ -67,18 +67,19 @@ export function Hero() {
     store.reduced = reducedMotion;
   }, [reducedMotion]);
 
-  // The boot ends when App stamps data-entered on this section (it owns the boot screen).
+  // Whether the boot is about to lift: App stamps data-warm on this section a little before the fade, so the canvas can
+  // mount behind it, and data-entered when the fade begins (it owns the boot screen).
+  const [warm, setWarm] = useState(false);
   useEffect(() => {
     const el = rootRef.current;
     if (entered || !el) return;
-    if (el.hasAttribute('data-entered')) {
-      setEntered(true);
-      return;
-    }
-    const observer = new MutationObserver(() => {
+    const read = () => {
+      if (el.hasAttribute('data-warm')) setWarm(true);
       if (el.hasAttribute('data-entered')) setEntered(true);
-    });
-    observer.observe(el, { attributes: true, attributeFilter: ['data-entered'] });
+    };
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(el, { attributes: true, attributeFilter: ['data-warm', 'data-entered'] });
     return () => observer.disconnect();
   }, [entered]);
 
@@ -126,20 +127,20 @@ export function Hero() {
     };
   }, [reducedMotion]);
 
-  // Lights on once he is standing there; reduced motion gets the lit scene straight away.
+  // Lights on once he is standing there and the boot has lifted; reduced motion gets the lit scene straight away.
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !entered) return;
     if (reducedMotion) {
       store.intro = 1;
       return;
     }
     return rampIntro(1400);
-  }, [ready, reducedMotion]);
+  }, [ready, entered, reducedMotion]);
 
   const onReady = useCallback(() => setReady(true), []);
   const onFail = useCallback(() => setFailed(true), []);
 
-  const mount = Stage !== null && entered && !settled;
+  const mount = Stage !== null && (entered || warm) && !settled;
   const stageState = !mount ? 'off' : ready ? 'ready' : 'loading';
   const live = mount && ready && !reducedMotion;
   const terminal = { instant: reducedMotion, active: entered, paused };

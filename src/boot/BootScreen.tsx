@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { content } from '../data/content';
+import { TAGLINE_A, TAGLINE_B } from '../hero/v2/copy';
 import { markBooted } from '../lib/session';
 import { bootSchedule, FADE_MS, isModifierOnly, TAG_TEXT } from './bootTimeline';
 import './BootScreen.css';
@@ -11,10 +12,12 @@ interface BootScreenProps {
   readonly onDone: () => void;
   /** Called once, the moment the fade begins, so the page beneath can start its entrance. */
   readonly onEnding?: () => void;
+  /** Called once, a little before the fade, so the page beneath can start mounting its 3D stage. */
+  readonly onStage?: () => void;
 }
 
 /** First-visit boot log (FR-15..FR-23, ADR-008). Ends by timeout, Skip, any key, click or tap. */
-export function BootScreen({ onDone, onEnding }: BootScreenProps) {
+export function BootScreen({ onDone, onEnding, onStage }: BootScreenProps) {
   const lines = content.boot;
   const [phase, setPhase] = useState<Phase>('running');
   const [shown, setShown] = useState(1);
@@ -25,11 +28,20 @@ export function BootScreen({ onDone, onEnding }: BootScreenProps) {
   const skipRef = useRef<HTMLButtonElement>(null);
   const onDoneRef = useRef(onDone);
   const onEndingRef = useRef(onEnding);
+  const onStageRef = useRef(onStage);
+  const stagedRef = useRef(false);
 
   useEffect(() => {
     onDoneRef.current = onDone;
     onEndingRef.current = onEnding;
-  }, [onDone, onEnding]);
+    onStageRef.current = onStage;
+  }, [onDone, onEnding, onStage]);
+
+  const stage = useCallback(() => {
+    if (stagedRef.current) return;
+    stagedRef.current = true;
+    onStageRef.current?.();
+  }, []);
 
   const end = useCallback(() => {
     if (phaseRef.current === 'ending') return;
@@ -37,9 +49,10 @@ export function BootScreen({ onDone, onEnding }: BootScreenProps) {
     for (const id of timers.current) window.clearTimeout(id);
     timers.current = [window.setTimeout(() => onDoneRef.current(), FADE_MS)];
     markBooted();
+    stage();
     onEndingRef.current?.();
     setPhase('ending');
-  }, []);
+  }, [stage]);
 
   useEffect(() => {
     const schedule = bootSchedule(lines.length);
@@ -49,6 +62,7 @@ export function BootScreen({ onDone, onEnding }: BootScreenProps) {
     });
     schedule.resolve.forEach((ms, i) => at(ms, () => setResolved(i + 1)));
     at(schedule.headline, () => setHeadline(true));
+    at(schedule.stage, stage);
     at(schedule.ending, end);
 
     document.body.classList.add('is-booting');
@@ -71,7 +85,7 @@ export function BootScreen({ onDone, onEnding }: BootScreenProps) {
       window.removeEventListener('pointerdown', end);
       window.removeEventListener('touchstart', end);
     };
-  }, [lines.length, end]);
+  }, [lines.length, end, stage]);
 
   return (
     <div
@@ -109,8 +123,10 @@ export function BootScreen({ onDone, onEnding }: BootScreenProps) {
           })}
         </ol>
         <div className="boot__echo" data-on={headline || undefined} aria-hidden="true">
-          <p className="mono-label">{content.hero.eyebrow}</p>
-          <p className="boot__display">{content.hero.headline}</p>
+          <p className="boot__name">{content.meta.name.toUpperCase()}</p>
+          <p className="boot__display">
+            {TAGLINE_A} <span>{TAGLINE_B}</span>
+          </p>
         </div>
       </div>
     </div>

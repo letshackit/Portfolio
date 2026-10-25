@@ -35,6 +35,16 @@ describe('hero v2, with no 3D (jsdom has no WebGL)', () => {
     expect(container.querySelector('section')).toHaveAccessibleName(content.meta.name);
   });
 
+  it('has the two quiet CTAs under the tagline: deployments anchor and the résumé', () => {
+    mockMedia(() => false);
+    const { container } = renderHero();
+    const cta = container.querySelector('.hv2__cta') as HTMLElement;
+    expect(within(cta).getByRole('link', { name: /See deployments/ })).toHaveAttribute('href', '#deployments');
+    const resume = within(cta).getByRole('link', { name: 'Download résumé' });
+    expect(resume).toHaveAttribute('href', content.contact.resumePath);
+    expect(resume).toHaveAttribute('download', content.contact.resumeFileName);
+  });
+
   it('renders every piece of copy at once: eyebrow, tagline, caption, badge, status bar', () => {
     mockMedia(() => false);
     const { container } = renderHero();

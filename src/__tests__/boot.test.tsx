@@ -6,11 +6,13 @@ import { bootSchedule } from '../boot/bootTimeline';
 import { content } from '../data/content';
 
 describe('boot schedule', () => {
-  it('ends within 2 s, prints the headline before the fade, and spaces lines', () => {
+  it('ends within 1.2 s, prints the headline before the fade, and spaces lines', () => {
     const schedule = bootSchedule(content.boot.length);
-    expect(schedule.done).toBeLessThanOrEqual(2000);
+    expect(schedule.done).toBeLessThanOrEqual(1200);
     expect(schedule.headline).toBeLessThan(schedule.ending);
     expect(schedule.ending).toBeLessThan(schedule.done);
+    expect(schedule.stage).toBeGreaterThan(schedule.headline);
+    expect(schedule.stage).toBeLessThan(schedule.ending);
     expect(schedule.appear).toHaveLength(content.boot.length);
     expect(schedule.appear[schedule.appear.length - 1]).toBeLessThan(schedule.headline);
   });
@@ -32,22 +34,50 @@ describe('BootScreen', () => {
     expect(document.body).toHaveClass('is-booting');
   });
 
-  it('prints the headline as its last line, not as a heading', () => {
+  it('prints the name and the tagline as its last lines, not as a heading', () => {
     const { container } = render(<BootScreen onDone={() => undefined} />);
     act(() => {
-      vi.advanceTimersByTime(1100);
+      vi.advanceTimersByTime(700);
     });
     const echo = container.querySelector('.boot__echo');
     expect(echo).toHaveAttribute('aria-hidden', 'true');
-    expect(echo).toHaveTextContent(content.hero.headline);
+    expect(echo).toHaveTextContent('HARSHAL SARAOGI');
+    expect(echo).toHaveTextContent('Forward-deployed. I build what I spec.');
     expect(screen.queryByRole('heading')).toBeNull();
   });
 
-  it('finishes by itself at 1.7 s and records the session', () => {
+  it('lets the page start its 3D stage 300 ms before the fade, once', () => {
+    const onStage = vi.fn();
+    const onEnding = vi.fn();
+    render(<BootScreen onDone={() => undefined} onStage={onStage} onEnding={onEnding} />);
+    act(() => {
+      vi.advanceTimersByTime(699);
+    });
+    expect(onStage).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(2);
+    });
+    expect(onStage).toHaveBeenCalledTimes(1);
+    expect(onEnding).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(onEnding).toHaveBeenCalledTimes(1);
+    expect(onStage).toHaveBeenCalledTimes(1);
+  });
+
+  it('a skip before the stage point still releases the stage', () => {
+    const onStage = vi.fn();
+    render(<BootScreen onDone={() => undefined} onStage={onStage} />);
+    fireEvent.keyDown(window, { key: 'a' });
+    expect(onStage).toHaveBeenCalledTimes(1);
+  });
+
+  it('finishes by itself at 1.2 s and records the session', () => {
     const onDone = vi.fn();
     const view = render(<BootScreen onDone={onDone} />);
     act(() => {
-      vi.advanceTimersByTime(1699);
+      vi.advanceTimersByTime(1199);
     });
     expect(onDone).not.toHaveBeenCalled();
     act(() => {

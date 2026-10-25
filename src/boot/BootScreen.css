@@ -140,13 +140,25 @@ body.is-booting .site-header {
   transition: opacity var(--d-base) var(--e-out);
 }
 
-.boot__display {
-  max-width: var(--measure-hero);
+.boot__name {
   color: var(--t-1);
-  font-size: var(--fs-display);
+  font-size: clamp(2rem, 1rem + 5vw, 4.5rem);
   font-weight: var(--w-semibold);
-  line-height: var(--lh-display);
-  letter-spacing: var(--ls-display);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.boot__display {
+  color: var(--t-1);
+  font-size: clamp(1.15rem, 0.8rem + 1.6vw, 2rem);
+  font-weight: var(--w-medium);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.boot__display span {
+  display: block;
+  color: var(--amber-400);
 }
 
 @media (min-width: 768px) {

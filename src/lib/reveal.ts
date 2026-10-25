@@ -23,6 +23,8 @@ export function revealProps(kind: RevealKind): { readonly 'data-reveal': RevealK
 export interface MotionOptions {
   /** Return false to stop the smoother from scrolling a focused element into view (palette open). */
   readonly allowFocusScroll: () => boolean;
+  /** Called after every ScrollTrigger refresh: pins and fonts have moved the sections, so a hash landing may need redoing. */
+  readonly onLayout?: () => void;
 }
 
 export interface MotionHandle {
@@ -34,13 +36,15 @@ export interface MotionHandle {
  * dispose first, when reduced motion, the desktop breakpoint or the pointer type changes (ADR-007).
  * Failure to load leaves a fully visible static page.
  */
-export function useMotion(enabled = true): void {
+export function useMotion(enabled = true, onLayout?: () => void): void {
   const { reducedMotion, isDesktop, pointerFine } = usePrefs();
   const { paletteOpen } = useUi();
   const paletteOpenRef = useRef(paletteOpen);
+  const onLayoutRef = useRef(onLayout);
   useEffect(() => {
     paletteOpenRef.current = paletteOpen;
-  }, [paletteOpen]);
+    onLayoutRef.current = onLayout;
+  }, [paletteOpen, onLayout]);
 
   useEffect(() => {
     if (reducedMotion || !enabled) return;
@@ -50,7 +54,10 @@ export function useMotion(enabled = true): void {
       import('./motion')
         .then((mod) => {
           if (disposed) return;
-          handle = mod.startMotion({ allowFocusScroll: () => !paletteOpenRef.current && !isProgrammaticFocus() });
+          handle = mod.startMotion({
+            allowFocusScroll: () => !paletteOpenRef.current && !isProgrammaticFocus(),
+            onLayout: () => onLayoutRef.current?.(),
+          });
         })
         .catch(() => {
           // The chunk failed to load: the page stays static and readable (FR-7).

@@ -41,8 +41,8 @@ export const BUDGET = {
 
 /** Timing constants in milliseconds. */
 export const TIMING = {
-  bootTotal: 1700,
-  bootHeadlinePrint: 1050,
+  bootTotal: 1200,
+  bootHeadlinePrint: 600,
   toastVisible: 2400,
   threeLoadTimeout: 8000,
   tooltipDelay: 60,

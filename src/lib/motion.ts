@@ -92,7 +92,7 @@ function bindReveals(duration: number): void {
 }
 
 /**
- * Keeps ScrollTrigger (pins, reveals) and ScrollSmoother measuring the real page. Lazy images, the 3D chunks swapping in,
+ * Keeps ScrollTrigger (pins, reveals) and ScrollSmoother measuring the real page. Lazy images, the 3D stages swapping in,
  * expanding cards and late fonts all change the height of #main after the first refresh; each distinct change schedules
  * one debounced refresh. Comparing heights keeps the refresh from re-triggering itself through the pin spacers.
  */
@@ -119,10 +119,16 @@ function watchLayout(isLive: () => boolean): () => void {
         })
       : null;
   if (main) observer?.observe(main);
+  // The hero's 3D stage arriving (data-stage: off, loading, ready) is a mount like the images: measure again once it settles.
+  const hero = document.querySelector('.hv2');
+  const stageObserver =
+    hero && typeof MutationObserver !== 'undefined' ? new MutationObserver(schedule) : null;
+  if (hero) stageObserver?.observe(hero, { attributes: true, attributeFilter: ['data-stage'] });
   return () => {
     window.clearTimeout(timer);
     document.removeEventListener('load', onImageLoad, true);
     observer?.disconnect();
+    stageObserver?.disconnect();
   };
 }
 
@@ -154,11 +160,14 @@ export function startMotion(options: MotionOptions): MotionHandle {
   if ('fonts' in document) void document.fonts.ready.then(onFontsReady);
   window.addEventListener('load', onFontsReady, { once: true });
   const stopWatching = watchLayout(() => live);
+  const onRefresh = () => options.onLayout?.();
+  ScrollTrigger.addEventListener('refresh', onRefresh);
 
   return {
     dispose() {
       live = false;
       stopWatching();
+      ScrollTrigger.removeEventListener('refresh', onRefresh);
       window.removeEventListener('load', onFontsReady);
       unbindHero();
       ctx.revert();
