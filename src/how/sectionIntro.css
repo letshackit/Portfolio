@@ -1,0 +1,133 @@
+/*
+ * Shared staging for "How I work" and "Deployments" (visual direction v2): the section sits inside the same dark,
+ * foggy, schematic world as the hero. Colours come from the token ramp through color-mix, never as literals.
+ * Only transform and opacity animate; the fog is one compositor layer that drifts very slowly.
+ */
+.stage-world {
+  --glass-fill: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--t-1) 7%, transparent) 0%,
+    color-mix(in srgb, var(--t-1) 2%, transparent) 38%,
+    color-mix(in srgb, var(--g-0) 62%, transparent) 100%
+  );
+  --glass-edge: color-mix(in srgb, var(--t-1) 10%, transparent);
+  --glass-hi: inset 0 1px 0 color-mix(in srgb, var(--t-1) 12%, transparent);
+  --glass-drop: 0 40px 90px -40px color-mix(in srgb, black 90%, transparent);
+  --glow-cyan: color-mix(in srgb, var(--cyan-500) 22%, transparent);
+  --glow-amber: color-mix(in srgb, var(--amber-500) 20%, transparent);
+  --deep: color-mix(in srgb, var(--g-0) 55%, black);
+
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+  background: linear-gradient(to bottom, transparent 0, var(--deep) 14%, var(--deep) 86%, transparent 100%);
+}
+
+.stage-world::before,
+.stage-world::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Fog: two slow radial washes, cyan high-left and amber low-right. */
+.stage-world::before {
+  inset: -10% -20%;
+  background:
+    radial-gradient(ellipse 45% 38% at 18% 22%, var(--glow-cyan), transparent 70%),
+    radial-gradient(ellipse 40% 34% at 84% 78%, var(--glow-amber), transparent 70%),
+    radial-gradient(ellipse 60% 30% at 50% 50%, color-mix(in srgb, var(--t-1) 3%, transparent), transparent 70%);
+  animation: stage-fog 26s ease-in-out infinite alternate;
+}
+
+/* Local schematic grid, brighter than the page grid and faded at the edges. */
+.stage-world::after {
+  background-image:
+    linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px);
+  background-size: var(--grid-cell-major) var(--grid-cell-major);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, var(--mask-solid) 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, var(--mask-solid) 20%, transparent 100%);
+  opacity: 0.55;
+}
+
+@keyframes stage-fog {
+  from {
+    transform: translate3d(-2%, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(2%, -1.5%, 0) scale(1.06);
+  }
+}
+
+/* Section intro: eyebrow, display title, lead. */
+.section-intro {
+  display: grid;
+  gap: var(--s-4);
+  margin-bottom: var(--s-7);
+}
+
+.section-intro__lead {
+  max-width: 46ch;
+}
+
+.split-title {
+  max-width: 13ch;
+  font-size: clamp(2.75rem, 1.15rem + 7.2vw, 7rem);
+  font-weight: var(--w-semibold);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.split-title:focus-visible {
+  outline-offset: var(--s-2);
+}
+
+.split-title__word {
+  display: inline-block;
+  white-space: nowrap;
+  /* A mask for the rising characters; the padding keeps descenders and tight leading unclipped. */
+  overflow: hidden;
+  padding: 0.08em 0.04em 0.16em;
+  margin: -0.08em -0.04em -0.16em;
+  vertical-align: top;
+}
+
+.split-title__ch {
+  display: inline-block;
+}
+
+.split-title__ch[data-accent] {
+  color: var(--cyan-500);
+}
+
+.split-title[data-armed] .split-title__ch {
+  transform: translate3d(0, 108%, 0) rotate(4deg);
+  opacity: 0;
+}
+
+.split-title[data-in] .split-title__ch {
+  transform: none;
+  opacity: 1;
+  transition:
+    transform 900ms var(--e-out),
+    opacity 500ms var(--e-out);
+  transition-delay: calc(var(--i) * 34ms);
+}
+
+.fade-up[data-armed] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+}
+
+.fade-up[data-in] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 800ms var(--e-out) 350ms,
+    transform 800ms var(--e-out) 350ms;
+}

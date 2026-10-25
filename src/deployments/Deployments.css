@@ -1,103 +1,384 @@
-/* Deployments (B.7.3): stacked below 1024, TravelDesk full width then a 2-up grid from 1024. */
+/*
+ * Deployments: five glass cards. One column below 1024; from 1024 TravelDesk (the flagship) spans the full width and the
+ * rest sit in two staggered columns. Reveal is y + blur, tilt is a lerped perspective transform, expand animates height.
+ */
 .deploy-grid {
   display: grid;
-  gap: var(--s-4);
+  gap: var(--s-5);
   align-items: start;
+  perspective: 1400px;
 }
 
 .deploy-card {
+  position: relative;
+}
+
+/* Reveal on scroll: armed before first paint by useReveal, released once in view. */
+.deploy-card[data-armed] {
+  opacity: 0;
+  transform: translate3d(0, 56px, 0);
+  filter: blur(14px);
+  will-change: transform, opacity, filter;
+}
+
+.deploy-card[data-in] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    opacity 900ms var(--e-out) calc(var(--col) * 140ms),
+    transform 1100ms var(--e-out) calc(var(--col) * 140ms),
+    filter 900ms var(--e-out) calc(var(--col) * 140ms);
+}
+
+.deploy-card__tilt {
+  position: relative;
   display: grid;
-  gap: var(--s-4);
+  gap: var(--s-5);
   padding: var(--s-5);
-  background: var(--surface);
-  border: var(--hairline);
-  border-radius: var(--r-2);
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+  border-radius: 18px;
+  box-shadow: var(--glass-hi), var(--glass-drop);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  backdrop-filter: blur(16px) saturate(1.25);
+  transform-style: flat;
+  transition: border-color var(--d-slow) var(--e-out);
 }
 
-.deploy-card:hover {
-  background: var(--surface-raised);
-  border-color: var(--line-3);
+.deploy-card:hover .deploy-card__tilt,
+.deploy-card:focus-within .deploy-card__tilt {
+  border-color: var(--line-2);
 }
 
-.deploy-card__head {
+/* Corner ticks, dim until the card is hovered or focused. */
+.deploy-card .corner-ticks::before,
+.deploy-card .corner-ticks::after {
+  opacity: 0.4;
+  transition: opacity var(--d-slow) var(--e-out);
+  border-radius: inherit;
+}
+
+.deploy-card:hover .corner-ticks::before,
+.deploy-card:hover .corner-ticks::after,
+.deploy-card:focus-within .corner-ticks::before,
+.deploy-card:focus-within .corner-ticks::after,
+.deploy-card--primary .corner-ticks::before,
+.deploy-card--primary .corner-ticks::after {
+  opacity: 1;
+}
+
+/* Edge glow: a cyan comet circling the 1px border. The ring is a mask; only the inner layer rotates (transform). */
+.deploy-card__edge {
+  position: absolute;
+  inset: -1px;
+  padding: 1px;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--d-slow) var(--e-out);
+  -webkit-mask:
+    linear-gradient(var(--mask-solid) 0 0) content-box,
+    linear-gradient(var(--mask-solid) 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(var(--mask-solid) 0 0) content-box exclude,
+    linear-gradient(var(--mask-solid) 0 0);
+}
+
+.deploy-card__edge::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(160%, 1400px);
+  aspect-ratio: 1;
+  margin: calc(max(160%, 1400px) / -2) 0 0 calc(max(160%, 1400px) / -2);
+  background: conic-gradient(from 0deg, transparent 0 62%, var(--cyan-500) 82%, var(--cyan-400) 88%, transparent 90% 100%);
+  animation: deploy-edge 5200ms linear infinite;
+  animation-play-state: paused;
+}
+
+.deploy-card:hover .deploy-card__edge,
+.deploy-card:focus-within .deploy-card__edge {
+  opacity: 0.9;
+}
+
+.deploy-card:hover .deploy-card__edge::before,
+.deploy-card:focus-within .deploy-card__edge::before {
+  animation-play-state: running;
+}
+
+@keyframes deploy-edge {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Glare follows the pointer (useTilt moves the orb). */
+.deploy-card__glare {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--d-slow) var(--e-out);
+}
+
+.deploy-card:hover .deploy-card__glare {
+  opacity: 1;
+}
+
+.deploy-card__orb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70%;
+  aspect-ratio: 1;
+  margin: -35% 0 0 -35%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--cyan-400) 14%, transparent), transparent 62%);
+}
+
+.deploy-card__top {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.deploy-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--t-1);
+}
+
+.deploy-card__status[data-live] {
+  color: var(--amber-400);
+}
+
+.deploy-card__no {
+  color: var(--t-3);
+}
+
+.deploy-card__main {
+  display: grid;
+  gap: var(--s-5);
+  align-items: center;
+}
+
+.deploy-card__copy {
+  display: grid;
   gap: var(--s-4);
+  align-content: start;
+}
+
+.deploy-card__title {
+  font-size: clamp(2.25rem, 1.2rem + 3.6vw, 4rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.deploy-card--primary .deploy-card__title {
+  font-size: clamp(2.75rem, 1.2rem + 6.4vw, 6rem);
+}
+
+.deploy-card__desc {
+  max-width: 46ch;
+  font-size: var(--fs-lead);
+  line-height: var(--lh-lead);
+  color: var(--t-2);
 }
 
 .deploy-card__chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s-2) var(--s-2);
+  gap: var(--s-2);
 }
 
+/* Metrics: a hairline grid. Inner lines come from li shadows clipped by the list's own overflow. */
 .deploy-card__metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(var(--metric-min), 1fr));
-  gap: var(--s-4) var(--s-5);
-  padding-top: var(--s-4);
-  border-top: var(--hairline);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  border: var(--hairline);
+  border-radius: var(--r-3);
+  background: color-mix(in srgb, var(--g-0) 45%, transparent);
+}
+
+.deploy-card__metrics li {
+  display: grid;
+  align-content: start;
+  padding: var(--s-4);
+  box-shadow:
+    -1px 0 0 var(--line-1),
+    0 -1px 0 var(--line-1);
+}
+
+.deploy-card__metric {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.deploy-card__metrics .mono-metric {
+  font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  color: var(--cyan-400);
+  font-variant-numeric: tabular-nums;
+}
+
+.deploy-card__metrics .mono-caption {
+  color: var(--t-2);
 }
 
 .deploy-card__actions {
-  display: grid;
-  gap: var(--s-3);
-  justify-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-5);
 }
 
-.deploy-card__actions .btn--secondary {
-  justify-self: stretch;
-  justify-content: center;
+.deploy-card__toggle {
+  border-color: var(--line-2);
+  background: color-mix(in srgb, var(--cyan-500) 5%, transparent);
 }
 
-.deploy-card__actions .btn[aria-expanded="true"] .icon {
+.deploy-card__toggle .icon {
+  transition: rotate var(--d-slow) var(--e-out);
+}
+
+.deploy-card__toggle[aria-expanded="true"] .icon {
   rotate: 180deg;
 }
 
+/* Expand: the region is a one-row grid whose row animates 0fr to 1fr. Content never reflows while it opens. */
 .deploy-card__details {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 520ms var(--e-in-out),
+    opacity 360ms var(--e-out);
+}
+
+.deploy-card__details[hidden] {
+  display: none;
+}
+
+.deploy-card__details[data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.deploy-card__details-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.deploy-card__details .bullets {
   padding-top: var(--s-4);
+  margin-top: var(--s-2);
   border-top: var(--hairline);
 }
 
+/* TravelDesk glyph: 18 nodes light in sequence once the card has revealed. */
+.td-glyph {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  justify-self: center;
+}
+
+.td-glyph__lines path {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 1;
+  opacity: 0.35;
+  transition:
+    opacity 900ms var(--e-out),
+    stroke 900ms var(--e-out);
+}
+
+.td-glyph[data-lit] .td-glyph__lines path {
+  opacity: 1;
+}
+
+.td-glyph__node {
+  fill: var(--bg);
+  stroke: var(--cyan-600);
+  stroke-width: 1.2;
+  opacity: 0.55;
+}
+
+.td-glyph[data-lit] .td-glyph__node {
+  fill: var(--cyan-500);
+  stroke: var(--cyan-400);
+  opacity: 1;
+  transition:
+    fill 380ms var(--e-out),
+    opacity 380ms var(--e-out);
+  transition-delay: calc(var(--i) * 85ms);
+}
+
+.td-glyph__packet {
+  fill: var(--amber-400);
+  filter: drop-shadow(0 0 4px var(--amber-500));
+}
+
 @media (min-width: 768px) {
-  .deploy-grid {
-    gap: var(--s-5);
+  .deploy-card__tilt {
+    padding: var(--s-6);
   }
 
-  .deploy-card {
-    padding: var(--s-5);
-  }
-
-  .deploy-card__actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--s-4);
-  }
-
-  .deploy-card__actions .btn--secondary {
-    justify-self: auto;
+  .deploy-card__metrics .mono-metric {
+    font-size: clamp(1.5rem, 1.1rem + 1.2vw, 2.125rem);
   }
 }
 
 @media (min-width: 1024px) {
   .deploy-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-6);
   }
 
   .deploy-card--primary {
     grid-column: 1 / -1;
   }
 
+  .deploy-card--primary .deploy-card__tilt {
+    padding: var(--s-7);
+  }
+
+  .deploy-card--primary .deploy-card__main {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: var(--s-7);
+  }
+
   .deploy-card--primary .deploy-card__metrics {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+
+  .deploy-card--primary .deploy-card__metrics .mono-metric {
+    font-size: clamp(2rem, 1.2rem + 2vw, 3rem);
+  }
+
+  /* Masonry-ish: the right-hand column sits lower than the left. */
+  .deploy-card:nth-child(odd):not(:first-child) {
+    margin-top: var(--s-9);
+  }
+
+  .deploy-card:nth-child(even) {
+    margin-top: 0;
+  }
 }
 
-@media (min-width: 1280px) {
-  .deploy-card {
-    padding: var(--s-6);
+@media (prefers-reduced-motion: reduce) {
+  .deploy-card[data-armed] {
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
 }

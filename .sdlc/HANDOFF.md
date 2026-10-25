@@ -666,3 +666,8 @@ npm test -> Test Files 13 passed (13), Tests 107 passed (107)
 ```
 **Known gaps / shortcuts:** Neither fix was driven in a browser by me (no Playwright run of r3resize.mjs or the 360 screenshot). No new unit tests for the focus counter. CSS order changes visual order only; screen readers still read title then dates. S9-AC11 still fails by design.
 **Next agent must verify:** r3resize flow keeps focus on contact-heading after resize to 700; hero stage click still focuses tab (1280) and list item (<768); arrow keys still move focus; history at 360 shows dates above title, 768/1280 unchanged.
+
+### [v2] how-deploy re-skin (src/how/**, src/deployments/**)
+- New global-ish CSS classes `.stage-world`, `.split-title`, `.fade-up`, `.section-intro` live in src/how/sectionIntro.css (shared by both sections; color-mix over tokens, no literals). Other sections can reuse `SectionIntro` from src/how/SplitTitle.tsx.
+- How I work journey needs ScrollSmoother present first (journeyMotion waits up to 10 s); tabpanel is one `role=tabpanel` viewport (pipelineStepper tests rely on it). `<header>` must not be used inside sections (landmark test).
+- Not installed: @react-three/drei (neither section needs 3D). Not verified: Safari, real GPU, touch devices.
