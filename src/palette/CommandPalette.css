@@ -6,7 +6,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: var(--s-2);
+  padding: 0;
   background: color-mix(in srgb, var(--g-0) 60%, transparent);
 }
 
@@ -14,10 +14,10 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-height: calc(100svh - var(--s-4));
+  max-height: 100svh;
   background: var(--surface);
   border: var(--rule);
-  border-radius: var(--r-3);
+  border-radius: 0 0 var(--r-3) var(--r-3);
   box-shadow: 0 var(--s-4) var(--s-8) var(--shadow-float);
 }
 
@@ -29,6 +29,7 @@
   .palette {
     width: min(560px, 100% - var(--s-4));
     max-height: 70vh;
+    border-radius: var(--r-3);
   }
 }
 

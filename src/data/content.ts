@@ -136,7 +136,7 @@ export const content: SiteContent = {
         summary: 'Market and vendor study before anything is scoped.',
         artifact:
           'HRMS market study across 12+ vendors (Keka, greytHR, ZingHR, Zoho, Rippling, HiBob, BambooHR, Deel), benchmarked against Workday, Darwinbox and the incumbent enterprise HRIS.',
-        numbers: ['12+'],
+        numbers: [{ value: '12+', label: 'vendors studied' }],
       },
       {
         id: 'prd',
@@ -146,7 +146,11 @@ export const content: SiteContent = {
         summary: 'The full requirement set, written before build.',
         artifact:
           'TravelDesk 116-page master PRD: travel requests, multi-level approvals, booking coordination, expense claims, OCR receipt capture, policy validation, reimbursement workflow, notifications, admin controls. Also the HRMS 461-page, 13-module PRD.',
-        numbers: ['116', '461', '13'],
+        numbers: [
+          { value: '116', label: 'pages, TravelDesk PRD' },
+          { value: '461', label: 'pages, HRMS PRD' },
+          { value: '13', label: 'modules, HRMS PRD' },
+        ],
       },
       {
         id: 'ux',
@@ -166,7 +170,10 @@ export const content: SiteContent = {
         summary: 'A working prototype is the alignment artifact, not a slide deck.',
         artifact:
           'Cloud Commerce: 8-module working Node.js prototype built in Cursor within 3 months. It became the reference design for the SAP-to-cloud migration.',
-        numbers: ['8', '3 months'],
+        numbers: [
+          { value: '8', label: 'modules in the prototype' },
+          { value: '3', label: 'months to build it' },
+        ],
       },
       {
         id: 'jira-confluence',
@@ -176,7 +183,11 @@ export const content: SiteContent = {
         summary: 'Work broken into stories a team can pick up.',
         artifact:
           'TravelDesk: about 94 source stories consolidated into 56 Jira-ready stories across 10 epics, with Confluence specs.',
-        numbers: ['94', '56', '10'],
+        numbers: [
+          { value: '94', label: 'source stories' },
+          { value: '56', label: 'Jira-ready stories' },
+          { value: '10', label: 'epics' },
+        ],
       },
       {
         id: 'qa-uat',
@@ -196,7 +207,10 @@ export const content: SiteContent = {
         summary: 'Ship it, then hand it to a team.',
         artifact:
           'TravelDesk MVP built and deployed solo, now led by a six-engineer team (2 backend, 2 frontend, 2 QA). BSS: about 60% of the build delivered personally, from local dev to deployment, before hiring the team.',
-        numbers: ['6', '2', '60%'],
+        numbers: [
+          { value: '6', label: 'engineers led: 2 backend, 2 frontend, 2 QA' },
+          { value: '60%', label: 'of the BSS build delivered personally' },
+        ],
       },
     ],
   },

@@ -54,6 +54,11 @@ export interface BootLine {
   readonly text: string;
 }
 
+export interface StageNumber {
+  readonly value: string;
+  readonly label: string;
+}
+
 export interface PipelineStage {
   readonly id: string;
   readonly index: number;
@@ -62,8 +67,8 @@ export interface PipelineStage {
   readonly shortLabel: string;
   readonly summary: string;
   readonly artifact: string;
-  /** Numbers that appear in the artifact text, shown as chips. */
-  readonly numbers: readonly string[];
+  /** Figures that appear in the artifact text, each with a caption saying what it counts. */
+  readonly numbers: readonly StageNumber[];
 }
 
 export interface HowIWorkContent {

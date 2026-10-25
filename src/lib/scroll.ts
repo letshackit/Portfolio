@@ -29,6 +29,12 @@ const FOCUS_DELAY_MS = 30;
 let smoother: SmootherHandle | null = null;
 let refreshHook: (() => void) | null = null;
 let lockCount = 0;
+let focusingProgrammatically = false;
+
+/** True while scrollToAnchor moves focus itself, so ScrollSmoother does not re-centre the heading it just placed (S5-AC23). */
+export function isProgrammaticFocus(): boolean {
+  return focusingProgrammatically;
+}
 
 export function getMode(): ScrollMode {
   return smoother ? 'smoother' : 'native';
@@ -135,7 +141,12 @@ export async function scrollToAnchor(id: AnchorId, options: ScrollOptions = {}):
     const target = focusTarget(id);
     if (target) {
       if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
-      target.focus({ preventScroll: true });
+      focusingProgrammatically = true;
+      try {
+        target.focus({ preventScroll: true });
+      } finally {
+        focusingProgrammatically = false;
+      }
     }
   }
 }

@@ -454,3 +454,159 @@ planted via sh scripts/check-confidential.sh <dir> (scratch dir, removed): "a b.
 ```
 **Known gaps / shortcuts:** axe/Lighthouse were NOT re-run (axe is not installed here); the label fixes follow the reviewer's DOM experiment and the WCAG rule but are unverified in a browser. The brand's accessible name is now "HS Harshal Saraogi" (monogram included). Base64 and other encodings are still not caught by the gate. A scan target path with a space still exits 2 (only files inside are NUL-safe). Review m-1, m-2, m-4 deferred.
 **Next agent must verify:** axe 4.14 or Lighthouse mobile shows 0 label-content-name-mismatch at 360 and 1280; the palette test and any screen-reader reading of the brand link are acceptable; owner confirmed token revoked and repo private.
+
+### 2026-10-25T11:29Z — security-auditor (round 3)
+**Did:** Security audit round 3 of revamp/mission-control against main (HEAD a50b0ae; `git status --short` empty, so no uncommitted files). Re-verified every round-2 finding in code. Reviewed:
+- the round-2 rework commit in full
+- the CSP and its fit with the build, _headers, 404.html, every `_blank` and `window.open`
+- the clipboard, sessionStorage, `location.hash` and onAnchorClick paths
+- leftover crypto code, git history (all refs), the committed .sdlc files
+
+`git diff 9488101 a50b0ae` is empty for vite.config.ts, package.json, the lockfile, index.html, public/, src/lib, src/palette and src/ui. Re-probed the dev server on loopback only and stopped it afterwards. Tested the gate with 31 planted cases in the scratchpad, then removed them. Did not edit source.
+**Artifacts:** .sdlc/05-security-audit-3.md
+**Verdict:** APPROVE WITH CHANGES. CRITICAL 0, HIGH 0, MEDIUM 2 (both owner actions, carried over), LOW 2, INFO 5.
+**Key decisions:**
+- Round-2 L-1, L-2, L-3 and I-5 are FIXED, each confirmed by a planted case that now exits 1. M-1 and M-2 are still open and are owner-only.
+- New L-1: the gate is blind to compressed or encoded files. Proof: the shipped résumé names the vendor 4 times, yet raw-byte grep finds 0 hits (13 FlateDecode streams). A planted compressed case-study.pdf naming the vendor exits 0. So any future PDF dropped into public/ is effectively unscanned. Base64, UTF-16, .gz, fromCharCode and `&ZeroWidthSpace;` are also missed.
+- The dev-dependency advisories are re-classified with titles. The 8 vite GHSAs are Windows, launch-editor, `.map`-only or custom-middleware issues, none reachable here.
+**Verification run:**
+```
+npm audit --omit=dev -> found 0 vulnerabilities (exit 0)
+npm audit -> 17 vulnerabilities (1 low, 5 moderate, 9 high, 2 critical), exit 1; critical = tinypool, vitest (direct); high incl. vite 5.4.21 (direct, 8 GHSAs); npm ls --omit=dev --all -> none of the flagged packages
+sh scripts/check-confidential.sh -> 5 PASS, WARN architecture status is 'proposed', check-confidential: OK, exit 0 (0.46s)
+npx vite build --outDir <scratchpad>/build-security-3 -> built in 950ms; 20 files, 0 .map, 0 dotfiles; index.html: 1 module script + 1 modulepreload + ld+json; no eval/new Function/Worker/WebSocket/sendBeacon/XMLHttpRequest/document.cookie/localStorage in assets
+sh scripts/check-confidential.sh <build-security-3> -> OK, exit 0 (resume PDF not path-exempt here and still passes: compressed text is invisible)
+planted matrix (scratchpad/confgate3, removed):
+  exit 1: vendor joined, author, author reversed, vendor in "a b.md", {'A'}{' '}{'B'}, 'A'+'B', ["A","B"],  , &#32;, /* */, Cyrillic homoglyph, github_pat_, AIza, sk-ant-, xoxb-, ghp_, AKIA, OPENSSH PEM, .DS_Store, <span> line split, SVG <text> split, gtag(, look-alike Harshal_Saraogi_Resume.pdf.txt
+  exit 0 (missed): Flate-compressed PDF, atob(base64), UTF-16 file, .js.gz, String.fromCharCode, &ZeroWidthSpace;
+  exit 0 (correct): two clean controls; nonexistent path -> 2; dir with space -> 2
+raw-byte check of public/Harshal_Saraogi_Resume.pdf: literal vendor hits 0, FlateDecode streams 13, decompressible 13
+npx vite --host 127.0.0.1 --port 5894: /.git/config, ?raw, .GIT, %2egit, /@fs<repo>/.git/config, /.sdlc/HANDOFF.md, testimonials.md?import&raw, /.SDLC -> 403; /, /.git/config/.., /.git%2fconfig -> 200 SPA index, 0 token lines; killed, curl -> 000
+git config --get remote.origin.url -> still https://letshackit:gho_…@github.com/letshackit/Portfolio.git (prefix only); credential.helper osxkeychain
+git log --all -p token-format grep -> 0 real secrets (hits = PEM header text in audit tables, "sk-" inside "desk-" words)
+git grep decrypt|encrypt|crypto.subtle|.enc|draco|.glb|gltf (non-.sdlc, non-lockfile) -> 0; git ls-files crypto/asset files -> 0
+grep _blank src index.html public -> ExternalLink.tsx:15 rel="noopener noreferrer"; commands.ts:98 window.open(...,'noopener,noreferrer') only
+grep dangerouslySetInnerHTML|innerHTML|outerHTML|insertAdjacentHTML|document.write|eval(|new Function|javascript: (non-test src, index.html, 404.html) -> 0
+emails/phones in src index.html public scripts README -> owner's own only (content.ts:541-543, index.html:43-44,74)
+npx vitest run -> Test Files 13 passed (13), Tests 107 passed (107)
+```
+**Must fix before the PR gate:**
+- *Owner, not code (carried over, pre-push):*
+  - (M-1) revoke the gho_ token, then `git remote set-url origin https://github.com/letshackit/Portfolio.git`
+  - (M-2) confirm github.com/letshackit/Portfolio is private, or replace both confidential names in .sdlc/ with placeholders
+- *Implementer, recommended (LOW, not blocking):*
+  - (L-1) scripts/check-confidential.sh: fail on any .pdf, .docx or .gz under the scan targets other than the exact résumé path, or keep an allow-list of shipped file types in public/. Also decode HTML named entities beyond nbsp/shy/zwj/zwnj (:64).
+  - (L-2) `npm audit fix`, then Vite 6.4.4+/7 with Vitest 3.2.6+, in a step that may run installs
+  - (I-5) print file:line only for the secrets scan, so a caught secret is not echoed into build logs (:40)
+**Known gaps / shortcuts:**
+- Made no network calls, so token liveness, token scope and repo visibility are unverified.
+- Did not open a browser to watch for runtime CSP violations; the CSP check is static, against the scratch build.
+- Did not test from a second LAN machine.
+- Did not run npm audit fix (installs not allowed in this step).
+- The vite advisory reachability is judged from advisory titles and this config, not by reproducing each one.
+**Next agent must verify:**
+- orchestrator: put M-1 and M-2 to the owner as pre-push actions. Do not loop the implementer on them.
+- If the implementer takes L-1: plant a Flate-compressed PDF that names the vendor into a scratch dir and run `sh scripts/check-confidential.sh <dir>`. It must exit 1. `sh scripts/check-confidential.sh` on the repo must still exit 0 with the résumé present. Remove the planted file afterwards.
+
+### 2026-10-25T11:38Z — code-reviewer (round 3)
+**Verdict:** BLOCK
+**Artifacts:** .sdlc/05-review-3.md
+**Did:** Reviewed `git diff main...HEAD` (0c81e60..a50b0ae). I read the round-2 rework commit line by line and re-read the runtime-critical modules in full. The working tree had no uncommitted source; only the parallel security auditor's .sdlc files were uncommitted. I checked every review-1 and review-2 finding against the code and at runtime. Then I built to scratchpad/build-review3, served it with vite preview :4299 (stopped afterwards), and drove headless Chrome over CDP (r2.mjs, plus new r3csp.mjs and r3resize.mjs). I ran axe-core 4.14 from the npx cache, with nothing installed. I tested the confidentiality gate end to end on a scratch mirror of its default targets, then deleted the mirror. I did not edit source, dist/ or public/.
+**Verification run:**
+```
+npm run verify -> exit 0 (eslint . no output; tsc -b no output; vite build 882 ms; sitemap; budgets PASS NFR-5 126.8/300, NFR-6 211.2/400, NFR-8 184.6/1024, FR-141 1692.9/5120 kB, entry 24.9 kB gz; check-confidential 5 PASS + WARN proposed, "OK")
+npx vitest run -> Test Files 13 passed (13), Tests 107 passed (107)
+axe 4.14: 360 reduce/motion -> no violations; 1280 reduce/motion -> label-content-name-mismatch x1 (palette button "Open command palette (CMD K)"); DOM experiment "Open command palette, CMD K" -> no violations
+CDP 1280 motion: arch link -> focus architecture-heading, wrapper 0; proof link -> deployments-heading; Back to top 9932 -> 0, focus top-heading; menu-button 899 flex / 900 none / 1280 none (R1 fixes hold)
+CDP header Deployments: smoother section top 220 (heading 376) vs native 56 (212) -> R2 m-1 still present
+CDP timing: three-*.js + Pipeline3D-*.js start 81 ms (boot ~1700 ms); Ctrl+K in boot -> palette open, focus page-start after boot
+CDP CSP/console over full scroll (1280 motion with 3D+smoother, 360 motion, 1280 reduce) -> 0 securitypolicyviolation, 0 console errors/warnings, 0 exceptions
+CDP resize: hero stage 3 -> header Contact (focus contact-heading) -> resize to 700 -> focus stepper-list__item top=-8831
+Gate, mirror of default targets, vendor name as string literal in dist/assets/index-*.js -> "PASS ... 0 matches", exit 0; same mirror minus the 8 png/woff2 -> FAIL, exit 1
+perl -CSD on each png/woff2 alone -> "Malformed UTF-8 character (fatal)", exit 255 (8/8); real find order: first binary is file 11/149, 131 text files never name-scanned (all dist/assets/*.js, dist/index.html, most of src/)
+Gate on text-only dir: name inside /** */ -> missed; same text in // comment -> caught
+grep vendor|author over src scripts index.html public dist README (PDF excluded) -> only scripts/check-confidential.sh
+```
+**Blockers (1):** B-1. `scripts/check-confidential.sh:55` `perl -CSD` dies on the first PNG or WOFF2, and every later file in the same xargs batch goes unscanned. As a result, `npm run build` / `npm run verify` report PASS on build output that contains the vendor name. In the same rewrite, `:67` deletes block-comment contents, so a name inside `/* */` is never seen. Both were introduced in a50b0ae. Today's tree is clean by manual grep, so nothing has leaked; the guard is broken.
+**Majors:** none.
+**Minors (2 new + carried):** m-1: the palette button still fails axe 4.14 label-in-name, because axe strips "(CMD K)" from the name. m-2: Stepper focus is driven by state, not intent. Focus jumps to an off-screen stage after a resize or zoom across 768 px; this is the same cause as the R1 re-select MINOR. Carried and unchanged (blanket-deferred in round 2): smoother centring, the weak onAnchorClick test, the 3D chunk loading during the boot, Ctrl+K during the boot, strings outside content.ts, no nav landmark below 900 px, the repeated toast, and gsap.context (PLAUSIBLE).
+**Known gaps / shortcuts (this review):** No Safari or Firefox. No real-GPU watchdog or context-loss drill (SwiftShader only). Lighthouse not run: lighthouse@12.2.1 is not cached and I avoided network installs, so whether its axe flags m-1 is unverified. The gsap.context finding is still PLAUSIBLE. `npm run verify` rewrote dist/ and public/sitemap.xml (same date, no git diff).
+**Next agent (implementer, to fix B-1, ideally m-1 and m-2; then code-reviewer round 4) must verify:**
+- On a scratch mirror of the default targets (`cp -R src scripts index.html public dist <mirror>/`), plant the vendor name as a string literal in `<mirror>/dist/assets/index-*.js`. `sh <mirror>/scripts/check-confidential.sh` must exit 1 with the PNGs and WOFF2s present.
+- In a text-only scratch dir, `/** … <vendor name> … */` must exit 1.
+- The real tree must still exit 0, with the résumé PDF still exempt.
+- axe 4.14 at 1280 shows 0 label-content-name-mismatch.
+- After hero stage 3 → header Contact → resize to 700, focus stays on contact-heading.
+
+### 2026-10-25T12:05Z — ux-reviewer (round 1)
+**Verdict:** APPROVE WITH CHANGES. 0 blockers, 2 majors, 10 minors.
+**Inspected:** the running built site in headless Chrome (puppeteer-core) with axe-core 4.14, at 360, 768, 1280 and 1600, in both motion modes. Not a source-only review. SwiftShader stands in for a GPU. No Safari, Firefox or real device.
+**Artifacts:** .sdlc/06-ux-review-1.md, screenshots in .sdlc/reports/ux-r1/. No application source was edited.
+**Verification run:**
+```
+npx vite build --outDir <scratchpad>/build-ux1 -> built; vite preview :4411 (stopped afterwards)
+axe 4.14 wcag2a/aa/21aa/22aa + best-practice, 8 runs -> 0 violations
+scrollWidth == clientWidth at 360/768/1280/1600, reduce and no-preference
+interactive elements < 44x44 at 360, 768, 1280 -> none
+computed text contrast: min 4.83:1; focus ring 2px solid cyan-400
+reduced motion: no running animations, no motion/three chunk requested; three chunk blocked -> SVG stays, no error text; clipboard blocked -> address shown + "Write an email"
+```
+**Majors:** M-1 history dates not paired with their roles (TimelineEntry.tsx). M-2 stepper artifact metrics are bare numbers with no captions.
+**Known gaps / shortcuts:** the ten-second test was not run with people. 3D look and speed are unverified (software GL). Cursor reticle, mid-visit reduced-motion toggle and 200 % zoom were not tested.
+**Next agent must verify:** the M-1 and M-2 fixes at 360 and 1280; hero stage nodes fully in the fold at 1280×800; the banner copy and colour change; that the owner sets `status: 'confirmed'` and the build gate passes.
+
+### 2026-10-25T12:03Z — qa-engineer (round 1)
+**Verdict:** FAIL (no BLOCKER; 1 MAJOR; 5 MINOR). 107 of 120 ACs PASS, 5 FAIL, 8 PARTIAL/UNVERIFIED.
+**Artifacts:** .sdlc/06-qa-report.md
+**Did:** Built and served dist/ with `vite preview --port 4411`, drove it with Playwright (playwright-core installed in the scratchpad, not the repo) on the system Chrome at 360x640, 768x1024, 1280x800, 1600x900, motion and reduced motion. Covered boot (timing, skip, any key, click, session, reduced, hash), skip link, a 120-stop keyboard walk, hero stage buttons (hover/focus/click), stepper keys, deployments, architecture (hover, focus, Escape, touch tap), palette (all 11 commands, filter, keys, trap, scroll lock, copy, blocked clipboard, download, LinkedIn), mobile menu, copy-email toast, 3D swap CLS and 1 px sampling, WebGL off / chunk blocked / chunk throws / context lost, motion chunk blocked, JS disabled, axe at 4 widths, Lighthouse 12.2.1. Did not edit source.
+**Verification run:**
+```
+npm run build -> exit 0 (check-confidential: 5 PASS, WARN architecture 'proposed', OK)
+npm test -> Test Files 13 passed (13), Tests 107 passed (107)
+npm run verify -> exit 0; budgets PASS NFR-5 126.8/300, NFR-6 211.2/400, NFR-8 184.6/1024, FR-141 1692.9/5120 kB
+axe (wcag2a/aa/21/22aa/best-practice): 360 and 768 -> 0 violations; 1280 and 1600, motion and reduced -> label-content-name-mismatch serious x1 (palette button) in 4 of 4
+Lighthouse 12.2.1 mobile local preview x2 -> 100/100/100/100; FCP 1.2 s, LCP 1.7 s, CLS 0.005, TBT 10/0 ms; desktop preset 100 x4
+360 first load transferSize sum 190,244 B; layout-shift over a full scroll: 1280 0.0044, 360 0
+boot duration: default Chrome 1706/1710 ms; cold swiftshader flags 3387-3443 ms (4 of 4)
+smoother landing: header links top 220/221/221 px, hero link 220, palette 56, hash reload 56
+check-confidential.sh: planted split and plain vendor in scratch src -> exit 1; --launch -> exit 1 (proposed)
+```
+**Bugs:** BUG-1 MAJOR (palette button label-content-name-mismatch at >= 1280, fails S8-AC4). MINOR: BUG-2 (smoother link landing 220 vs 56; fails S5-AC23), BUG-3 (outline: none at src/app/Shell.css:3; fails S1-AC14 literal), BUG-4 (palette 344 of 360 px; fails S5-AC24 literal), BUG-5 (boot 3.4 s on cold software-GL start; S5-AC2 passes on default Chrome), BUG-6 (stage buttons shift 1 px at SVG to 3D swap).
+**Known gaps / shortcuts:** Chrome only, SwiftShader WebGL, no real touch device, no Firefox/Safari. Hidden-tab pause tested by overriding visibilityState. 200% zoom emulated with a 640x400 viewport. Contrast computed ad hoc (the repo has no contrast script). Live-URL checks, flash analysis, WCAG manual checks, ten-second test not done. Review-3 m-2 (focus after resize) not retested. The dist/ folder was rewritten by verify and build (no source diff). A UX reviewer wrote .sdlc/06-ux-review-1.md in parallel; I did not read or touch it.
+**Next agent (implementer, to fix; then qa-engineer round 2) must verify:**
+- BUG-1: axe at 1280 and 1600 shows 0 serious (try aria-label "Open command palette, CMD K").
+- BUG-2: at 1280 with motion, real-click header Deployments lands the section top at 56 px like the palette; focus on heading.
+- BUG-3/BUG-4: decide fix or amend the ACs (owner call), then re-grep `outline: none` and re-measure palette width at 360.
+- BUG-5: cold start with `--use-angle=swiftshader` flags, boot <= 2 s; ideally also on a real GPU.
+- BUG-6: stage button x unchanged across the swap.
+- Owner: confirm architecture status (Q-1) and OG/favicon approval (A-6) before the launch gate; run Lighthouse and Rich Results on the live URL; test Firefox and Safari.
+
+### 2026-10-25T12:11Z — implementer (QA/UX rework round 1)
+**Story:** STORY-001..009 (QA round 1 BUG-1..6, S9-AC11; UX round 1 M-1, M-2)
+**Did (item -> fix, file:line):**
+- BUG-1: palette button label now "Open command palette, CMD K" (comma, not parentheses) -> src/nav/Header.tsx:84. axe 4.14 at 1280, 1600, 768, 360: 0 violations.
+- BUG-2: the cause was not the scroll position. ScrollSmoother's onFocusIn re-centred the heading when scrollToAnchor focused it (the palette escaped only because paletteOpenRef was still true). scroll.ts now raises a flag around its own focus() call (src/lib/scroll.ts:35 isProgrammaticFocus, :144 set/clear), and reveal.ts:53 refuses focus-scroll while it is set. Real clicks at 1280 with smoother: header Deployments 56 px, header History 56 px, palette 56 px (was 220/221/56). Tab-driven focus scroll is unchanged.
+- BUG-3: removed outline: none. The sentinel is now 0x0 with overflow hidden (src/app/Shell.css:2-6) and :focus sets outline-width: 0 (Shell.css:8-10). The literal grep for "outline: none" is clean, but a reviewer may still read outline-width: 0 as the same thing (see gaps).
+- BUG-4: palette backdrop padding 0 and square top corners on narrow screens (src/palette/CommandPalette.css:9, :17-20; radius restored at 768+ at :32). Measured at 360: x 0, width 360.
+- BUG-5: two causes. (a) The 3D probe (supportsWebGL, 1.5 s on SwiftShader) ran during the boot because the boot adds its body class after PipelineFrame's effect; PipelineFrame now waits one task, then for body.is-booting to clear (src/hero/PipelineFrame.tsx:23-37, used at :40). (b) The page under the boot is no longer painted: visibility hidden on #smooth-wrapper and the header while booting (src/boot/BootScreen.css:8-11). Cold launch with --use-angle=swiftshader: boot 1.9 s and 1.7 s (was 3.4 s); default Chrome 1.7 s.
+- BUG-6: Scene.tsx now anchors the rest pose to the SVG percentages and adds only the tilt delta (src/hero/three/Scene.tsx:110-121). Stage button x/y identical to 2 dp before and after the swap at 1280 (121.55,896.73 ... 1114.44,896.73, svg then 3d).
+- S9-AC11: NOT changed. It is an owner action: set status 'confirmed' in src/data/traveldesk-architecture.ts:67 after confirming the 16 service names, and approve OG image and favicon. check-confidential --launch still exits 1 by design.
+- UX M-1: each role is now one unit, h3 plus its own dates paragraph (src/history/TimelineEntry.tsx:8-20). At 768+ the dates stay in the left column on the same row as the title through CSS subgrid (src/history/History.css:117-145); at 360 the dates sit under the title. Verified by screenshot at 1280 and 360.
+- UX M-2: stage numbers are now {value, label} (src/data/content.types.ts:57-71, src/data/content.ts stages), rendered as a mono-metric value over a mono-caption (src/how/StagePanel.tsx:17-24, src/how/HowIWork.css:72-80). Dropped the bare "2" from the deploy stage and folded the team split into the "6" caption.
+**Artifacts:** src/app/Shell.css, src/boot/BootScreen.css, src/data/content.ts, src/data/content.types.ts, src/hero/PipelineFrame.tsx, src/hero/three/Scene.tsx, src/history/History.css, src/history/TimelineEntry.tsx, src/how/HowIWork.css, src/how/StagePanel.tsx, src/lib/reveal.ts, src/lib/scroll.ts, src/nav/Header.tsx, src/palette/CommandPalette.css
+**Key decisions:** BUG-3 and BUG-4 fixed in code, not by amending the ACs. Hiding the page during the boot is a visual no-op because the boot covers it, but it is a new behaviour a reviewer should look at.
+**Verification run:**
+```
+npx tsc -b -> no output; npx eslint . -> no output
+npm run verify -> exit 0; NFR-5 127.1/300, NFR-6 211.2/400, NFR-8 184.9/1024, FR-141 1694.3/5120 kB; check-confidential OK (WARN proposed)
+npm test -> Test Files 13 passed (13), Tests 107 passed (107)
+Playwright on system Chrome, vite preview of a scratch build: real clicks at 1280 -> section top 56/56/56 (header x2, palette); axe 4.14 wcag2a/aa/21aa/22aa + best-practice at 1280, 1600, 768, 360 -> 0 violations; palette at 360 -> width 360; swiftshader cold boot x2 -> 1901 and 1698 ms
+```
+**Known gaps / shortcuts:**
+- S9-AC11 remains failing until the owner acts.
+- BUG-3: outline-width: 0 on a zero-size sentinel; if the AC means "no outline rule at all", the :focus rule can simply be deleted (a 0x0 box draws nothing meaningful). Not tested with forced-colors.
+- BUG-5 measured on SwiftShader only; real GPU unmeasured. The first swiftshader run was 1.9 s, close to the limit.
+- BUG-6 overlay buttons now match the SVG at rest, so they can sit up to about 1 px off the 3D node discs; not checked visually on a real GPU.
+- No new unit tests added: the scroll-focus flag, the boot gate and the subgrid layout were checked in a browser only. The history subgrid needs a browser with subgrid support (all current ones).
+- Other UX minors (banner copy, hero fold height, orphan word, etc.) were not in this step's list and are untouched. verify rewrote dist/ (ignored by git).
+**Next agent must verify:** QA round 2: BUG-2 with a real wheel and keyboard Tab at 1280 (Tab to an off-screen link must still scroll); boot length on a cold SwiftShader launch several times; history entries at 360, 768, 1280 with a screen reader reading h3 then dates; hero stage buttons on a real GPU.

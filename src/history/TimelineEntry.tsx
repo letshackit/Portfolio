@@ -1,21 +1,19 @@
 import type { HistoryEntry } from '../data/content.types';
 import { Icon } from '../ui/Icon';
 
-/** One employer: dates column, spine, then roles, company line, promotion marker and highlights. */
+/** One employer: spine, then each role with its own dates, company line, promotion marker and highlights. */
 export function TimelineEntry({ entry }: { readonly entry: HistoryEntry }) {
   return (
     <li className="timeline-entry">
-      <div className="timeline-entry__dates mono-caption">
-        {entry.roles.map((role) => (
-          <p key={role.id}>{role.dates}</p>
-        ))}
-      </div>
       <div className="timeline-entry__spine" aria-hidden="true">
         <span className="timeline-entry__line" />
       </div>
       <article className="timeline-entry__body">
         {entry.roles.map((role) => (
-          <h3 key={role.id}>{role.title}</h3>
+          <div className="timeline-entry__role" key={role.id}>
+            <h3>{role.title}</h3>
+            <p className="timeline-entry__dates mono-caption">{role.dates}</p>
+          </div>
         ))}
         <p className="timeline-entry__company mono-caption">
           {entry.company} · {entry.location}

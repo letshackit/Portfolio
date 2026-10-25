@@ -107,9 +107,17 @@ export function Scene({ layout, frameEl, hoveredStage, onArrive, pointerFine, on
     if (moved) {
       group.updateMatrixWorld(true);
       state.camera.updateMatrixWorld();
+      // Anchor the rest pose to the SVG percentages and add only the tilt movement, so the stage buttons do not
+      // jump by a pixel when the 3D scene replaces the SVG (S7-AC3).
+      const [vbW, vbH] = layout.viewBox;
       positions.forEach((pos, i) => {
+        scratch.copy(pos).project(state.camera);
+        const restX = scratch.x;
+        const restY = scratch.y;
         scratch.copy(pos).applyMatrix4(group.matrixWorld).project(state.camera);
-        setNodeVars(frameEl, i, `${(((scratch.x + 1) / 2) * 100).toFixed(2)}%`, `${(((1 - scratch.y) / 2) * 100).toFixed(2)}%`);
+        const left = (layout.nodes[i].x / vbW) * 100 + (scratch.x - restX) * 50;
+        const top = (layout.nodes[i].y / vbH) * 100 - (scratch.y - restY) * 50;
+        setNodeVars(frameEl, i, `${left.toFixed(2)}%`, `${top.toFixed(2)}%`);
       });
       projected.current = { rx: group.rotation.x, ry: group.rotation.y, w: size.width, h: size.height };
     }

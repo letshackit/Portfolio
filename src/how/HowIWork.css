@@ -69,6 +69,16 @@
   gap: var(--s-3) var(--s-6);
 }
 
+.stage-panel__number {
+  display: grid;
+  gap: var(--s-1);
+  max-width: 22ch;
+}
+
+.stage-panel__number .mono-caption {
+  color: var(--t-2);
+}
+
 @media (min-width: 768px) {
   .stepper-list__item {
     padding-inline-start: var(--s-7);

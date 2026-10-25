@@ -16,8 +16,9 @@ export function StagePanel({ stage }: { readonly stage: PipelineStage }) {
         {stage.numbers.length > 0 ? (
           <ul className="stage-panel__numbers">
             {stage.numbers.map((n) => (
-              <li className="mono-metric" key={n}>
-                {n}
+              <li className="stage-panel__number" key={n.label}>
+                <span className="mono-metric">{n.value}</span>
+                <span className="mono-caption">{n.label}</span>
               </li>
             ))}
           </ul>

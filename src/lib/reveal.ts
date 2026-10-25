@@ -7,6 +7,7 @@
 import { useEffect, useRef } from 'react';
 import { usePrefs } from '../app/providers/prefsContext';
 import { useUi } from '../app/providers/uiContext';
+import { isProgrammaticFocus } from './scroll';
 import { afterFirstPaint } from './visibility';
 
 export type RevealKind = 'lines' | 'block';
@@ -49,7 +50,7 @@ export function useMotion(enabled = true): void {
       import('./motion')
         .then((mod) => {
           if (disposed) return;
-          handle = mod.startMotion({ allowFocusScroll: () => !paletteOpenRef.current });
+          handle = mod.startMotion({ allowFocusScroll: () => !paletteOpenRef.current && !isProgrammaticFocus() });
         })
         .catch(() => {
           // The chunk failed to load: the page stays static and readable (FR-7).

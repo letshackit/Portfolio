@@ -19,8 +19,25 @@ interface NavigatorWithConnection {
   readonly connection?: { readonly saveData?: boolean };
 }
 
-/** Resolves true once the hero text is painted in its final font and the browser is idle (FR-53, NFR-7). */
+/** Resolves when the boot screen is gone, so the 3D chunk never competes with the 2 s boot for the main thread (FR-16). */
+async function waitForBootEnd(): Promise<void> {
+  const booting = () => document.body.classList.contains('is-booting');
+  // The boot screen adds its body class in an effect that runs after this component's, so look one task later.
+  await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+  if (!booting()) return;
+  await new Promise<void>((resolve) => {
+    const observer = new MutationObserver(() => {
+      if (booting()) return;
+      observer.disconnect();
+      resolve();
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  });
+}
+
+/** Resolves once the hero text is painted in its final font and the browser is idle (FR-53, NFR-7). */
 async function waitForQuiet(): Promise<void> {
+  await waitForBootEnd();
   if (document.fonts) await document.fonts.ready;
   await new Promise<void>((resolve) => {
     if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(() => resolve());

@@ -1,4 +1,5 @@
-/* Deployment history (B.7.6). 360: [spine 16][entry] with dates above the title. 768+: [dates 180][spine 24][entry]. */
+/* Deployment history (B.7.6). 360: [spine 16][entry], each role's dates under its title. 768+: [dates 180][spine 24][entry];
+   the dates sit in the left column on the same row as the role they belong to (subgrid), so every date is paired with its title. */
 .timeline {
   display: grid;
   gap: var(--s-7);
@@ -10,15 +11,14 @@
   column-gap: var(--s-3);
 }
 
-.timeline-entry__dates {
-  grid-column: 2;
-  grid-row: 1;
-  margin-bottom: var(--s-2);
+.timeline-entry__role {
+  display: grid;
+  gap: var(--s-1);
 }
 
 .timeline-entry__spine {
   grid-column: 1;
-  grid-row: 1 / span 2;
+  grid-row: 1;
   position: relative;
   justify-self: center;
   width: 1px;
@@ -48,7 +48,7 @@
 
 .timeline-entry__body {
   grid-column: 2;
-  grid-row: 2;
+  grid-row: 1;
   display: grid;
   gap: var(--s-3);
   align-content: start;
@@ -111,20 +111,36 @@
     column-gap: var(--s-4);
   }
 
-  .timeline-entry__dates {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-    margin: 0;
-    text-align: end;
-  }
-
   .timeline-entry__spine {
     grid-column: 2;
   }
 
   .timeline-entry__body {
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    column-gap: var(--s-4);
+  }
+
+  .timeline-entry__role {
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: baseline;
+    gap: 0 var(--s-4);
+  }
+
+  .timeline-entry__role h3 {
     grid-column: 3;
-    grid-row: 1 / span 2;
+    grid-row: 1;
+  }
+
+  .timeline-entry__dates {
+    grid-column: 1;
+    grid-row: 1;
+    text-align: end;
+  }
+
+  .timeline-entry__body > :not(.timeline-entry__role) {
+    grid-column: 3;
   }
 }
 

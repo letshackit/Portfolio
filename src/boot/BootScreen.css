@@ -3,6 +3,13 @@ body.is-booting {
   overflow: hidden;
 }
 
+/* The page beneath is covered, so skip painting it: on a software rasteriser it otherwise stalls the main thread and the
+   boot overruns its 2 s limit (FR-16). Layout is kept, so the hash landing and the hero entrance still work. */
+body.is-booting #smooth-wrapper,
+body.is-booting .site-header {
+  visibility: hidden;
+}
+
 .boot {
   position: fixed;
   inset: 0;

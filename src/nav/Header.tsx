@@ -81,7 +81,7 @@ export function Header() {
           <button
             type="button"
             className="btn btn--secondary site-header__btn"
-            aria-label={`${content.palette.openPalette} (${shortcutLabel()})`}
+            aria-label={`${content.palette.openPalette}, ${shortcutLabel()}`}
             onClick={() => setPaletteOpen(true)}
           >
             <Icon name="command" />
