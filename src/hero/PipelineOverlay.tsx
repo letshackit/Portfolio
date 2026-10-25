@@ -18,7 +18,7 @@ interface PipelineOverlayProps {
  */
 export function PipelineOverlay({ layout, stages, label }: PipelineOverlayProps) {
   const { pointerFine } = usePrefs();
-  const { hoveredStage, selectedStage, setHoveredStage, setSelectedStage } = useUi();
+  const { hoveredStage, selectedStage, setHoveredStage, setSelectedStage, requestStageFocus } = useUi();
   const [tipId, setTipId] = useState<string | null>(null);
 
   // The tooltip follows hover/focus after a short delay; it is derived, so leaving hides it at once.
@@ -30,6 +30,7 @@ export function PipelineOverlay({ layout, stages, label }: PipelineOverlayProps)
 
   const select = (stage: PipelineStage) => {
     setSelectedStage(stage.id);
+    requestStageFocus();
     void scrollToAnchor(ANCHORS.howIWork, { focus: false });
   };
 

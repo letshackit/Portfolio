@@ -14,12 +14,15 @@ export function Stepper() {
 
 /** List mode: all seven stages visible, in order (FR-67). The stage chosen in the hero is focused on arrival. */
 function StepperList() {
-  const { selectedStage } = useUi();
+  const { selectedStage, stageFocusRequest } = useUi();
+  const seenRequest = useRef(stageFocusRequest);
   const selectedRef = useRef<HTMLLIElement | null>(null);
 
   useEffect(() => {
+    if (stageFocusRequest === seenRequest.current) return;
+    seenRequest.current = stageFocusRequest;
     if (selectedStage) selectedRef.current?.focus({ preventScroll: true });
-  }, [selectedStage]);
+  }, [selectedStage, stageFocusRequest]);
 
   return (
     <ol className="stepper-list" aria-label={content.ui.stageListLabel}>
@@ -44,7 +47,8 @@ function StepperList() {
 
 /** Tabs mode: roving tabindex, Left/Right/Home/End move the selection and focus with it (FR-66). */
 function StepperTabs() {
-  const { selectedStage, setSelectedStage } = useUi();
+  const { selectedStage, setSelectedStage, stageFocusRequest, requestStageFocus } = useUi();
+  const seenRequest = useRef(stageFocusRequest);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   const activeIndex = Math.max(
@@ -53,10 +57,12 @@ function StepperTabs() {
   );
   const active = stages[activeIndex];
 
-  // Stage 1 is selected on load without moving focus; any later change (hero click, arrows) focuses the tab (FR-60).
+  // Focus follows an explicit pick (hero click, tab click, arrows), never a remount or a resize (FR-60).
   useEffect(() => {
-    if (selectedStage !== null) tabRefs.current[activeIndex]?.focus({ preventScroll: true });
-  }, [selectedStage, activeIndex]);
+    if (stageFocusRequest === seenRequest.current) return;
+    seenRequest.current = stageFocusRequest;
+    tabRefs.current[activeIndex]?.focus({ preventScroll: true });
+  }, [stageFocusRequest, activeIndex]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     let next: number;
@@ -78,6 +84,7 @@ function StepperTabs() {
     }
     e.preventDefault();
     setSelectedStage(stages[next].id);
+    requestStageFocus();
   };
 
   return (
@@ -104,7 +111,10 @@ function StepperTabs() {
               ref={(el) => {
                 tabRefs.current[i] = el;
               }}
-              onClick={() => setSelectedStage(stage.id)}
+              onClick={() => {
+                setSelectedStage(stage.id);
+                requestStageFocus();
+              }}
             >
               <span className="stepper-tabs__dot" aria-hidden="true" />
               <span className="mono-label stepper-tabs__num">{String(stage.index).padStart(2, '0')}</span>

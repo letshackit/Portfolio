@@ -13,11 +13,13 @@ const ui: UiContextValue = {
   paletteOpen: false,
   activeSection: null,
   selectedStage: null,
+  stageFocusRequest: 0,
   hoveredStage: null,
   toast: null,
   setPaletteOpen: () => undefined,
   setActiveSection: () => undefined,
   setSelectedStage: () => undefined,
+  requestStageFocus: () => undefined,
   setHoveredStage: () => undefined,
   showToast: () => undefined,
 };

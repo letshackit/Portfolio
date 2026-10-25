@@ -5,6 +5,8 @@ export interface UiState {
   readonly paletteOpen: boolean;
   readonly activeSection: AnchorId | null;
   readonly selectedStage: string | null;
+  /** Bumped by an explicit stage pick; the stepper focuses only when this changes after it mounted (FR-60). */
+  readonly stageFocusRequest: number;
   readonly hoveredStage: string | null;
   readonly toast: string | null;
 }
@@ -13,6 +15,7 @@ export interface UiActions {
   readonly setPaletteOpen: (open: boolean) => void;
   readonly setActiveSection: (id: AnchorId | null) => void;
   readonly setSelectedStage: (id: string | null) => void;
+  readonly requestStageFocus: () => void;
   readonly setHoveredStage: (id: string | null) => void;
   readonly showToast: (message: string | null) => void;
 }

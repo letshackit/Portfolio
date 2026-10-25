@@ -16,6 +16,11 @@
   gap: var(--s-1);
 }
 
+/* Narrow: dates above the title (FR-101); the DOM keeps title first for reading order. */
+.timeline-entry__dates {
+  order: -1;
+}
+
 .timeline-entry__spine {
   grid-column: 1;
   grid-row: 1;

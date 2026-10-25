@@ -610,3 +610,59 @@ Playwright on system Chrome, vite preview of a scratch build: real clicks at 128
 - No new unit tests added: the scroll-focus flag, the boot gate and the subgrid layout were checked in a browser only. The history subgrid needs a browser with subgrid support (all current ones).
 - Other UX minors (banner copy, hero fold height, orphan word, etc.) were not in this step's list and are untouched. verify rewrote dist/ (ignored by git).
 **Next agent must verify:** QA round 2: BUG-2 with a real wheel and keyboard Tab at 1280 (Tab to an off-screen link must still scroll); boot length on a cold SwiftShader launch several times; history entries at 360, 768, 1280 with a screen reader reading h3 then dates; hero stage buttons on a real GPU.
+
+### 2026-10-25T12:17Z — ux-reviewer (round 2)
+**Verdict:** APPROVE WITH CHANGES (0 BLOCKER, 0 MAJOR, 9 MINOR). Inspected the running built site, not only the source.
+**Artifacts:** .sdlc/06-ux-review-2.md, .sdlc/reports/ux-r2/ (47 screenshots)
+**Did:** Built to a scratch outDir, served with vite preview on :4412, drove system Chrome over raw CDP at 360, 768, 1280 and 1600, motion and reduced motion. Checked horizontal overflow, 44 px targets, computed text contrast, 129-stop keyboard walk, palette, mobile menu, blocked clipboard, 3D-chunk-blocked fallback, reduced-motion fidelity incl. mid-visit toggle, token grep, boot. Re-checked review 1: both MAJORs (history dates, bare metrics) are fixed; the minors are still open. Did not edit source.
+**Verification run:**
+```
+npx vite build --outDir <scratchpad>/build-ux2 -> built OK
+overflow: scrollWidth == clientWidth at 360/768/1280/1600, mo and rm; targets under 44 px: 0; lowest text contrast 4.83:1
+tab walk 1280: 129 stops, 0 without ring; header links top=0 (ring clipped at top)
+reduced motion: 0 running animations, no three/motion chunk, frames byte-identical; mid-visit toggle removes canvas
+grep for hex/rgb/hsl in src outside tokens.css and tests: 0 matches
+```
+**Known gaps / shortcuts:** No axe re-run, no Safari/Firefox, no real GPU (SwiftShader), no touch device, no screen reader, no forced-colors, no 200% zoom. Ten-second test by inspection only, not with 5 people. Contrast excludes the WebGL canvas.
+**Next agent must verify:** implementer to apply the minors (banner copy, eyebrow title, header link height, scrim, architecture two-column facts and full stops, caption "tap", toast placement); owner to run the 5-person ten-second test and confirm S9-AC11 and OG/favicon; re-test hero fold at 1280x800 after any hero layout change.
+
+### 2026-10-25T12:27Z — qa-engineer (round 2)
+**Verdict:** FAIL (2 ACs fail, 0 BLOCKER, 0 MAJOR, 2 MINOR). 110 of 120 ACs PASS, 2 FAIL (S2-AC13, S9-AC11), 8 PARTIAL/UNVERIFIED (unchanged: S6-AC7, S8-AC3, S8-AC7, S8-AC9, S8-AC10, S9-AC9, S9-AC10, S9-AC12). All round-1 bugs BUG-1..6 are fixed and re-verified.
+**Artifacts:** .sdlc/06-qa-report.md (overwritten); scratch scripts in scratchpad/qa/ (r2a, r2b, r2c, out2/).
+**Did:** Built to a scratch dir, served with vite preview :4411, drove system Chrome with Playwright at 360x640, 768x1024, 1280x800, 1600x900, motion and reduced; keyboard walk (120 and 75 real Tab stops), boot (natural end, key, click, touch tap, reload, cold swiftshader x4), hash landing, palette, copy-email toast, swap CLS sampling, failure modes of the 3D chunk, axe. Did not edit application source. Verified S4-AC10 "confirmed" half in a scratch copy (cp-qa2).
+**Verification run:**
+```
+npm test -> Test Files 13 passed (13), Tests 107 passed (107)
+npm run verify -> exit 0; NFR-5 127.1/300, NFR-6 211.2/400, NFR-8 184.9/1024, FR-141 1694.3/5120 kB; check-confidential OK (WARN proposed)
+axe 4.x wcag2a/aa/21aa/22aa + best-practice, 360/768/1280/1600 x motion/reduced -> 8 of 8 runs 0 violations, console [], failed requests []
+real clicks at 1280 with smoother: header Deployments/History/Contact top 56/56/56, hero link 56, palette 56, reload on hash 56
+palette at 360 touch -> width 360 of 360, rows 44 px
+boot: default Chrome 1693-1698 ms (6 runs); cold swiftshader 1696, 1695, 1891, 1695 ms; touch tap on Skip -> gone in 244 ms
+stage button x 122/1114 identical before and after svg -> 3d; swap CLS 0
+history at 360: dates BELOW h3 (4 of 4) -> S2-AC13 fails; 768/1280: dates left of title, same row
+r3resize.mjs: contact-heading y=9783 -> resize 700 -> stepper-list__item top=-8921 y=11103
+scratch copy status 'confirmed': banner absent from DOM, check-confidential --launch exit 0; real tree --launch still exit 1
+```
+**Bugs:** BUG-1 MINOR (history dates under titles at 360, AC-13 says above; caused by UX M-1 fix). BUG-2 MINOR (focus jumps to off-screen stepper item after resize across 768; review-3 m-2, pre-existing).
+**Known gaps / shortcuts:** Chrome only, SwiftShader WebGL, no real touch/GPU. Lighthouse not re-run (R1 100/100/100/100 carried). Live URL checks, ten-second test, flash analysis, screen reader, forced-colors not done. Several t-script FAILs (S2-7, S3-9, S5-20) are known script artefacts, re-checked by other means as documented in the report. S9-AC11 is owner-blocked.
+**Next agent (implementer to fix BUG-1/BUG-2, or owner to amend AC-13; owner for S9-AC11) must verify:**
+- BUG-1: at 360 either dates sit above the title, or AC-13/FR-101 is amended; 768/1280 unchanged.
+- BUG-2: r3resize flow keeps focus on contact-heading after resize to 700.
+- S9-AC11: owner sets status 'confirmed' and approves OG/favicon; `sh scripts/check-confidential.sh --launch` exits 0 and the banner is gone.
+
+### 2026-10-25T12:29Z — implementer (QA/UX rework round 2)
+**Story:** STORY-002 / STORY-009 / review-3 m-2
+**Did:**
+- BUG-1 / S2-AC13: dates above titles at 360 px. `.timeline-entry__dates { order: -1 }` in src/history/History.css:19-22 (base, narrow). DOM stays h3 then dates for reading order; at 768+ the explicit grid-row/column placement (History.css:136-140) is unaffected.
+- BUG-2 / review-3 m-2: focus follows an explicit pick, not state. New `stageFocusRequest` counter and `requestStageFocus()` in src/app/providers/uiContext.ts, UiProvider.tsx; hero select calls it (src/hero/PipelineOverlay.tsx:32-33); StepperList and StepperTabs focus only when the counter differs from the value seen at mount (src/how/Stepper.tsx:17 onward), tab click and arrow keys call it. Remount on resize no longer focuses; re-picking the same stage now does focus. motion.test.ts mock updated.
+- S9-AC11: NOT changed. Owner action: confirm 16 service names, set status 'confirmed' at src/data/traveldesk-architecture.ts:67, approve OG image and favicon (A-6). `check-confidential.sh --launch` still exits 1 until then.
+**Artifacts:** src/history/History.css, src/app/providers/uiContext.ts, src/app/providers/UiProvider.tsx, src/hero/PipelineOverlay.tsx, src/how/Stepper.tsx, src/__tests__/motion.test.ts
+**Key decisions:** Chose CSS reorder over amending AC-13/FR-101. Used the counter approach suggested in review-3 m-2.
+**Verification run:**
+```
+npx tsc -b -> no output; npx eslint . -> no output
+npm run verify -> exit 0; check-confidential OK (WARN proposed)
+npm test -> Test Files 13 passed (13), Tests 107 passed (107)
+```
+**Known gaps / shortcuts:** Neither fix was driven in a browser by me (no Playwright run of r3resize.mjs or the 360 screenshot). No new unit tests for the focus counter. CSS order changes visual order only; screen readers still read title then dates. S9-AC11 still fails by design.
+**Next agent must verify:** r3resize flow keeps focus on contact-heading after resize to 700; hero stage click still focuses tab (1280) and list item (<768); arrow keys still move focus; history at 360 shows dates above title, 768/1280 unchanged.

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ANCHORS, type AnchorId } from '../../config';
 import { UiContext, type UiContextValue } from './uiContext';
 
@@ -22,6 +22,8 @@ export function UiProvider({ children }: { readonly children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<AnchorId | null>(null);
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
+  const [stageFocusRequest, setStageFocusRequest] = useState(0);
+  const requestStageFocus = useCallback(() => setStageFocusRequest((n) => n + 1), []);
   const [hoveredStage, setHoveredStage] = useState<string | null>(null);
   const [toast, showToast] = useState<string | null>(null);
 
@@ -53,15 +55,17 @@ export function UiProvider({ children }: { readonly children: ReactNode }) {
       paletteOpen,
       activeSection,
       selectedStage,
+      stageFocusRequest,
       hoveredStage,
       toast,
       setPaletteOpen,
       setActiveSection,
       setSelectedStage,
+      requestStageFocus,
       setHoveredStage,
       showToast,
     }),
-    [paletteOpen, activeSection, selectedStage, hoveredStage, toast],
+    [paletteOpen, activeSection, selectedStage, stageFocusRequest, requestStageFocus, hoveredStage, toast],
   );
   return <UiContext.Provider value={value}>{children}</UiContext.Provider>;
 }
