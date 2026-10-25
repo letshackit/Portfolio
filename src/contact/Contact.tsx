@@ -4,6 +4,7 @@ import { content } from '../data/content';
 import { CopyEmailButton } from '../palette/CopyEmailButton';
 import { Button } from '../ui/Button';
 import { ExternalLink } from '../ui/ExternalLink';
+import { PortraitCard } from '../portrait/PortraitCard';
 import { Section } from '../ui/Section';
 import { StatusBadge } from '../ui/StatusBadge';
 import { contactCopy } from './contactCopy';
@@ -87,7 +88,9 @@ export function Contact() {
       </div>
 
       <div className="ct-grid">
-        <div className="contact-portrait-slot">{/* PortraitCard mounts here */}</div>
+        <div className="contact-portrait-slot">
+          <PortraitCard />
+        </div>
 
         <div className="ct-panel corner-ticks">
           <StatusBadge variant="live" size="lg">

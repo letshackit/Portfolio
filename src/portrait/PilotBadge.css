@@ -1,0 +1,51 @@
+/* Pilot badge: circular duotone portrait, cyan ring with a slow amber-tipped sweep, amber live dot. */
+.pilot-badge {
+  --pb-ring: 2px;
+  position: relative;
+  display: inline-block;
+  flex: none;
+  border-radius: var(--r-pill);
+  background: var(--g-0);
+  box-shadow: 0 0 0 1px var(--line-3), 0 0 24px -6px var(--line-3);
+}
+
+.pilot-badge__img {
+  position: absolute;
+  inset: var(--pb-ring);
+  width: calc(100% - 2 * var(--pb-ring));
+  height: calc(100% - 2 * var(--pb-ring));
+  border-radius: var(--r-pill);
+  object-fit: cover;
+}
+
+/* Rotating conic ring, drawn as a masked disc so only the outer 2 px shows. Transform-only animation. */
+.pilot-badge__ring {
+  position: absolute;
+  inset: calc(-1 * var(--pb-ring));
+  border-radius: var(--r-pill);
+  background: conic-gradient(from 0deg, transparent 0 60%, var(--cyan-500) 85%, var(--amber-500) 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--pb-ring) - 1px), var(--mask-solid) calc(100% - var(--pb-ring)));
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--pb-ring) - 1px), var(--mask-solid) calc(100% - var(--pb-ring)));
+  animation: pilot-sweep 6s linear infinite;
+}
+
+.pilot-badge[data-paused] .pilot-badge__ring {
+  animation-play-state: paused;
+}
+
+.pilot-badge__live {
+  position: absolute;
+  right: 2%;
+  bottom: 2%;
+  display: grid;
+  place-items: center;
+  padding: var(--s-1);
+  background: var(--g-0);
+  border-radius: var(--r-pill);
+}
+
+@keyframes pilot-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
