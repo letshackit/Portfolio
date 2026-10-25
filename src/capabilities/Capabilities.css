@@ -1,28 +1,102 @@
-/* Capabilities (B.7.5): one column, two at 768, four at 1024. */
+/*
+ * Capabilities: four glass cards in the same staged world as How I work and Deployments (.stage-world, sectionIntro.css).
+ * Four columns from 1280, two from 768, one below. Reveal is a staggered rise driven by [data-armed]/[data-in] on the
+ * grid (useReveal); transform and opacity only. Without scripting or under reduced motion the cards are plain and lit.
+ */
 .cap-grid {
   display: grid;
   gap: var(--s-4);
 }
 
 .cap-card {
+  position: relative;
   display: grid;
-  gap: var(--s-3);
+  gap: var(--s-4);
   align-content: start;
   padding: var(--s-5);
-  background: var(--surface);
-  border: var(--hairline);
-  border-radius: var(--r-2);
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-3);
+  box-shadow: var(--glass-hi), var(--glass-drop);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  backdrop-filter: blur(14px) saturate(1.25);
+  transition: border-color var(--d-slow) var(--e-out), box-shadow var(--d-slow) var(--e-out);
+}
+
+/* Corner ticks, top pair and bottom pair, same frame language as the stage cards. */
+.cap-card::before,
+.cap-card::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.5;
+  transition: opacity var(--d-slow) var(--e-out);
+  background:
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top left / var(--tick) 1px no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top left / 1px var(--tick) no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top right / var(--tick) 1px no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top right / 1px var(--tick) no-repeat;
+}
+
+.cap-card::after {
+  transform: scaleY(-1);
+}
+
+.cap-card:hover,
+.cap-card:focus-within {
+  border-color: var(--line-3);
+  box-shadow:
+    var(--glass-hi),
+    var(--glass-drop),
+    0 0 60px -14px var(--glow-cyan);
+}
+
+.cap-card:hover::before,
+.cap-card:hover::after,
+.cap-card:focus-within::before,
+.cap-card:focus-within::after {
+  opacity: 1;
+}
+
+.cap-card__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.cap-card__eyebrow::before {
+  content: "";
+  width: var(--s-5);
+  height: 1px;
+  background: var(--cyan-500);
+}
+
+.cap-card__title {
+  font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem);
+  font-weight: var(--w-semibold);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .cap-card__skills {
   display: flex;
   flex-wrap: wrap;
+  gap: var(--s-2);
 }
 
-.cap-card__skills li:not(:last-child)::after {
-  content: "·";
-  margin-inline: var(--s-2);
-  color: var(--cyan-600);
+.cap-chip {
+  padding: var(--s-1) var(--s-2);
+  border: var(--hairline);
+  border-radius: var(--r-1);
+  background: color-mix(in srgb, var(--t-1) 3%, transparent);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-caption);
+  line-height: var(--lh-mono-caption);
+  letter-spacing: var(--ls-mono-caption);
+  color: var(--t-2);
 }
 
 .cap-card__proof {
@@ -41,6 +115,22 @@
   min-height: var(--tap);
 }
 
+/* Staggered reveal */
+.cap-grid[data-armed] .cap-card {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+}
+
+.cap-grid[data-in] .cap-card {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 800ms var(--e-out) calc(var(--i) * 110ms),
+    transform 900ms var(--e-out) calc(var(--i) * 110ms),
+    border-color var(--d-slow) var(--e-out),
+    box-shadow var(--d-slow) var(--e-out);
+}
+
 @media (min-width: 768px) {
   .cap-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -48,14 +138,15 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .cap-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 1280px) {
-  .cap-card {
-    padding: var(--s-6);
+@media (prefers-reduced-motion: reduce) {
+  .cap-grid[data-armed] .cap-card {
+    opacity: 1;
+    transform: none;
   }
 }

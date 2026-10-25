@@ -1,26 +1,32 @@
+import type { CSSProperties } from 'react';
 import { content } from '../data/content';
+import { SectionIntro } from '../how/SplitTitle';
+import { useReveal } from '../how/useReveal';
 import { anchorHref } from '../lib/anchors';
 import { onAnchorClick } from '../lib/scroll';
 import { Icon } from '../ui/Icon';
 import { Section } from '../ui/Section';
-import { SectionHeading } from '../ui/SectionHeading';
 import './Capabilities.css';
 
 export function Capabilities() {
   const { capabilities, ui } = content;
+  // One observer for the grid; the cards stagger off --i (CSS). Never armed under reduced motion.
+  const [gridRef] = useReveal<HTMLDivElement>({ threshold: 0.12 });
   return (
-    <Section anchor="capabilities">
-      <SectionHeading anchor="capabilities" heading={capabilities.heading} lead={capabilities.lead || undefined} />
-      <div className="cap-grid">
+    <Section anchor="capabilities" className="stage-world cap">
+      <SectionIntro anchor="capabilities" heading={capabilities.heading} lead={capabilities.lead || undefined} />
+      <div className="cap-grid" ref={gridRef}>
         {capabilities.groups.map((group, index) => (
-          <article className="cap-card" key={group.id}>
-            <p className="mono-label">
+          <article className="cap-card" key={group.id} style={{ '--i': index } as CSSProperties}>
+            <p className="cap-card__eyebrow mono-label">
               {String(index + 1).padStart(2, '0')} / {group.name}
             </p>
-            <h3>{group.name}</h3>
+            <h3 className="cap-card__title">{group.name}</h3>
             <ul className="cap-card__skills">
               {group.skills.map((skill) => (
-                <li key={skill}>{skill}</li>
+                <li key={skill} className="cap-chip">
+                  {skill}
+                </li>
               ))}
             </ul>
             <div className="cap-card__proof">

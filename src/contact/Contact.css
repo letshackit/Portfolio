@@ -101,6 +101,7 @@
 
 /* ---- Panel ---- */
 .ct-panel {
+  container-type: inline-size;
   display: grid;
   gap: var(--s-6);
   justify-items: start;
@@ -135,6 +136,8 @@
   max-width: 100%;
   font-family: var(--font-mono);
   font-size: clamp(0.875rem, 0.1rem + 4.2vw, 3rem);
+  /* Sized from the panel so the 24 mono characters always fit on one line (no mid-word wrap at 390 or 1440). */
+  font-size: clamp(0.8125rem, 6.2cqi, 3rem);
   font-weight: var(--w-medium);
   line-height: 1.1;
   letter-spacing: -0.03em;

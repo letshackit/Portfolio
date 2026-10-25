@@ -1,7 +1,7 @@
 /**
  * The motion chunk (ADR-007). Loaded by `useMotion()` after first paint and never under reduced motion.
- * Owns: ScrollSmoother (desktop + fine pointer only, ADR-002), `[data-reveal]` reveals, the career timeline
- * draw, and ScrollTrigger refresh. Every from-state is set here, at the moment of animating (FR-7).
+ * Owns: ScrollSmoother (desktop + fine pointer only, ADR-002), `[data-reveal]` reveals, and ScrollTrigger refresh
+ * (fonts, images, layout changes). The pinned How journey and the History rail run their own triggers. Every from-state is set here, at the moment of animating (FR-7).
  */
 import { gsap } from 'gsap';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
@@ -20,8 +20,8 @@ const SMOOTH = 0.8;
 const REVEAL_START = 0.85;
 const LINE_STAGGER = 0.06;
 const BLOCK_OFFSET_PX = 8;
-const TIMELINE_START = 'top 70%';
-const TIMELINE_END = 'bottom 30%';
+/** Quiet period before a layout-driven ScrollTrigger.refresh. */
+const REFRESH_DEBOUNCE_MS = 150;
 const REVEAL_EASE = 'power3.out';
 
 function matches(query: string): boolean {
@@ -89,21 +89,39 @@ function bindReveals(duration: number): void {
   });
 }
 
-/** Each entry's spine line draws from the top as the visitor scrolls through that entry (B.5, FR-102). */
-function bindTimeline(): void {
-  document.querySelectorAll<HTMLElement>('.timeline-entry').forEach((entry) => {
-    const line = entry.querySelector<HTMLElement>('.timeline-entry__line');
-    if (!line) return;
-    gsap.fromTo(
-      line,
-      { scaleY: 0, transformOrigin: 'top' },
-      {
-        scaleY: 1,
-        ease: 'none',
-        scrollTrigger: { trigger: entry, start: TIMELINE_START, end: TIMELINE_END, scrub: true },
-      },
-    );
-  });
+/**
+ * Keeps ScrollTrigger (pins, reveals) and ScrollSmoother measuring the real page. Lazy images, the 3D chunks swapping in,
+ * expanding cards and late fonts all change the height of #main after the first refresh; each distinct change schedules
+ * one debounced refresh. Comparing heights keeps the refresh from re-triggering itself through the pin spacers.
+ */
+function watchLayout(isLive: () => boolean): () => void {
+  const main = document.getElementById('main');
+  let timer = 0;
+  let lastHeight = main?.offsetHeight ?? 0;
+  const schedule = () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      if (!isLive()) return;
+      lastHeight = main?.offsetHeight ?? lastHeight;
+      ScrollTrigger.refresh();
+    }, REFRESH_DEBOUNCE_MS);
+  };
+  const onImageLoad = (event: Event) => {
+    if (event.target instanceof HTMLImageElement) schedule();
+  };
+  document.addEventListener('load', onImageLoad, true);
+  const observer =
+    main && typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => {
+          if (Math.abs(main.offsetHeight - lastHeight) > 1) schedule();
+        })
+      : null;
+  if (main) observer?.observe(main);
+  return () => {
+    window.clearTimeout(timer);
+    document.removeEventListener('load', onImageLoad, true);
+    observer?.disconnect();
+  };
 }
 
 export function startMotion(options: MotionOptions): MotionHandle {
@@ -122,7 +140,6 @@ export function startMotion(options: MotionOptions): MotionHandle {
       attachSmoother(smoother, () => ScrollTrigger.refresh());
     }
     bindReveals(slowSeconds());
-    bindTimeline();
   });
 
   let live = true;
@@ -131,10 +148,12 @@ export function startMotion(options: MotionOptions): MotionHandle {
   };
   if ('fonts' in document) void document.fonts.ready.then(onFontsReady);
   window.addEventListener('load', onFontsReady, { once: true });
+  const stopWatching = watchLayout(() => live);
 
   return {
     dispose() {
       live = false;
+      stopWatching();
       window.removeEventListener('load', onFontsReady);
       ctx.revert();
       if (smoother) {
