@@ -9,6 +9,10 @@ export const archCopy = {
   captionConnects: 'connects to',
   diagramLabel: 'TravelDesk architecture diagram',
   legendLabel: 'Legend',
+  hudTag: 'TRAVELDESK / EXPLODED VIEW',
+  hudAssembly: 'ASSEMBLY',
+  hudLive: 'LIVE SYSTEMS',
+  hudPhase2: 'PHASE 2',
   legendPhase2: 'dashed = Phase 2',
   kindLabel: {
     frontend: 'Front end',

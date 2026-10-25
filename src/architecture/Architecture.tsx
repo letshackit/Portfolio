@@ -25,7 +25,7 @@ export function Architecture() {
     ? `${activeNode.label} — ${activeNode.role} · ${archCopy.captionConnects}: ${connectionLabels(model, activeNode.id).join(', ')}`
     : archCopy.captionDefault;
   return (
-    <Section anchor="architecture">
+    <Section anchor="architecture" className="arch-section">
       <SectionHeading anchor="architecture" heading={architecture.heading} />
       <dl className="arch-facts" aria-label={ui.factsLabel}>
         {architecture.facts.map((fact) => {

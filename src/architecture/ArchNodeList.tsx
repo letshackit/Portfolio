@@ -1,15 +1,24 @@
 import { useState } from 'react';
 import { content } from '../data/content';
 import type { ArchGroup, ArchitectureModel, ArchNode } from '../data/content.types';
-import { connectionLabels, type ArchLayout } from '../lib/archLayout';
+import { connectionLabels } from '../lib/archLayout';
 import { Icon } from '../ui/Icon';
 import { archCopy } from './archCopy';
 import type { ArchSelection } from './useArchSelection';
 
+export interface NodeRect {
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 interface Props {
   readonly model: ArchitectureModel;
-  /** Present on wide screens: buttons are positioned over their SVG boxes. Null: stacked, expandable list. */
-  readonly layout: ArchLayout | null;
+  /** True on wide screens: buttons sit over their drawn node (SVG box or 3D block). False: stacked, expandable list. */
+  readonly wide: boolean;
+  /** Where a node is drawn, in percent of the frame. Only read when `wide`. */
+  readonly rectOf: (id: string) => NodeRect | undefined;
   readonly selection: ArchSelection;
   readonly nodeState: (id: string) => 'idle' | 'on' | 'dim';
 }
@@ -19,24 +28,17 @@ interface Props {
  * front end, gateway, domain services, integrations (FR-86). On wide screens the group wrappers
  * vanish from layout and each button sits over its SVG box; below 768 px it is a stacked accordion.
  */
-export function ArchNodeList({ model, layout, selection, nodeState }: Props) {
+export function ArchNodeList({ model, wide, rectOf, selection, nodeState }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
-  const wide = layout !== null;
   const nodesIn = (group: ArchGroup) => model.nodes.filter((n) => group.kinds.includes(n.kind));
 
   const renderNode = (node: ArchNode) => {
     const links = connectionLabels(model, node.id);
     const descId = `arch-desc-${node.id}`;
-    const box = layout?.boxes.get(node.id);
-    const style =
-      layout && box
-        ? {
-            left: `${(box.x / layout.viewBox[0]) * 100}%`,
-            top: `${(box.y / layout.viewBox[1]) * 100}%`,
-            width: `${(box.w / layout.viewBox[0]) * 100}%`,
-            height: `${(box.h / layout.viewBox[1]) * 100}%`,
-          }
-        : undefined;
+    const box = wide ? rectOf(node.id) : undefined;
+    const style = box
+      ? { left: `${box.left}%`, top: `${box.top}%`, width: `${box.width}%`, height: `${box.height}%` }
+      : undefined;
 
     if (wide) {
       return (
