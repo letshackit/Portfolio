@@ -1,10 +1,8 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrefsProvider } from '../app/providers/PrefsProvider';
 import { UiProvider } from '../app/providers/UiProvider';
-import { ANCHORS } from '../config';
 import { content } from '../data/content';
-import { PipelineFrame } from '../hero/PipelineFrame';
 import { Stepper } from '../how/Stepper';
 import { LiveDot } from '../ui/LiveDot';
 
@@ -83,59 +81,6 @@ describe('Stepper list mode', () => {
     renderStepper();
     expect(screen.queryByRole('tab')).toBeNull();
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(7);
-  });
-});
-
-describe('Hero pipeline overlay', () => {
-  function renderFrame() {
-    return render(
-      <PrefsProvider>
-        <UiProvider>
-          <PipelineFrame />
-          <Stepper />
-        </UiProvider>
-      </PrefsProvider>,
-    );
-  }
-
-  it('exposes an ordered list of seven focusable stage buttons and an aria-hidden svg', () => {
-    mockMedia(wide);
-    const { container } = renderFrame();
-    const overlay = container.querySelector('.pipeline-overlay');
-    expect(overlay?.tagName).toBe('OL');
-    const buttons = overlay?.querySelectorAll('button.stage');
-    expect(buttons).toHaveLength(7);
-    expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    expect(container.querySelectorAll('svg .node')).toHaveLength(7);
-    expect(container.querySelectorAll('svg .edge')).toHaveLength(6);
-  });
-
-  it('shows the artifact tooltip on focus', () => {
-    mockMedia(wide);
-    vi.useFakeTimers();
-    const { container } = renderFrame();
-    const first = container.querySelector<HTMLButtonElement>('button.stage');
-    expect(first).not.toBeNull();
-    fireEvent.focus(first as HTMLButtonElement);
-    act(() => {
-      vi.advanceTimersByTime(100);
-    });
-    vi.useRealTimers();
-    const tip = container.querySelector('[role="tooltip"]:not([hidden])');
-    expect(tip).toHaveTextContent(stages[0].artifact);
-  });
-
-  it('selects the stage and scrolls to How I work on click', () => {
-    mockMedia(wide);
-    const target = document.createElement('div');
-    target.id = ANCHORS.howIWork;
-    document.body.append(target);
-    const { container } = renderFrame();
-    const buttons = container.querySelectorAll<HTMLButtonElement>('button.stage');
-    fireEvent.click(buttons[2]);
-    expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
-    expect(screen.getAllByRole('tab')[2]).toHaveAttribute('aria-selected', 'true');
-    target.remove();
   });
 });
 

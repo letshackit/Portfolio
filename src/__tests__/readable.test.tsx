@@ -5,11 +5,11 @@ import { ANCHORS } from '../config';
 import { content } from '../data/content';
 
 describe('readable console (step 1)', () => {
-  it('renders the headline as the only h1', () => {
+  it('renders the name as the only h1', () => {
     render(<App />);
     const h1s = screen.getAllByRole('heading', { level: 1 });
     expect(h1s).toHaveLength(1);
-    expect(h1s[0]).toHaveTextContent(content.hero.headline);
+    expect(h1s[0]).toHaveTextContent(content.meta.name);
   });
 
   it('renders the five deployment cards in order', () => {

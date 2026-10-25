@@ -6,7 +6,7 @@ import { CommandPalette } from '../palette/CommandPalette';
 import { Cursor } from '../ui/Cursor';
 import { Toast } from '../ui/Toast';
 import { Deployments } from '../deployments/Deployments';
-import { Hero } from '../hero/Hero';
+import { Hero } from '../hero/v2/Hero';
 import { History } from '../history/History';
 import { HowIWork } from '../how/HowIWork';
 import { PAGE_START_ID } from '../lib/scroll';

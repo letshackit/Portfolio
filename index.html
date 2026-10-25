@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests" />
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests" />
   <!-- Meta text, JSON-LD and the noscript block below are kept in step by hand with src/data/content.ts. -->
   <title>Harshal Saraogi — AI-native builder and Product Manager</title>
   <meta name="description" content="Harshal Saraogi embeds with enterprise teams, builds working platforms with AI agents, and hands them to engineers. Open to Forward Deployed Engineer roles." />
@@ -16,6 +16,9 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="preload" href="/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <!-- The hero stage's avatar and light probe: fetched in parallel with the entry script so he is on screen within ~1.5 s (read by GLTFLoader / RGBELoader with fetch, so as=fetch + crossorigin). -->
+  <link rel="preload" href="/hero/character.glb" as="fetch" type="model/gltf-binary" crossorigin="anonymous" />
+  <link rel="preload" href="/hero/char_environment.hdr" as="fetch" crossorigin="anonymous" />
 
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://harshalsaraogi.com/" />
