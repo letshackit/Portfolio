@@ -1,0 +1,129 @@
+/* Deployment history (B.7.6). 360: [spine 16][entry] with dates above the title. 768+: [dates 180][spine 24][entry]. */
+.timeline {
+  display: grid;
+  gap: var(--s-7);
+}
+
+.timeline-entry {
+  display: grid;
+  grid-template-columns: var(--spine-col-narrow) minmax(0, 1fr);
+  column-gap: var(--s-3);
+}
+
+.timeline-entry__dates {
+  grid-column: 2;
+  grid-row: 1;
+  margin-bottom: var(--s-2);
+}
+
+.timeline-entry__spine {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  position: relative;
+  justify-self: center;
+  width: 1px;
+  background: var(--cyan-500);
+}
+
+.timeline-entry__spine::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: calc(var(--dot) + var(--s-1));
+  height: calc(var(--dot) + var(--s-1));
+  translate: -50% 0;
+  background: var(--cyan-500);
+  border: 2px solid var(--g-0);
+  border-radius: var(--r-pill);
+  box-sizing: content-box;
+}
+
+.timeline-entry__body {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+}
+
+.timeline-entry__marker {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-3);
+  background: var(--surface-inset);
+  border: var(--rule);
+  border-radius: var(--r-pill);
+  color: var(--cyan-400);
+}
+
+.education {
+  display: grid;
+  gap: var(--s-5);
+  margin-top: var(--s-8);
+  padding-top: var(--s-6);
+  border-top: var(--hairline);
+}
+
+.education__grid {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.edu-card {
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+  padding: var(--s-5);
+  background: var(--surface);
+  border: var(--hairline);
+  border-radius: var(--r-2);
+}
+
+.edu-card__list {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.edu-card__title {
+  color: var(--t-1);
+}
+
+.edu-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+}
+
+@media (min-width: 768px) {
+  .timeline-entry {
+    grid-template-columns: var(--date-col) var(--spine-col) minmax(0, 1fr);
+    column-gap: var(--s-4);
+  }
+
+  .timeline-entry__dates {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    margin: 0;
+    text-align: end;
+  }
+
+  .timeline-entry__spine {
+    grid-column: 2;
+  }
+
+  .timeline-entry__body {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .education__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-5);
+  }
+}

@@ -1,0 +1,188 @@
+/* Shared primitives (B.4): section scaffold, heading, buttons, badge, chip, dot, icon, bullets. */
+.section {
+  padding-block: var(--section-pad);
+}
+
+.section-heading {
+  display: grid;
+  gap: var(--s-3);
+  margin-bottom: var(--s-6);
+}
+
+.section-heading h2:focus-visible {
+  outline-offset: var(--s-1);
+}
+
+.section-heading__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.section-heading__rule {
+  width: var(--rail-rule);
+  height: 1px;
+  background: var(--cyan-500);
+}
+
+.section-heading__lead {
+  max-width: var(--measure-heading-lead);
+}
+
+@media (min-width: 1280px) {
+  .section-heading {
+    margin-bottom: var(--s-7);
+  }
+}
+
+.icon {
+  flex: none;
+  width: var(--icon);
+  height: var(--icon);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  padding: 0 var(--s-5);
+  border: 1px solid transparent;
+  border-radius: var(--r-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-button);
+  font-weight: var(--w-medium);
+  letter-spacing: var(--ls-button);
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    background-color var(--d-fast) var(--e-out),
+    border-color var(--d-fast) var(--e-out),
+    color var(--d-fast) var(--e-out);
+}
+
+.btn--primary {
+  background: var(--cyan-500);
+  color: var(--g-0);
+}
+
+.btn--primary:hover {
+  background: var(--cyan-400);
+}
+
+.btn--primary:active {
+  background: var(--cyan-600);
+  color: var(--t-1);
+}
+
+.btn--secondary {
+  color: var(--t-1);
+  border-color: var(--border-control);
+}
+
+.btn--secondary:hover {
+  background: var(--fill-cyan);
+}
+
+.btn--link {
+  padding: 0;
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-3);
+}
+
+.btn--link:hover {
+  text-decoration-color: currentColor;
+}
+
+.live-dot {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: var(--r-pill);
+  background: var(--cyan-500);
+}
+
+.live-dot[data-tone="amber"] {
+  background: var(--amber-500);
+}
+
+.live-dot[data-hollow] {
+  background: transparent;
+  border: 1px solid var(--cyan-600);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: var(--badge-h);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-pill);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-label);
+  font-weight: var(--w-medium);
+  letter-spacing: var(--ls-mono-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: var(--surface-inset);
+  border: var(--hairline);
+  color: var(--t-2);
+}
+
+.status-badge[data-variant="live"] {
+  background: var(--fill-amber);
+  border-color: var(--line-amber);
+  color: var(--amber-400);
+}
+
+.status-badge[data-size="lg"] {
+  height: var(--badge-h-lg);
+  padding: 0 var(--s-4);
+  max-width: 100%;
+  white-space: normal;
+  min-height: var(--badge-h-lg);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: var(--chip-h);
+  padding: 0 var(--s-2);
+  background: var(--fill-cyan);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-1);
+  color: var(--cyan-400);
+  font-family: var(--font-mono);
+  font-size: var(--fs-chip);
+  line-height: 1;
+  letter-spacing: var(--ls-mono-caption);
+}
+
+.bullets {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.bullets li {
+  position: relative;
+  padding-inline-start: var(--s-4);
+}
+
+.bullets li::before {
+  content: "";
+  position: absolute;
+  top: 0.7em;
+  left: 0;
+  width: var(--s-1);
+  height: var(--s-1);
+  background: var(--cyan-500);
+}
+
+[hidden] {
+  display: none !important;
+}

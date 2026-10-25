@@ -117,6 +117,31 @@
   --grid-cell-major: 120px;
   --tick: 10px; /* corner tick arm length */
 
+  /* Component sizing (B.4, B.7): named so no raw size sits in a component stylesheet */
+  --dot: 6px;
+  --dot-lg: 8px;
+  --badge-h: 24px;
+  --badge-h-lg: 32px;
+  --chip-h: 22px;
+  --icon: 16px;
+  --row-h: 48px;
+  --rail-rule: 24px;
+  --strip-label-w: 112px;
+  --date-col: 180px;
+  --spine-col: 24px;
+  --spine-col-narrow: 16px;
+  --measure-hero: 880px;
+  --measure-heading-lead: 640px;
+  --frame-narrow-w: 320px;
+  --frame-max-h: 420px;
+  --frame-max-w: 1235px;
+  --measure-quote: 60ch;
+  --quote-glyph: 40px;
+  --metric-min: 140px;
+  --card-min: 220px;
+  --fs-chip: 0.75rem;
+  --fs-name: 0.9375rem;
+
   /* Motion (B.5) */
   --d-fast: 120ms; /* colour and opacity on hover/focus */
   --d-base: 200ms; /* open/close, panel swap, toast, tooltip */

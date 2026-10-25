@@ -1,0 +1,60 @@
+/* Recognition (B.7.7): one column, two at 768 (ITC spans both), same at 1024+. */
+.quote-grid {
+  display: grid;
+  gap: var(--s-4);
+  align-items: start;
+}
+
+.quote-card {
+  display: grid;
+  gap: var(--s-4);
+  justify-items: start;
+  padding: var(--s-5);
+  background: var(--surface);
+  border: var(--hairline);
+  border-radius: var(--r-2);
+}
+
+.quote-card__glyph {
+  font-size: var(--quote-glyph);
+  font-weight: var(--w-semibold);
+  line-height: 1;
+  color: var(--cyan-600);
+}
+
+.quote-card__text {
+  display: grid;
+  gap: var(--s-3);
+  max-width: var(--measure-quote);
+  color: var(--t-1);
+}
+
+.quote-card__full {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.quote-card__caption {
+  display: grid;
+  gap: var(--s-1);
+  padding-top: var(--s-4);
+  border-top: var(--hairline);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .quote-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-5);
+  }
+
+  .quote-card[data-wide] {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1280px) {
+  .quote-card {
+    padding: var(--s-6);
+  }
+}

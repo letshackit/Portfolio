@@ -1,0 +1,118 @@
+/* Skip link and fixed header (B.7.9). Links are plain anchors in step 1. */
+.skip-link {
+  position: fixed;
+  top: var(--s-2);
+  left: var(--s-2);
+  z-index: 110;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--s-5);
+  background: var(--surface);
+  color: var(--t-1);
+  border: 1px solid var(--border-control);
+  border-radius: var(--r-2);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.site-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  height: var(--header-h);
+  background: color-mix(in srgb, var(--g-0) 85%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: var(--hairline);
+}
+
+.site-header__inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.site-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  min-width: var(--tap);
+  flex: none;
+  color: var(--t-1);
+  text-decoration: none;
+}
+
+.site-header__mark {
+  display: inline-grid;
+  place-items: center;
+  width: var(--s-5);
+  height: var(--s-5);
+  border: var(--rule);
+  border-radius: var(--r-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-label);
+  color: var(--cyan-400);
+}
+
+.site-header__name {
+  display: none;
+  font-size: var(--fs-name);
+  font-weight: var(--w-medium);
+}
+
+.site-header__nav {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.site-header__nav::-webkit-scrollbar {
+  display: none;
+}
+
+.site-header__list {
+  display: flex;
+  justify-content: flex-start;
+  width: max-content;
+  margin-inline-start: auto;
+}
+
+.site-header__link {
+  display: inline-flex;
+  align-items: center;
+  height: var(--header-h);
+  min-width: var(--tap);
+  padding: 0 var(--s-3);
+  color: var(--t-2);
+  font-size: var(--fs-nav);
+  letter-spacing: var(--ls-nav);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-header__link:hover {
+  color: var(--t-1);
+}
+
+@media (min-width: 768px) {
+  .site-header__name {
+    display: inline;
+  }
+}
+
+@media (min-width: 1100px) {
+  .site-header__list {
+    margin-inline-start: 0;
+  }
+
+  .site-header__nav {
+    display: flex;
+    justify-content: center;
+  }
+}

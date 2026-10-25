@@ -1,0 +1,103 @@
+/* Deployments (B.7.3): stacked below 1024, TravelDesk full width then a 2-up grid from 1024. */
+.deploy-grid {
+  display: grid;
+  gap: var(--s-4);
+  align-items: start;
+}
+
+.deploy-card {
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  background: var(--surface);
+  border: var(--hairline);
+  border-radius: var(--r-2);
+}
+
+.deploy-card:hover {
+  background: var(--surface-raised);
+  border-color: var(--line-3);
+}
+
+.deploy-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--s-4);
+}
+
+.deploy-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-2);
+}
+
+.deploy-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--metric-min), 1fr));
+  gap: var(--s-4) var(--s-5);
+  padding-top: var(--s-4);
+  border-top: var(--hairline);
+}
+
+.deploy-card__actions {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+}
+
+.deploy-card__actions .btn--secondary {
+  justify-self: stretch;
+  justify-content: center;
+}
+
+.deploy-card__actions .btn[aria-expanded="true"] .icon {
+  rotate: 180deg;
+}
+
+.deploy-card__details {
+  padding-top: var(--s-4);
+  border-top: var(--hairline);
+}
+
+@media (min-width: 768px) {
+  .deploy-grid {
+    gap: var(--s-5);
+  }
+
+  .deploy-card {
+    padding: var(--s-5);
+  }
+
+  .deploy-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-4);
+  }
+
+  .deploy-card__actions .btn--secondary {
+    justify-self: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .deploy-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .deploy-card--primary {
+    grid-column: 1 / -1;
+  }
+
+  .deploy-card--primary .deploy-card__metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .deploy-card {
+    padding: var(--s-6);
+  }
+}

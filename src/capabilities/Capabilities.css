@@ -1,0 +1,61 @@
+/* Capabilities (B.7.5): one column, two at 768, four at 1024. */
+.cap-grid {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.cap-card {
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+  padding: var(--s-5);
+  background: var(--surface);
+  border: var(--hairline);
+  border-radius: var(--r-2);
+}
+
+.cap-card__skills {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.cap-card__skills li:not(:last-child)::after {
+  content: "·";
+  margin-inline: var(--s-2);
+  color: var(--cyan-600);
+}
+
+.cap-card__proof {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+  padding-top: var(--s-4);
+  border-top: var(--hairline);
+}
+
+.cap-card__link {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+}
+
+@media (min-width: 768px) {
+  .cap-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-5);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cap-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .cap-card {
+    padding: var(--s-6);
+  }
+}

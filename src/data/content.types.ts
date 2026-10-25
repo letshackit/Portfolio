@@ -201,8 +201,34 @@ export interface ContactContent {
   readonly resumeMeta: string;
 }
 
+/** Structural labels used by components (not copy from the résumé). */
+export interface UiLabels {
+  readonly skipLink: string;
+  readonly monogram: string;
+  readonly navLabel: string;
+  readonly pipelineCaption: string;
+  readonly deploymentPrefix: string;
+  readonly stackLabel: string;
+  readonly metricsLabel: string;
+  readonly artifactLabel: string;
+  readonly stageListLabel: string;
+  readonly connectsTo: string;
+  readonly proofLabel: string;
+  readonly degreesHeading: string;
+  readonly journalLabel: string;
+  readonly factsLabel: string;
+  readonly archGroupsLabel: string;
+  readonly contactEmail: string;
+  readonly contactPhone: string;
+  readonly contactLocation: string;
+  readonly contactLinkedin: string;
+  readonly contactGithub: string;
+  readonly openLinkedin: string;
+}
+
 export interface SiteContent {
   readonly meta: SiteMeta;
+  readonly ui: UiLabels;
   readonly nav: readonly NavItem[];
   readonly hero: HeroContent;
   readonly boot: readonly BootLine[];

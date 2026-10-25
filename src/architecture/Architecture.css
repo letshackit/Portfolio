@@ -1,0 +1,111 @@
+/* Architecture (B.7.4): facts strip, PROPOSED banner, grouped list. The diagram arrives in step 3. */
+.arch-facts {
+  display: grid;
+}
+
+.arch-facts__row {
+  display: grid;
+  grid-template-columns: var(--strip-label-w) 1fr;
+  gap: var(--s-3);
+  align-items: baseline;
+  padding-block: var(--s-3);
+  border-top: var(--hairline);
+}
+
+.arch-facts__row:last-child {
+  border-bottom: var(--hairline);
+}
+
+.arch-banner {
+  margin-top: var(--s-5);
+  padding: var(--s-3) var(--s-4);
+  background: var(--fill-amber);
+  border: 1px solid var(--line-amber);
+  border-radius: var(--r-1);
+  color: var(--amber-400);
+}
+
+.arch-groups {
+  display: grid;
+  gap: var(--s-6);
+  margin-top: var(--s-6);
+}
+
+.arch-group {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.arch-group__list {
+  border: var(--hairline);
+  border-radius: var(--r-2);
+  background: var(--surface);
+}
+
+.arch-node + .arch-node {
+  border-top: var(--hairline);
+}
+
+.arch-node[data-kind="integration-phase2"] .arch-node__label {
+  color: var(--t-2);
+}
+
+.arch-node__button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: var(--row-h);
+  padding: 0 var(--s-4);
+  text-align: start;
+  color: var(--t-1);
+}
+
+.arch-node__button:hover {
+  background: var(--surface-raised);
+}
+
+.arch-node__button[aria-expanded="true"] .icon {
+  rotate: 180deg;
+}
+
+.arch-node__panel {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4) var(--s-4);
+}
+
+.arch-node__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.arch-node__links li {
+  padding: var(--s-1) var(--s-2);
+  background: var(--surface-inset);
+  border-radius: var(--r-1);
+  font-size: var(--fs-mono-caption);
+  color: var(--t-2);
+}
+
+@media (min-width: 1024px) {
+  .arch-facts {
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--s-7);
+  }
+
+  .arch-facts__row:nth-last-child(2) {
+    border-bottom: var(--hairline);
+  }
+
+  .arch-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .arch-group:nth-child(3) {
+    grid-row: span 2;
+  }
+}

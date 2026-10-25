@@ -1,0 +1,111 @@
+/* Hero (B.7.1). The frame slot reserves the pipeline box: phone 320 x 427, tablet 1000:340, desktop capped at 420 tall. */
+.hero {
+  min-height: 100svh;
+  padding-top: calc(var(--header-h) + var(--s-5));
+  padding-bottom: var(--s-8);
+}
+
+.hero__text {
+  display: grid;
+  gap: var(--s-5);
+  max-width: var(--measure-hero);
+}
+
+.hero__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.hero__subline {
+  max-width: var(--measure-lead);
+}
+
+.status-strip {
+  display: grid;
+}
+
+.status-strip__row {
+  display: grid;
+  grid-template-columns: var(--strip-label-w) 1fr;
+  gap: var(--s-3);
+  align-items: baseline;
+  padding-block: var(--s-2);
+  border-top: var(--hairline);
+}
+
+.status-strip__row:last-child {
+  border-bottom: var(--hairline);
+}
+
+.status-strip__label {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.hero__actions {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.pipeline-frame {
+  position: relative;
+  display: grid;
+  margin-top: var(--s-7);
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--frame-narrow-w);
+  aspect-ratio: 360 / 480;
+  border: var(--rule);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+
+.pipeline-frame__caption {
+  padding: var(--s-3) var(--s-4);
+  align-self: start;
+}
+
+@media (min-width: 768px) {
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .pipeline-frame {
+    max-width: none;
+    aspect-ratio: 1000 / 340;
+  }
+}
+
+@media (min-width: 1024px) {
+  .status-strip {
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    gap: var(--s-7);
+  }
+
+  .status-strip__row {
+    border: 0;
+    padding-block: 0;
+    grid-template-columns: 1fr;
+    gap: var(--s-1);
+  }
+
+  .status-strip__row:last-child {
+    border: 0;
+  }
+
+  .status-strip__row + .status-strip__row {
+    padding-inline-start: var(--s-7);
+    border-inline-start: var(--hairline);
+  }
+}
+
+@media (min-width: 1280px) {
+  .pipeline-frame {
+    max-height: var(--frame-max-h);
+    max-width: var(--frame-max-w);
+  }
+}

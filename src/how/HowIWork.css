@@ -1,0 +1,94 @@
+/* How I work (B.7.2), list mode at every width in step 1. */
+.how-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-3);
+  border: var(--hairline);
+  border-radius: var(--r-pill);
+  text-transform: uppercase;
+}
+
+.how-tools__mark {
+  width: var(--s-1);
+  height: var(--s-1);
+  background: var(--cyan-500);
+}
+
+.stepper-list {
+  display: grid;
+  gap: var(--s-5);
+  margin-top: var(--s-6);
+}
+
+.stepper-list__item {
+  position: relative;
+  padding-inline-start: var(--s-6);
+  border-inline-start: var(--rule);
+  margin-inline-start: var(--s-2);
+  border-radius: var(--r-2);
+}
+
+.stepper-list__item[data-selected] {
+  border-color: var(--line-3);
+}
+
+.stepper-list__dot {
+  position: absolute;
+  top: var(--s-1);
+  left: calc(var(--dot-lg) / -2 - 1px);
+  width: var(--dot-lg);
+  height: var(--dot-lg);
+  border: 1px solid var(--cyan-600);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+}
+
+.stage-panel {
+  display: grid;
+  gap: var(--s-3);
+  max-width: var(--measure-body);
+}
+
+.stage-panel__artifact {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--r-3);
+}
+
+.stage-panel__text {
+  color: var(--t-1);
+}
+
+.stage-panel__numbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-6);
+}
+
+@media (min-width: 768px) {
+  .stepper-list__item {
+    padding-inline-start: var(--s-7);
+  }
+
+  .stage-panel {
+    max-width: none;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    column-gap: var(--grid-gap);
+  }
+
+  .stage-panel > .mono-label,
+  .stage-panel > h3,
+  .stage-panel > p {
+    grid-column: 1;
+  }
+
+  .stage-panel__artifact {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: start;
+  }
+}

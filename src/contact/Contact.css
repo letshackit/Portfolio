@@ -1,0 +1,83 @@
+/* Contact panel (B.7.8) and footer. */
+.contact-panel {
+  display: grid;
+  gap: var(--s-6);
+  padding: var(--s-5);
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--r-2);
+}
+
+.contact-panel__main {
+  display: grid;
+  gap: var(--s-5);
+  justify-items: start;
+}
+
+.contact-panel__side {
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+}
+
+.contact-panel__side .btn {
+  justify-content: center;
+}
+
+.contact-list {
+  display: grid;
+  width: 100%;
+}
+
+.contact-list__row {
+  display: grid;
+  grid-template-columns: var(--strip-label-w) 1fr;
+  gap: var(--s-3);
+  align-items: center;
+  min-height: var(--tap);
+  border-top: var(--hairline);
+}
+
+.contact-list__row dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.contact-list__row a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  color: var(--t-1);
+}
+
+.site-footer {
+  padding-block: var(--s-5);
+  border-top: var(--hairline);
+}
+
+.site-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.site-footer__name {
+  text-transform: uppercase;
+}
+
+@media (min-width: 768px) {
+  .contact-panel {
+    padding: var(--s-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .contact-panel {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--s-7);
+    padding: var(--s-7);
+  }
+}
