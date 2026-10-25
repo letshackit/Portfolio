@@ -1,5 +1,6 @@
 import { content } from '../data/content';
 import { anchorHref } from '../lib/anchors';
+import { onAnchorClick } from '../lib/scroll';
 import { Icon } from '../ui/Icon';
 import { Section } from '../ui/Section';
 import { SectionHeading } from '../ui/SectionHeading';
@@ -24,7 +25,7 @@ export function Capabilities() {
             </ul>
             <div className="cap-card__proof">
               <p className="mono-label">{ui.proofLabel}</p>
-              <a className="cap-card__link" href={anchorHref(group.anchor)}>
+              <a className="cap-card__link" href={anchorHref(group.anchor)} onClick={onAnchorClick}>
                 {group.proof}
                 <Icon name="arrow-right" />
               </a>

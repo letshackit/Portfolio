@@ -55,7 +55,7 @@ export function PipelineOverlay({ layout, stages, label }: PipelineOverlayProps)
               className="stage"
               data-stage={i}
               data-active={selectedStage === stage.id || undefined}
-              aria-label={`${stage.name} (${stage.index}/${stages.length})`}
+              aria-label={`${String(stage.index).padStart(2, '0')} ${stage.shortLabel}: ${stage.name} (${stage.index}/${stages.length})`}
               aria-describedby={tipDomId}
               onClick={() => select(stage)}
               onFocus={() => setHoveredStage(stage.id)}

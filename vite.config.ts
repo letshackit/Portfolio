@@ -33,7 +33,8 @@ export default defineConfig({
       },
     },
   },
-  server: { host: true },
+  // Loopback only, and never serve the repo's own metadata (.git holds the remote URL, .sdlc the decision record).
+  server: { fs: { deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/.sdlc/**'] } },
   preview: { port: 4173 },
   test: {
     environment: 'jsdom',

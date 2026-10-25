@@ -9,10 +9,12 @@ type Phase = 'running' | 'ending';
 interface BootScreenProps {
   /** Called once the screen has faded out and may unmount. */
   readonly onDone: () => void;
+  /** Called once, the moment the fade begins, so the page beneath can start its entrance. */
+  readonly onEnding?: () => void;
 }
 
 /** First-visit boot log (FR-15..FR-23, ADR-008). Ends by timeout, Skip, any key, click or tap. */
-export function BootScreen({ onDone }: BootScreenProps) {
+export function BootScreen({ onDone, onEnding }: BootScreenProps) {
   const lines = content.boot;
   const [phase, setPhase] = useState<Phase>('running');
   const [shown, setShown] = useState(1);
@@ -22,10 +24,12 @@ export function BootScreen({ onDone }: BootScreenProps) {
   const timers = useRef<number[]>([]);
   const skipRef = useRef<HTMLButtonElement>(null);
   const onDoneRef = useRef(onDone);
+  const onEndingRef = useRef(onEnding);
 
   useEffect(() => {
     onDoneRef.current = onDone;
-  }, [onDone]);
+    onEndingRef.current = onEnding;
+  }, [onDone, onEnding]);
 
   const end = useCallback(() => {
     if (phaseRef.current === 'ending') return;
@@ -33,6 +37,7 @@ export function BootScreen({ onDone }: BootScreenProps) {
     for (const id of timers.current) window.clearTimeout(id);
     timers.current = [window.setTimeout(() => onDoneRef.current(), FADE_MS)];
     markBooted();
+    onEndingRef.current?.();
     setPhase('ending');
   }, []);
 

@@ -162,7 +162,7 @@
     margin-inline-start: 0;
   }
 
-  .site-header__menu-btn {
+  .site-header .site-header__menu-btn {
     display: none;
   }
 

@@ -2,6 +2,7 @@
  * Scrolling seam (ADR-002, architecture E.4). Only this module knows whether a smoother exists.
  * Native mode is the default; motion.ts attaches ScrollSmoother through attachSmoother() when eligible.
  */
+import type { MouseEvent } from 'react';
 import { ANCHORS, type AnchorId } from '../config';
 
 /** Focus sentinel at the very start of the page: focus lands here when the boot ends, so the next Tab reaches the skip link (FR-23). */
@@ -57,6 +58,25 @@ function headerOffset(): number {
 
 export function isAnchorId(value: string): value is AnchorId {
   return (Object.values(ANCHORS) as string[]).includes(value);
+}
+
+/** Section id named by an in-page href such as "#deployments", or null for anything else. */
+function anchorIdFromHref(href: string | null): AnchorId | null {
+  if (!href || !href.startsWith('#')) return null;
+  const id = href.slice(1);
+  return isAnchorId(id) ? id : null;
+}
+
+/**
+ * Click handler for in-page links: routes a plain left click through scrollToAnchor so ScrollSmoother, the hash
+ * and focus stay in step. Modified clicks and unknown targets keep their native meaning.
+ */
+export function onAnchorClick(event: MouseEvent<HTMLAnchorElement>): void {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const id = anchorIdFromHref(event.currentTarget.getAttribute('href'));
+  if (!id) return;
+  event.preventDefault();
+  void scrollToAnchor(id, { focus: true });
 }
 
 /** The element that takes focus after a jump: the section heading, or the section itself. */

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { onAnchorClick } from '../lib/scroll';
 import { ExternalLink } from './ExternalLink';
 import { Icon, type IconName } from './Icon';
 
@@ -46,7 +47,12 @@ export function Button(props: ButtonProps) {
       );
     }
     return (
-      <a href={props.href} className={cls} download={props.download}>
+      <a
+        href={props.href}
+        className={cls}
+        download={props.download}
+        onClick={props.href.startsWith('#') ? onAnchorClick : undefined}
+      >
         {props.children}
         {icon}
       </a>

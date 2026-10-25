@@ -3,7 +3,7 @@ import { act, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrefsContext, defaultPrefs, type Prefs } from '../app/providers/prefsContext';
 import { UiContext, type UiContextValue } from '../app/providers/uiContext';
-import { attachSmoother, getMode, lockScroll, refresh, scrollToAnchor, type SmootherHandle } from '../lib/scroll';
+import { attachSmoother, getMode, lockScroll, onAnchorClick, refresh, scrollToAnchor, type SmootherHandle } from '../lib/scroll';
 import { revealProps, useMotion } from '../lib/reveal';
 
 const startMotion = vi.fn(() => ({ dispose: vi.fn() }));
@@ -125,5 +125,19 @@ describe('scroll seam with a smoother attached', () => {
     await scrollToAnchor('history', { instant: true, focus: true });
     expect(section.scrollIntoView).toHaveBeenCalled();
     expect(document.activeElement).toBe(document.getElementById('history-heading'));
+  });
+});
+
+describe('onAnchorClick', () => {
+  it('routes a plain click on an in-page link through scrollToAnchor and leaves modified clicks alone', () => {
+    document.body.innerHTML = '<section id="deployments"></section><a id="l" href="#deployments">go</a>';
+    const link = document.getElementById('l') as HTMLAnchorElement;
+    const plain = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
+    link.addEventListener('click', (e) => onAnchorClick(e as unknown as import('react').MouseEvent<HTMLAnchorElement>));
+    link.dispatchEvent(plain);
+    expect(plain.defaultPrevented).toBe(true);
+    const modified = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0, ctrlKey: true });
+    link.dispatchEvent(modified);
+    expect(modified.defaultPrevented).toBe(false);
   });
 });

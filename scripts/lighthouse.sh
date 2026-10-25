@@ -13,7 +13,7 @@ PID=$!
 trap 'kill $PID 2>/dev/null; rm -rf "$OUT"' EXIT
 sleep 3
 CHROME_PATH="${CHROME_PATH:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}" \
-npx --yes lighthouse "http://localhost:$PORT/" --form-factor=mobile --screenEmulation.mobile \
+npx --yes lighthouse@12.2.1 "http://localhost:$PORT/" --form-factor=mobile --screenEmulation.mobile \
   --throttling-method=simulate --only-categories=performance,accessibility,best-practices,seo \
   --output=html --output=json --output-path=./.sdlc/reports/lighthouse-mobile \
   --chrome-flags="--headless=new"

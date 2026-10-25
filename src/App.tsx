@@ -30,7 +30,6 @@ function Root() {
 
   const onBootDone = useCallback(() => {
     setBooting(false);
-    enterHero();
     document.getElementById(PAGE_START_ID)?.focus({ preventScroll: true });
     landOnHash();
   }, []);
@@ -45,7 +44,7 @@ function Root() {
   return (
     <>
       <Shell />
-      {booting ? <BootScreen onDone={onBootDone} /> : null}
+      {booting ? <BootScreen onDone={onBootDone} onEnding={enterHero} /> : null}
     </>
   );
 }

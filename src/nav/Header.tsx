@@ -50,6 +50,7 @@ export function Header() {
         <a
           className="site-header__brand"
           href={`#${ANCHORS.top}`}
+          aria-label={content.meta.name}
           onClick={(event) => go(event, ANCHORS.top)}
         >
           <span className="site-header__mark" aria-hidden="true">

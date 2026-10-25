@@ -270,3 +270,87 @@ sh scripts/lighthouse.sh (mobile, simulated throttle, local preview, real Chrome
 ```
 **Known gaps / shortcuts:** (a) Lighthouse is local only; NFR-11 is judged on the live URL, not measured. (b) a11y 96 passes the 95 target but two audits fail, both in src/ (not mine to edit): link-name on `a.site-header__brand` (no discernible name) and label-content-name-mismatch on the hero pipeline `button.stage` elements (aria-label "Research (1/7)" does not contain the visible text). Recommend fixing both. (c) Not run: Rich Results Test, LinkedIn Post Inspector, 404 status on a real host, ten-second test, keyboard/360px/reduced-motion walk-throughs (human or later agents). (d) AC-11 not met: architecture status is still 'proposed' and the owner has not approved the favicon/OG image (A-6); launch is blocked on those, build is not. (e) public/sitemap.xml lastmod is the build date and will change on each `npm run sitemap`. (f) 404.html and the CSP in _headers use literal colours since they are standalone files outside the Vite pipeline. (g) tsbuildinfo files in repo root are ignored by .gitignore, not deleted. (h) index.html JSON-LD carries the owner's own email and phone per FR-135.
 **Next agent must verify:** the two a11y failures above; that _headers matches the host's syntax once Q-5 names the host; OG image copy and look (owner approval); that no CSP violations appear in the browser console with the _headers CSP (frame-ancestors only applies as a header); that check-confidential's --launch mode is the intended gate wording for ADR-005.
+
+### 2026-10-25T10:55Z — security-auditor (round 1)
+**Did:** Security audit of revamp/mission-control against main. The working tree was clean, so there were no uncommitted files. Reviewed index.html, the CSP, public/_headers, 404.html, every external link, clipboard and sessionStorage use, scripts/, vite.config.ts, package.json, git history (all refs), the résumé PDF (active content and metadata only) and a scratch production build. Ran a local-only check of the Vite dev server bound to 127.0.0.1, then stopped it. Did not edit source.
+**Artifacts:** .sdlc/05-security-audit-1.md
+**Verdict:** BLOCK. CRITICAL 0, HIGH 1, MEDIUM 1, LOW 4, INFO 4.
+**Key decisions:** H-1 is rated HIGH even though it is not in the shipped site. A live GitHub OAuth token (`gho_…`) sits in plain text in the git remote URL. The branch made the dev server listen on every interface (vite.config.ts:36 `server: { host: true }`, on top of `vite --host` from main). Vite 5.4.21's default fs.deny does not cover `.git/`, so the token is served to anyone on the LAN. Dev-dependency advisories are rated LOW because none reach the shipped site.
+**Verification run:**
+```
+npm audit --omit=dev -> found 0 vulnerabilities (exit 0)
+npm audit -> 17 vulnerabilities (1 low, 5 moderate, 9 high, 2 critical), exit 1; all devDependencies (tinypool/vitest, vite/esbuild, postcss, brace-expansion, ...); none in the build
+sh scripts/check-confidential.sh -> 4 PASS, WARN architecture 'proposed', check-confidential: OK, exit 0
+planted strings in scratch dir via scripts/check-confidential.sh <dir>: joined/UPPER/space/hyphen/underscore/NBSP vendor, author, old host, gtag -> exit 1;
+  vendor with &nbsp; / '.' / zero-width, vendor or author wrapped across two JSX lines, vendor in a non-résumé .pdf, AKIA/PEM/ghp_ -> exit 0 (missed); nonexistent path -> exit 0. Scratch files removed.
+npx vite build --outDir <scratchpad>/build-security-1 -> built in 886ms; index.html has 1 external module script + JSON-LD only; no eval/new Function/Worker/WebSocket/sendBeacon; only fetch is Vite's same-origin modulepreload polyfill; 0 .map files; .DS_Store present in output
+npx vite --host 127.0.0.1 --port 5791 ; curl /.git/config -> HTTP 200, body contains "gho_" (1); /.sdlc/00-inputs/testimonials.md -> 200; server killed
+git log --all -p | grep token/key formats -> only false positives (Draco wasm glue, "desk-architecture"); no committed secret
+git grep decrypt|encrypt|crypto.subtle|.enc on HEAD -> 0 hits; no .enc/.glb/draco files tracked
+grep _blank src -> only src/ui/ExternalLink.tsx:15 (rel="noopener noreferrer") and window.open(...,'noopener,noreferrer') at src/palette/commands.ts:98
+grep dangerouslySetInnerHTML|innerHTML|insertAdjacentHTML|eval in src (non-test) -> 0 hits
+```
+**Must fix before the PR gate:**
+- *Owner, not code (the implementer cannot clear this):* revoke the `gho_` token and reset `origin` to `https://github.com/letshackit/Portfolio.git` with no credentials in it (use the osxkeychain helper). Confirm whether the GitHub repo is public before any push (M-1: `.sdlc/` names the HRIS vendor and the SBI Life contact).
+- *Implementer (H-1):*
+  - remove `server: { host: true }` from vite.config.ts
+  - change `"dev"` to plain `vite` (an optional `"dev:lan"` may keep `--host`)
+  - add `server.fs.deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/.sdlc/**']`
+- *Recommended, same round (LOW):*
+  - delete public/.DS_Store and src/.DS_Store (L-2)
+  - harden scripts/check-confidential.sh (L-1): multiline and separator-tolerant matching, exclude only the résumé PDF, fail when a path is missing, wider secret patterns
+  - make the build run the gate, or document that the host must run `npm run verify`
+  - pin the lighthouse version (L-3)
+**Known gaps / shortcuts:**
+- Did not check the GitHub repo's visibility or the token's scope; both need network calls with the credential, which I avoided.
+- Did not test LAN reachability from a second machine; it follows from `--host` and `server.host: true`.
+- Did not open a browser to watch for CSP violations; the CSP check is static, against the built files.
+- Did not run `npm audit fix`, because this step may not run installs.
+- The raw `gho_` token now also appears in this agent's local transcript, through `git remote -v` output. That is one more reason to revoke it.
+**Next agent must verify:**
+- implementer: after the H-1 fix, `npx vite --host 127.0.0.1 --port <p>` then `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:<p>/.git/config` returns 403, and the same for `/.sdlc/00-inputs/testimonials.md`; `npm run dev` output shows only a Local URL, no Network URL.
+- orchestrator: escalate the token revocation and the repo-visibility question to the owner rather than looping the implementer on them.
+- security-auditor round 2: re-run the planted-string matrix against the updated check-confidential.sh.
+
+### 2026-10-25T11:03Z — code-reviewer (round 1)
+**Verdict:** BLOCK
+**Artifacts:** .sdlc/05-review-1.md
+**Did:** Reviewed `git diff main...HEAD` (0c81e60..e152d08; the working tree had no uncommitted source). Checked it against the PRD (FR/NFR plus Amendments), architecture B.5, C, D, E, H, J, ADR-001..008, the stories, and every implementer's "Known gaps". Ran the gates myself. Then built to a scratch folder, served it with `vite preview`, and drove headless Chrome over CDP: real mouse, keyboard and wheel input, computed styles, resource timing. Every CONFIRMED finding below was reproduced, not inferred.
+**Verification run:**
+```
+npm run verify -> exit 0. eslint: no output. tsc -b: no output. vite build ok.
+  PASS NFR-5 126.7/300 kB, NFR-6 211.2/400 kB, NFR-8 184.4/1024 kB, FR-141 1698.4/5120 kB; entry 24.7 kB gz
+  check-confidential: 4 PASS, WARN architecture 'proposed', OK
+npm test -> Test Files 13 passed (13), Tests 106 passed (106)
+grep -rniE "people ?strong|abha|sinha|netlify" src scripts index.html public dist README.md (PDF excluded)
+  -> hits only in check-confidential.sh (split patterns) and README "Netlify" hosting note
+CDP, 1280x800, motion on, real click on "See deployments" -> wrapper.scrollTop=2024, scrollY=0; after 40 wheel-ups #top still at -2024
+CDP, footer "Back to top" at scrollY 9932 -> scrollY unchanged, hero at -9932
+CDP, #menu-button at 1280 -> computed display:flex, 84x44, in Tab order
+CDP, boot end -> hero h1 opacity 1 during the fade, then 0 when data-entered is set, back to 1 by about 2.3 s
+CDP, resource timing first visit 1280 -> three chunk starts at 141 ms (boot covers the hero until 1700 ms)
+CDP, 360/768/1024/1280/1600 -> no horizontal overflow; 360: no tap target under 44 px; fonts >=16 sans / >=12 mono
+```
+**Blockers:** 1. In-page `#anchor` links (hero "See deployments", the TravelDesk "See the architecture" link, the capability proof links, footer "Back to top") skip `scrollToAnchor()`. Under ScrollSmoother they scroll the fixed `#smooth-wrapper` natively: the hero becomes unreachable, Back to top does nothing, and the architecture link lands off screen.
+**Majors (4):** the MENU button shows at 900 px and up (`.btn` cascade beats `.site-header__menu-btn`); the hero text flashes at boot end (`data-entered` is set after the fade instead of at `ending`); the brand link has no accessible name below 768 px; the hero stage buttons fail WCAG 2.5.3 Label in Name.
+**Known gaps / shortcuts (this review):** I did not run axe (not installed), so the palette-listbox finding is PLAUSIBLE. I did not check the architecture-diagram label fit at 768/1024 visually, did not test Safari or Firefox, and ran no real-GPU watchdog or context-loss drills. The headless Chrome used SwiftShader WebGL, so the 3D path ran, but frame times mean nothing. The `motion.ts` context-escape finding is PLAUSIBLE, from GSAP semantics only. `npm run verify` rewrote `dist/` and `public/sitemap.xml`; the lastmod is unchanged (same date) and git shows no diff for it.
+**Next agent (implementer, to fix) must verify:** (1) After routing all `a[href^="#"]` through the scroll seam, repeat the real-mouse test at 1280 with motion on: click "See deployments", then wheel up. The hero must be reachable, `#smooth-wrapper.scrollTop` must stay 0, Back to top must reach the hero with focus on it, and "See the architecture" must land its heading under the header. (2) At 1280 the MENU button is `display:none` and not in the Tab order. (3) Sample hero h1 opacity across boot end: it never drops after the boot starts fading. (4) Lighthouse mobile shows no `link-name` and no `label-content-name-mismatch`. (5) Fix the MINORs in 05-review-1.md, or record why each is deferred. Then send back to code-reviewer round 2.
+
+### 2026-10-25T11:07Z — implementer (review rework, round 1)
+**Story:** review-1 / security-audit-1 findings
+**Did (by finding):**
+- BLOCKER anchors: new `onAnchorClick` in src/lib/scroll.ts (above scrollToAnchor) sends plain left clicks on in-page hrefs through scrollToAnchor (modified clicks stay native). Wired in src/ui/Button.tsx (any href starting '#', covering hero See deployments, TravelDesk See the architecture, footer Back to top) and src/capabilities/Capabilities.tsx (proof links). Unit test added in src/__tests__/motion.test.ts.
+- H-1: vite.config.ts server.host removed, server.fs.deny now has **/.git/** and **/.sdlc/** (plus .env, pem); package.json dev script is plain `vite`. Verified on a running dev server: /.git/config 403, /.sdlc/HANDOFF.md 403, / 200. OWNER STILL MUST revoke the gho_ token and reset the remote URL without credentials; code cannot do that.
+- MAJOR menu button: src/nav/Header.css (900px rule) now uses `.site-header .site-header__menu-btn` to beat .btn display.
+- MAJOR hero flash: BootScreen gets optional onEnding (src/boot/BootScreen.tsx, called in end()); src/App.tsx passes enterHero to it and no longer calls it in onBootDone.
+- MAJOR brand name: aria-label={content.meta.name} on the brand link (src/nav/Header.tsx).
+- MAJOR label-in-name: src/hero/PipelineOverlay.tsx aria-label is now "01 Short label: Name (n/7)", starting with the visible text.
+- M-1: not code-fixable. OWNER must confirm github.com/letshackit/Portfolio is private before any push.
+- L-1: scripts/check-confidential.sh rewritten: perl name scan strips zero-width chars and &nbsp;/&#160; entities, allows whitespace . _ - tags and JSX braces between the words, matches across lines; only Harshal_Saraogi_Resume.pdf is exempt; nonexistent path exits 2; secrets add AKIA, gh[pousr]_ and PEM private keys; stray .DS_Store fails. package.json build now ends with check:confidential. Nine planted cases (nbsp, dot, zero-width, line split for both names, AKIA, ghp_, PEM, JSX brace) each exit 1.
+- L-2: deleted public/.DS_Store (and src/ and dist/ copies); the gate now fails on any .DS_Store.
+- L-3: scripts/lighthouse.sh pins lighthouse@12.2.1 (version confirmed on npm).
+- L-4: waived. Dev-only advisories, not in the shipped bundle (omit=dev reports 0); upgrading vite/vitest majors is out of scope for a rework and npm install is barred in this step.
+**Artifacts:** files above plus the review and audit reports; test author's tests committed (nothing to apply from them).
+**Verification run:** `npm run verify` -> lint, tsc, vite build, sitemap, budgets (all PASS) and check:confidential OK (WARN only: architecture still 'proposed'). `npm test` -> 13 files, 107 tests passed.
+**Known gaps / shortcuts:** No browser re-run of the blocker (headless Chrome click on See deployments under ScrollSmoother), the hero flash, or Lighthouse; fixes verified by code, unit test and build only. Menu-button fix is CSS specificity, unseen at 900px. The perl scan does not handle homoglyphs or base64.
+**Next agent must verify:** in real Chrome at 1280px with motion on, click See deployments, See the architecture, a capability proof link and Back to top, then scroll back to the hero; MENU button hidden at 900px+; no hero flash at boot end; Lighthouse link-name and label-content-name-mismatch now pass.
