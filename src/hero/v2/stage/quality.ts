@@ -1,6 +1,7 @@
 /**
- * Quality tiers for the stage. The adaptive monitor steps down one tier at a time: first pixels (dpr, antialiasing, the
- * mirror pass), then particles (drones, packets, sparkles), then the film effects. Framework-free.
+ * Quality tiers for the stage. The adaptive monitor steps down one tier at a time: first pixels (dpr, the mirror pass,
+ * shadow size), then particles (drones, packets, sparkles), then the film grain. Anti-aliasing is never off: the last
+ * tier keeps 2x MSAA. Framework-free.
  */
 export type Tier = 0 | 1 | 2;
 
@@ -12,19 +13,20 @@ export interface Quality {
   /** Reflective floor render-target size; 0 = a plain glossy floor, no mirror pass. */
   readonly reflect: number;
   readonly shadowRes: number;
+  /** Size of the key light's shadow map (self-shadowing on the avatar). */
+  readonly keyRes: number;
   readonly drones: number;
   /** Packets riding each satellite beam (0..4). */
   readonly packets: number;
   /** Multiplier on the sparkle counts. */
   readonly sparkles: number;
-  readonly chroma: boolean;
   readonly noise: boolean;
 }
 
 export const TIERS: readonly Quality[] = [
-  { dpr: 1.75, msaa: 4, reflect: 768, shadowRes: 512, drones: 6, packets: 4, sparkles: 1, chroma: true, noise: true },
-  { dpr: 1.25, msaa: 0, reflect: 384, shadowRes: 256, drones: 4, packets: 2, sparkles: 0.5, chroma: true, noise: true },
-  { dpr: 1, msaa: 0, reflect: 0, shadowRes: 256, drones: 2, packets: 0, sparkles: 0, chroma: false, noise: false },
+  { dpr: 2, msaa: 4, reflect: 768, shadowRes: 512, keyRes: 2048, drones: 6, packets: 4, sparkles: 1, noise: true },
+  { dpr: 1.5, msaa: 4, reflect: 384, shadowRes: 256, keyRes: 1024, drones: 4, packets: 2, sparkles: 0.5, noise: true },
+  { dpr: 1, msaa: 2, reflect: 0, shadowRes: 256, keyRes: 512, drones: 2, packets: 0, sparkles: 0, noise: false },
 ];
 
 export const LAST_TIER: Tier = 2;

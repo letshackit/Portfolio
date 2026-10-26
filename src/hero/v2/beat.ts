@@ -45,7 +45,7 @@ export function bindHeroBeat(): () => void {
     .fromTo(q('.hv2__copy'), { ...SHOWN, yPercent: 0 }, { ...HIDDEN, yPercent: -16, ease: 'power2.in', duration: 0.42 }, 0)
     .fromTo(q('.hv2__badge'), { ...SHOWN, x: 0 }, { ...HIDDEN, x: 48, ease: 'power2.in', duration: 0.32 }, 0.02)
     .fromTo(q('.hv2__pane'), { ...SHOWN, xPercent: 0 }, { ...HIDDEN, xPercent: 135, ease: 'power2.in', duration: 0.4 }, 0.04)
-    .fromTo(q('.hv2__cue'), SHOWN, { ...HIDDEN, duration: 0.12 }, 0)
+    .fromTo(q('.hv2__cue, .hv2__hint'), SHOWN, { ...HIDDEN, duration: 0.12 }, 0)
     .to(q('.hv2__console'), { width: CHIP_WIDTH, minWidth: 0, ease: 'power2.inOut', duration: 0.34 }, 0.3)
     .to(q('.hv2__console .hv2__term-body'), { height: 0, paddingTop: 0, paddingBottom: 0, autoAlpha: 0, ease: 'power2.inOut', duration: 0.34 }, 0.3)
     .to(q('.hv2__console .hv2__term-meta'), { autoAlpha: 0, duration: 0.2 }, 0.3)

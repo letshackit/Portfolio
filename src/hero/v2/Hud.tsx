@@ -114,6 +114,17 @@ export function Cue() {
   );
 }
 
+/** Mono hint under the avatar's feet; fades for good after the first drag or arrow-key turn. */
+export function RotateHint({ show, done }: { show: boolean; done: boolean }) {
+  return (
+    <div className="hv2__hint" aria-hidden="true">
+      <span className="hv2__hint-text" data-show={show && !done ? '' : undefined}>
+        DRAG TO ROTATE <b>⟲</b>
+      </span>
+    </div>
+  );
+}
+
 function Clock({ paused }: { paused: boolean }) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {

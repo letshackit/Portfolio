@@ -69,6 +69,45 @@
 
 .hv2__canvas canvas {
   display: block;
+  /* Horizontal drags turn the avatar; vertical ones still scroll the page on touch. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hv2__stage:focus-visible {
+  outline: 2px solid var(--cyan-500);
+  outline-offset: -4px;
+}
+
+/* "Drag to rotate": a small mono line under the operator's feet; it fades in once he is standing there. */
+.hv2__hint {
+  position: absolute;
+  left: 60%;
+  bottom: calc(var(--inset) + var(--bar-h) + 16px);
+  transform: translateX(-50%);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  color: var(--t-3);
+  white-space: nowrap;
+}
+.hv2__hint-text {
+  display: inline-block;
+  opacity: 0;
+  transition: opacity 0.9s var(--e-out);
+}
+.hv2__hint-text[data-show] {
+  opacity: 1;
+  transition-delay: 1.4s;
+}
+.hv2__hint b {
+  font-weight: var(--w-regular);
+  color: var(--amber-400);
+  font-size: 0.875rem;
+}
+@media (max-width: 900px) {
+  /* Left of his legs and above the console, where the floor is empty. */
+  .hv2__hint { left: calc(var(--inset) + 12px); transform: none; bottom: calc(var(--inset) + var(--bar-h) + 150px); }
 }
 
 /* Soft edge darkening so the HUD copy always sits on a calm field. */

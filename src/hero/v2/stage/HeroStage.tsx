@@ -1,6 +1,7 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentProps } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Environment, PerformanceMonitor, Sparkles, useGLTF } from '@react-three/drei';
+import { Environment, PerformanceMonitor, Sparkles as DreiSparkles, useGLTF } from '@react-three/drei';
+import type { Points, ShaderMaterial } from 'three';
 import { resetCounters, store } from '../store';
 import { Avatar, AVATAR_URL } from './Avatar';
 import { Backdrop, Floor, GlowPool, Lights } from './Atmosphere';
@@ -13,6 +14,22 @@ import { Effects } from './Effects';
 import { disposeSoftTexture } from './glow';
 import { useCityVectors, useLayout } from './layout';
 import { dprFor, startTier, stepDown, TIERS, type Tier } from './quality';
+
+/**
+ * drei's Sparkles shader writes a slightly negative alpha in the corners of each point sprite (0.05 / d - 0.1 is below
+ * zero past d = 0.5). On the half-float scene buffer that is not clamped, so every sprite drew a dark square around
+ * itself. Clamp it once the material exists.
+ */
+function Sparkles(props: ComponentProps<typeof DreiSparkles>) {
+  const ref = useRef<Points>(null);
+  useLayoutEffect(() => {
+    const mat = ref.current?.material as ShaderMaterial | undefined;
+    if (!mat || !mat.fragmentShader.includes('strength * vOpacity')) return;
+    mat.fragmentShader = mat.fragmentShader.replace('strength * vOpacity', 'max(strength, 0.0) * vOpacity');
+    mat.needsUpdate = true;
+  }, []);
+  return <DreiSparkles {...props} ref={ref} />;
+}
 
 export const ENV_URL = '/hero/char_environment.hdr';
 
@@ -99,7 +116,7 @@ function World({ tier, reduced, onReady }: WorldProps) {
       <fog attach="fog" args={['#07080a', 6.2, 14.5]} />
       <Clock />
       <CameraRig />
-      <Lights />
+      <Lights shadowRes={q.keyRes} />
       <Backdrop />
       <Floor reflect={q.reflect} shadowRes={q.shadowRes} />
       <Suspense fallback={null}>
@@ -161,6 +178,7 @@ export default function HeroStage({ paused, reduced, pin, onReady, onLost }: Her
       frameloop={reduced ? 'demand' : paused ? 'never' : 'always'}
       dpr={dprFor(tier, window.devicePixelRatio)}
       camera={{ fov: 28, near: 0.1, far: 60, position: [2.6, 1.4, 4.5] }}
+      shadows="percentage"
       gl={{ antialias: false, powerPreference: 'high-performance', alpha: false, stencil: false }}
       onCreated={({ gl }) => {
         gl.setClearColor('#07080a');

@@ -1,39 +1,91 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, MeshReflectorMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 import { smoothstep, store } from '../store';
 
-/** Cyan rim from behind-right, amber key from front-left, with a "lights on" ramp that starts at a 40 % floor. */
-export function Lights() {
+/** Where the key and fill aim: his chest. */
+const AIM = new THREE.Vector3(0, 1.05, 0);
+
+/**
+ * Three-point studio on the operator, with a "lights on" ramp that starts at a 40 % floor.
+ * Key: warm (about 3200 K), front-left and high, casting soft shadows onto him (chin, lapel, hair) for form.
+ * Fill: cool cyan, low and front-right, lifting the shadow side without flattening it.
+ * Rim: cyan from behind-right for the silhouette against the city, with a weaker one at the back-left, so the outline
+ * still reads while he turns. The studio HDR (set on his materials) adds the reflections.
+ */
+export function Lights({ shadowRes }: { shadowRes: number }) {
+  const key = useRef<THREE.DirectionalLight>(null);
+  const fill = useRef<THREE.DirectionalLight>(null);
   const rim = useRef<THREE.DirectionalLight>(null);
   const rim2 = useRef<THREE.DirectionalLight>(null);
-  const key = useRef<THREE.PointLight>(null);
   const under = useRef<THREE.PointLight>(null);
   const amb = useRef<THREE.AmbientLight>(null);
   const scene = useThree((s) => s.scene);
+  const aim = useMemo(() => {
+    const o = new THREE.Object3D();
+    o.position.copy(AIM);
+    return o;
+  }, []);
+
+  useLayoutEffect(() => {
+    for (const l of [key.current, fill.current]) {
+      if (l) l.target = aim;
+    }
+    const k = key.current;
+    if (k) {
+      k.shadow.mapSize.set(shadowRes, shadowRes);
+      k.shadow.map?.dispose();
+      k.shadow.map = null;
+    }
+  }, [aim, shadowRes]);
 
   useFrame(() => {
     // 0.4 floor: he is readable the moment he mounts; the intro only brings the lights up to full.
     const k = 0.4 + 0.6 * smoothstep(0, 1, store.intro);
-    if (rim.current) rim.current.intensity = 5.2 * k;
-    if (rim2.current) rim2.current.intensity = 1.8 * k;
-    if (key.current) key.current.intensity = 26 * k;
+    if (key.current) key.current.intensity = KEY * k;
+    if (fill.current) fill.current.intensity = FILL * k;
+    if (rim.current) rim.current.intensity = RIM * k;
+    if (rim2.current) rim2.current.intensity = RIM2 * k;
     if (under.current) under.current.intensity = 2.2 * k;
-    if (amb.current) amb.current.intensity = 0.22 * k;
-    scene.environmentIntensity = 0.55 * k;
+    if (amb.current) amb.current.intensity = 0.1 * k;
+    // The probe lights the avatar through his own materials; this is what the floor and the city get.
+    scene.environmentIntensity = SCENE_ENV * k;
   });
 
   return (
     <>
-      <ambientLight ref={amb} color="#9fb4c8" intensity={0.09} />
-      <directionalLight ref={rim} color="#22d3ee" position={[3.6, 3.2, -3.6]} intensity={2} />
-      <directionalLight ref={rim2} color="#38bdf8" position={[-3.4, 2.4, -3]} intensity={0.7} />
-      <pointLight ref={key} color="#f59e0b" position={[-2.3, 1.9, 2.7]} intensity={10} distance={14} decay={2} />
+      <primitive object={aim} />
+      <ambientLight ref={amb} color="#9fb4c8" intensity={0.1} />
+      <directionalLight
+        ref={key}
+        color="#ffb877"
+        position={[-2.6, 3.2, 3.4]}
+        intensity={KEY}
+        castShadow
+        shadow-radius={5}
+        shadow-bias={-0.0003}
+        shadow-normalBias={0.025}
+        shadow-camera-left={-1.3}
+        shadow-camera-right={1.3}
+        shadow-camera-top={2.3}
+        shadow-camera-bottom={-0.4}
+        shadow-camera-near={2}
+        shadow-camera-far={9}
+      />
+      <directionalLight ref={fill} color="#7fe6ff" position={[3.0, 0.8, 2.8]} intensity={FILL} />
+      <directionalLight ref={rim} color="#22d3ee" position={[3.6, 3.0, -3.4]} intensity={RIM} />
+      <directionalLight ref={rim2} color="#38bdf8" position={[-3.4, 2.4, -3]} intensity={RIM2} />
       <pointLight ref={under} color="#22d3ee" position={[0, 0.2, -1]} intensity={1} distance={5} decay={2} />
     </>
   );
 }
+
+const KEY = 3.1;
+const FILL = 0.7;
+const RIM = 4.2;
+const RIM2 = 1.6;
+const SCENE_ENV = 0.4;
 
 /** A soft radial glow texture with its lower third faded, so a plane never shows a hard line where it meets the floor. */
 function useGlowTexture(stops: ReadonlyArray<readonly [number, string]>): THREE.CanvasTexture {
@@ -158,7 +210,7 @@ export function Floor({ reflect, shadowRes }: FloorProps) {
           <meshBasicMaterial color="#f59e0b" toneMapped={false} transparent opacity={0.5} />
         </mesh>
       </group>
-      <ContactShadows position={[0, 0.012, 0]} opacity={0.8} scale={6} blur={2.4} far={1.8} resolution={shadowRes} color="#000000" />
+      <ContactShadows position={[0, 0.012, 0]} opacity={0.9} scale={5} blur={2.2} far={1.6} resolution={shadowRes} color="#000000" />
     </group>
   );
 }

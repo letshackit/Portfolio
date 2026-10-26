@@ -34,7 +34,8 @@ export const BUDGET = {
   /** Narrow-screen first load, motion allowed (NFR-8). */
   narrowFirstLoadGz: 1024 * 1024,
   /** Whole built folder, raw (FR-141). */
-  distTotal: 5 * 1024 * 1024,
+  /** Raised from 5 MB: the avatar's glb carries 1k webp textures and a 3D portfolio justifies it. */
+  distTotal: 8 * 1024 * 1024,
   /** Early-warning line for the entry chunk (architecture R-1, R-5). */
   entryWarnGz: 120 * 1024,
 } as const;

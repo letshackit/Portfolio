@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type KeyboardEvent } from 'react';
 import { usePrefs } from '../../app/providers/prefsContext';
 import { ANCHORS, TIMING } from '../../config';
 import { hasBooted } from '../../lib/session';
 import { useOffscreenPause } from '../../lib/useOffscreenPause';
 import { afterFirstPaint } from '../../lib/visibility';
 import { supportsWebGL } from '../../lib/webgl';
-import { Badge, Caption, Cue, Frame, Headline, StatusBar } from './Hud';
+import { Badge, Caption, Cue, Frame, Headline, RotateHint, StatusBar } from './Hud';
 import { rampIntro } from './intro';
 import { store } from './store';
 import { AgentConsole, DeployPane } from './Terminals';
@@ -106,6 +106,23 @@ export function Hero() {
     };
   }, [saveData, quality]);
 
+  // The first drag or arrow-key turn fades the "drag to rotate" hint for good.
+  const [turned, setTurned] = useState<boolean>(() => store.interacted);
+  useEffect(() => {
+    store.onInteract = () => setTurned(true);
+    return () => {
+      store.onInteract = null;
+    };
+  }, []);
+
+  // Left / Right turn the avatar while the stage region itself has focus (links inside it keep their own keys).
+  const onStageKey = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    e.preventDefault();
+    store.keyTurn += e.key === 'ArrowRight' ? 1 : -1;
+    store.wake?.();
+  }, []);
+
   // Cursor drives the camera parallax and the head tracking.
   useEffect(() => {
     if (reducedMotion) return;
@@ -155,7 +172,13 @@ export function Hero() {
       data-live={live ? '' : undefined}
       data-entered={entered ? '' : undefined}
     >
-      <div className="hv2__stage" ref={stageRef}>
+      <div
+        className="hv2__stage"
+        ref={stageRef}
+        {...(mount && ready
+          ? { tabIndex: 0, role: 'group', 'aria-label': 'Interactive 3D avatar. Use the left and right arrow keys to rotate.', onKeyDown: onStageKey }
+          : {})}
+      >
         <div className="hv2__poster" aria-hidden="true" />
         <div className="hv2__canvas" aria-hidden="true">
           {mount && Stage ? (
@@ -181,6 +204,7 @@ export function Hero() {
           <DeployPane {...terminal} />
           <Caption />
           <Cue />
+          <RotateHint show={live || (mount && ready)} done={turned} />
           <StatusBar live={mount && ready} scene={live} settled={settled} paused={paused} />
         </div>
       </div>
