@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { content } from '../data/content';
 import { Section } from '../ui/Section';
 import { SectionHeading } from '../ui/SectionHeading';
-import { Education } from './Education';
+import { Credentials } from '../credentials/Credentials';
 import { TimelineEntry } from './TimelineEntry';
 import { useTimelineDraw } from './useTimelineDraw';
 import './History.css';
@@ -25,7 +25,7 @@ export function History() {
           ))}
         </ol>
       </div>
-      <Education />
+      <Credentials />
     </Section>
   );
 }
