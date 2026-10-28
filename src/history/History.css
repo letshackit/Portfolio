@@ -5,6 +5,8 @@
   --hist-glass: rgba(11, 16, 20, 0.78);
   --hist-hi: rgba(255, 255, 255, 0.07);
   --hist-display: clamp(2.75rem, 1rem + 6.2vw, 6.5rem);
+  /* The muted mono ramp, lifted for this section: 8:1 on the card glass and 8.6:1 on the stage (WCAG AA needs 4.5:1). */
+  --t-3: #a6aeb8;
   position: relative;
   isolation: isolate;
   overflow-x: clip;
@@ -26,6 +28,156 @@
   -webkit-mask-image: radial-gradient(ellipse 85% 75% at 30% 50%, var(--mask-solid) 25%, transparent 100%);
 }
 
+/* Opening frame: the heading on the left, the career as a time axis on the right, so the first screen is never half empty. */
+.hist-head {
+  display: grid;
+  gap: var(--s-5);
+  margin-bottom: var(--s-6);
+}
+
+.hist-head .section-heading {
+  margin-bottom: 0;
+}
+
+.hist-index {
+  display: grid;
+  gap: var(--s-3);
+  align-content: end;
+  padding: var(--s-4);
+  background: var(--hist-glass);
+  border: var(--hairline);
+  border-radius: var(--r-3);
+  box-shadow: inset 0 1px 0 var(--hist-hi);
+  font-family: var(--font-mono);
+}
+
+.hist-index__head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  color: var(--cyan-400);
+}
+
+.hist-index__range {
+  color: var(--t-3);
+}
+
+.hist-index__rows {
+  display: grid;
+  gap: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: var(--hairline);
+}
+
+.hist-index__row {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 9.5rem) minmax(0, 1fr) 3.2rem;
+  align-items: center;
+  gap: var(--s-3);
+  color: var(--t-1);
+  font-size: var(--fs-mono-value);
+}
+
+.hist-index__n,
+.hist-index__len {
+  color: var(--t-3);
+}
+
+.hist-index__len {
+  text-align: right;
+}
+
+.hist-index__name {
+  overflow: hidden;
+  font-family: var(--font-sans);
+  font-weight: var(--w-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hist-index__track {
+  position: relative;
+  height: 14px;
+  background: linear-gradient(to right, var(--line-2), var(--line-2)) 0 50% / 100% 1px no-repeat;
+}
+
+.hist-index__bar {
+  position: absolute;
+  top: 3px;
+  height: 8px;
+  border: 1px solid var(--cyan-500);
+  border-radius: 2px;
+  background: rgba(34, 211, 238, 0.22);
+}
+
+.hist-index__row[data-now] .hist-index__bar {
+  border-color: var(--amber-500);
+  background: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+}
+
+.hist-index__promo {
+  position: absolute;
+  top: 1px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  background: var(--amber-400);
+  rotate: 45deg;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
+}
+
+.hist-index__legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding-top: var(--s-3);
+  border-top: var(--hairline);
+  color: var(--t-3);
+}
+
+.hist-index__legend {
+  gap: var(--s-2) var(--s-5);
+}
+
+.hist-index__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.hist-index__key {
+  width: 10px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.hist-index__key--cyan {
+  border: 1px solid var(--cyan-500);
+  background: rgba(34, 211, 238, 0.22);
+}
+
+.hist-index__key--amber {
+  width: 8px;
+  height: 8px;
+  background: var(--amber-400);
+  rotate: 45deg;
+}
+
+@media (min-width: 1024px) {
+  .hist-head {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: end;
+    gap: var(--s-8);
+    margin-bottom: var(--s-7);
+  }
+
+  .hist-index {
+    padding: var(--s-5);
+  }
+}
+
 .hist-section .section-heading h2 {
   max-width: 12ch;
   font-size: var(--hist-display);
@@ -36,7 +188,7 @@
 
 /* ---- The journey: stage + station cards ---- */
 .tl3 {
-  --tl-stage-h: 156px;
+  --tl-stage-h: 208px;
   --tl-rail-col: 30px;
   position: relative;
 }
@@ -69,9 +221,57 @@
 
 .tl3__poster,
 .tl3__canvas,
+.tl3__tags,
 .tl3__scrim {
   position: absolute;
   inset: 0;
+}
+
+/* The scene's words: DOM, moved to their 3D anchors every frame. Invisible until the stage shows one. */
+.tl3__tags {
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tl3__tag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 0;
+  opacity: 0;
+  white-space: nowrap;
+  text-shadow:
+    0 0 14px var(--hist-ink),
+    0 0 4px var(--hist-ink);
+  will-change: transform, opacity;
+}
+
+.tl3__tag-name {
+  color: var(--t-1);
+  font-size: 1.0625rem;
+  font-weight: var(--w-semibold);
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.tl3__tag-dates {
+  color: var(--cyan-400);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-caption);
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.tl3__tag--year {
+  color: var(--cyan-400);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-caption);
+  letter-spacing: 0.14em;
 }
 
 .tl3__poster {
@@ -254,6 +454,11 @@
   display: none;
 }
 
+.tl3__pips-label {
+  display: none;
+  color: var(--t-3);
+}
+
 .tl3__pip[data-active] {
   color: var(--amber-400);
 }
@@ -298,13 +503,14 @@
 
 .tl3__list::before {
   bottom: 0;
-  background: var(--line-2);
+  background: repeating-linear-gradient(to bottom, var(--line-2) 0 6px, transparent 6px 12px);
 }
 
+/* The lit part of the rail is a dashed track too: it reads as the card index, never as the scene's solid time axis. */
 .tl3__list::after {
   height: var(--tl-fill);
-  background: linear-gradient(to bottom, var(--cyan-500), var(--amber-500));
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.55);
+  background: repeating-linear-gradient(to bottom, var(--amber-500) 0 6px, transparent 6px 12px);
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
 }
 
 .tl3__item {
@@ -405,7 +611,7 @@
   font-weight: var(--w-regular);
   letter-spacing: 0;
   line-height: 1.3;
-  color: var(--t-3);
+  color: var(--t-2);
 }
 
 .tl3__where {
@@ -576,7 +782,7 @@
 /* ---- Tablet: the strip gets a little taller and the active name reads out ---- */
 @media (min-width: 640px) {
   .tl3 {
-    --tl-stage-h: 200px;
+    --tl-stage-h: 264px;
   }
 
   .tl3__pip[data-active] .tl3__pip-name {
@@ -620,7 +826,8 @@
 
   /* The scene lives in the left part of the stage, centred on its own axis; its right edge melts into the dark. */
   .tl3__poster,
-  .tl3__canvas {
+  .tl3__canvas,
+  .tl3__tags {
     right: auto;
     width: 62%;
     -webkit-mask-image: linear-gradient(to right, var(--mask-solid) 70%, transparent);
@@ -695,6 +902,12 @@
   .tl3__pip-name,
   .tl3__pip[data-active] .tl3__pip-name {
     display: inline;
+  }
+
+  .tl3__pips-label {
+    display: inline;
+    padding-right: var(--s-2);
+    border-right: var(--hairline);
   }
 
   .tl3[data-armed] .tl3__card {

@@ -51,6 +51,9 @@ export function StageHud({ model, active, onJump, live }: StageHudProps) {
         ) : null}
       </div>
       <div className="tl3__pips" role="group" aria-label="Jump to a role">
+        <span className="tl3__pips-label mono-label" aria-hidden="true">
+          Jump to
+        </span>
         {model.stations.map((s, i) => (
           <button
             key={s.id}

@@ -1,17 +1,18 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentProps, type RefObject } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Billboard, Environment, Grid, Lightformer, PerformanceMonitor, Sparkles as DreiSparkles } from '@react-three/drei';
-import { MeshBasicMaterial, PointLight, Vector3, type Points, type ShaderMaterial } from 'three';
+import { Environment, Grid, Lightformer, PerformanceMonitor, Sparkles as DreiSparkles } from '@react-three/drei';
+import { PointLight, type Points, type ShaderMaterial } from 'three';
 import { dprFor, startTier, stepDown, TIERS, type Tier } from '../../hero/v2/stage/quality';
-import { hstore, smoothstep } from '../historyStore';
+import { hstore } from '../historyStore';
 import type { TimelineModel } from '../timelineModel';
 import { Effects } from './Effects';
 import { buildGateGeometry, disposeGate } from './gate';
-import { drawLabel, fontsReady, MONO, softDot } from './labels';
+import { softDot } from './labels';
 import { focusBack, monthsBack, pathPoint } from './path';
 import { Rig, type RigMode } from './Rig';
 import { MonthTicks, Spine } from './Spine';
 import { Flare, Station } from './Station';
+import { TagProjector } from './TagProjector';
 
 /** Same fix as the hero's: drei's Sparkles shader writes a slightly negative alpha in the sprite corners. */
 function Sparkles(props: ComponentProps<typeof DreiSparkles>) {
@@ -37,60 +38,10 @@ export interface HistoryStageProps {
   readonly reduced: boolean;
   /** Hold this tier and never adapt (QA); null adapts. */
   readonly pin: Tier | null;
+  /** The DOM layer the scene's labels live in; the stage only moves them. */
+  readonly tags: RefObject<HTMLElement | null>;
   readonly onReady: () => void;
   readonly onLost: () => void;
-}
-
-function YearLabels({ model, fonts, reduced }: { model: TimelineModel; fonts: boolean; reduced: boolean }) {
-  const items = useMemo(
-    () =>
-      fonts
-        ? model.years.map((y) => ({
-            year: y.year,
-            position: pathPoint(monthsBack(model, y.at)),
-            texture: drawLabel([{ text: String(y.year), font: `500 64px ${MONO}`, color: '#67e8f9', y: 0.7, tracking: 6 }], 384, 128),
-          }))
-        : [],
-    [model, fonts],
-  );
-  useEffect(
-    () => () => {
-      for (const i of items) i.texture.dispose();
-    },
-    [items],
-  );
-  const mats = useRef<(MeshBasicMaterial | null)[]>([]);
-  const tmp = useMemo(() => new Vector3(), []);
-  useFrame((state) => {
-    items.forEach((it, i) => {
-      const m = mats.current[i];
-      if (!m) return;
-      const d = state.camera.position.distanceTo(tmp.copy(it.position));
-      m.opacity = reduced ? 0.9 : smoothstep(5, 9, d) * smoothstep(26, 12, d) * 0.8;
-    });
-  });
-  return (
-    <>
-      {items.map((it, i) => (
-        <Billboard key={it.year} position={[it.position.x - 0.45, it.position.y + 0.34, it.position.z]}>
-          <mesh>
-            <planeGeometry args={[1.0, 0.333]} />
-            <meshBasicMaterial
-              ref={(m) => {
-                mats.current[i] = m;
-              }}
-              map={it.texture}
-              color="#b4b4b4"
-              transparent
-              depthWrite={false}
-              toneMapped={false}
-              fog={false}
-            />
-          </mesh>
-        </Billboard>
-      ))}
-    </>
-  );
 }
 
 /** One amber light riding with the visitor, so the glass of the station they are at catches warm light. */
@@ -107,16 +58,16 @@ function FocusLight({ model, reduced }: { model: TimelineModel; reduced: boolean
   return <pointLight ref={ref} color="#f59e0b" distance={9} decay={2} intensity={9} />;
 }
 
-interface WorldProps extends Pick<HistoryStageProps, 'model' | 'mode' | 'reduced'> {
+interface WorldProps extends Pick<HistoryStageProps, 'model' | 'mode' | 'reduced' | 'tags'> {
   readonly tier: Tier;
   readonly onReady: () => void;
 }
 
-function ReadyGate({ hold, onReady }: { hold: boolean; onReady: () => void }) {
+function ReadyGate({ onReady }: { onReady: () => void }) {
   const frames = useRef(0);
   const fired = useRef(false);
   useFrame(() => {
-    if (fired.current || hold) return;
+    if (fired.current) return;
     frames.current += 1;
     if (frames.current < 3) return;
     fired.current = true;
@@ -125,18 +76,8 @@ function ReadyGate({ hold, onReady }: { hold: boolean; onReady: () => void }) {
   return null;
 }
 
-function World({ model, mode, reduced, tier, onReady }: WorldProps) {
+function World({ model, mode, reduced, tags, tier, onReady }: WorldProps) {
   const q = TIERS[tier];
-  const [fonts, setFonts] = useState(false);
-  useEffect(() => {
-    let live = true;
-    void fontsReady().then(() => {
-      if (live) setFonts(true);
-    });
-    return () => {
-      live = false;
-    };
-  }, []);
 
   const gate = useMemo(() => buildGateGeometry(), []);
   useEffect(() => () => disposeGate(gate), [gate]);
@@ -179,19 +120,19 @@ function World({ model, mode, reduced, tier, onReady }: WorldProps) {
       <Spine model={model} reduced={reduced} />
       <MonthTicks model={model} />
       {model.stations.map((s, i) => (
-        <Station key={s.id} station={s} index={i} model={model} gate={gate} reduced={reduced} glass={tier < 2} halo={halo} fonts={fonts} compact={mode === 'side'} />
+        <Station key={s.id} station={s} index={i} model={model} gate={gate} reduced={reduced} glass={tier < 2} halo={halo} />
       ))}
       {model.stations.map((s, i) =>
-        s.promotion ? <Flare key={s.id} station={s} index={i} model={model} reduced={reduced} halo={halo} fonts={fonts} compact={mode === 'side'} /> : null,
+        s.promotion ? <Flare key={s.id} station={s} index={i} model={model} reduced={reduced} halo={halo} /> : null,
       )}
-      <YearLabels model={model} fonts={fonts} reduced={reduced} />
+      <TagProjector model={model} mode={mode} layer={tags} />
       {dust > 0 ? (
         <Sparkles count={dust} scale={[9, 5, length]} position={[0, 0.6, mid.z]} size={2.6} speed={reduced ? 0 : 0.18} opacity={0.55} color="#67e8f9" noise={0.5} />
       ) : null}
       {embers > 0 ? (
         <Sparkles count={embers} scale={[7, 4, length]} position={[0, 0.4, mid.z]} size={3.4} speed={reduced ? 0 : 0.3} opacity={0.7} color="#fbbf24" noise={0.7} />
       ) : null}
-      <ReadyGate hold={!fonts} onReady={onReady} />
+      <ReadyGate onReady={onReady} />
       <Effects q={q} />
     </>
   );
@@ -220,7 +161,7 @@ const coarsePointer = () => window.matchMedia('(pointer: coarse)').matches;
  * postprocessing are the shared 3D chunk). Quality adapts at run time: a performance monitor steps the tier down (pixels,
  * then particles, then film grain) and never back up. Paused when off screen or hidden; disposed on unmount.
  */
-export default function HistoryStage({ model, mode, paused, reduced, pin, onReady, onLost }: HistoryStageProps) {
+export default function HistoryStage({ model, mode, paused, reduced, pin, tags, onReady, onLost }: HistoryStageProps) {
   const [tier, setTier] = useState<Tier>(() => pin ?? startTier(narrowViewport(), coarsePointer()));
   const [monitor, setMonitor] = useState(false);
 
@@ -247,7 +188,7 @@ export default function HistoryStage({ model, mode, paused, reduced, pin, onRead
       }}
       aria-hidden="true"
     >
-      <World model={model} mode={mode} reduced={reduced} tier={tier} onReady={ready} />
+      <World model={model} mode={mode} reduced={reduced} tags={tags} tier={tier} onReady={ready} />
       {reduced ? <StillFrames /> : null}
       {monitor ? <PerformanceMonitor flipflops={2} onDecline={down} onFallback={bottom} /> : null}
     </Canvas>

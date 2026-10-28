@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Billboard } from '@react-three/drei';
 import {
   AdditiveBlending,
   Color,
@@ -16,9 +15,7 @@ import {
 } from 'three';
 import { hstore, smoothstep } from '../historyStore';
 import type { Station as StationModel, TimelineModel } from '../timelineModel';
-import { monthLabel } from '../timelineModel';
-import { type GateGeometry, GATE_R, hexPoints } from './gate';
-import { drawLabel, MONO, SANS } from './labels';
+import { type GateGeometry, GATE_R, hexPoints, OVERVIEW_SCALE } from './gate';
 import { monthsBack, pathPoint, pathTangent } from './path';
 
 const CYAN = new Color('#22d3ee');
@@ -34,16 +31,13 @@ interface StationProps {
   readonly reduced: boolean;
   readonly glass: boolean;
   readonly halo: CanvasTexture;
-  readonly fonts: boolean;
-  /** Phone strip: the readout already names the station, so the 3D labels stay off. */
-  readonly compact: boolean;
 }
 
 /**
  * One employer as a station on the spine: a glass hex gate the path runs through, a core that is cold cyan until the
- * visitor arrives and then lights amber, role orbiters, and a label with the name and dates in mono.
+ * visitor arrives and then lights amber, and role orbiters. Its name and dates are a DOM tag (see TagProjector).
  */
-export function Station({ station, index, model, gate, reduced, glass, halo, fonts, compact }: StationProps) {
+export function Station({ station, index, model, gate, reduced, glass, halo }: StationProps) {
   const back = monthsBack(model, station.end);
   const { position, quaternion } = useMemo(() => {
     const p = pathPoint(back);
@@ -61,24 +55,9 @@ export function Station({ station, index, model, gate, reduced, glass, halo, fon
   const spin = useRef<Group>(null);
   const studs = useRef<(Mesh | null)[]>([]);
   const orbiters = useRef<(Mesh | null)[]>([]);
-  const labelMat = useRef<MeshBasicMaterial>(null);
   const armed = useRef(true);
   const flashAt = useRef(-10);
   const tint = useMemo(() => new Color(), []);
-  const camPos = useMemo(() => new Vector3(), []);
-
-  const labelTexture = useMemo(() => {
-    if (!fonts || compact) return null;
-    return drawLabel(
-      [
-        { text: station.short.toUpperCase(), font: `600 104px ${SANS}`, color: '#eceef0', y: 0.5, tracking: 2 },
-        { text: station.dates.toUpperCase(), font: `500 40px ${MONO}`, color: '#67e8f9', y: 0.86, tracking: 3 },
-      ],
-      1024,
-      256,
-    );
-  }, [fonts, compact, station.short, station.dates]);
-  useEffect(() => () => labelTexture?.dispose(), [labelTexture]);
 
   const haloMat = useMemo(
     () =>
@@ -95,15 +74,16 @@ export function Station({ station, index, model, gate, reduced, glass, halo, fon
   );
   useEffect(() => () => haloMat.dispose(), [haloMat]);
 
-  useFrame((state) => {
+  useFrame(() => {
     const t = hstore.time;
     // Once the visitor has travelled past a station it folds away, so the foreground stays clear for the next one.
     const present = reduced ? 1 : 1 - smoothstep(0.3, 0.95, hstore.fs - index);
     if (root.current) {
       root.current.visible = present > 0.01;
-      root.current.scale.setScalar(Math.max(present, 0.001));
+      root.current.scale.setScalar(Math.max(present, 0.001) * (reduced ? OVERVIEW_SCALE : 1));
     }
-    const a = reduced ? 1 : smoothstep(1.05, 0.15, Math.abs(hstore.fs - index));
+    // Reduced motion shows the overview at the newest station: that one amber, the rest cold cyan (same as the poster).
+    const a = smoothstep(1.05, 0.15, Math.abs((reduced ? 0 : hstore.fs) - index));
     if (!reduced) {
       if (a > 0.6 && armed.current) {
         armed.current = false;
@@ -144,12 +124,6 @@ export function Station({ station, index, model, gate, reduced, glass, halo, fon
       const mat = m.material as MeshBasicMaterial;
       mat.color.copy(AMBER).multiplyScalar(0.7 + 1.7 * a);
     });
-    if (labelMat.current) {
-      const d = state.camera.position.distanceTo(camPos.copy(position));
-      const near = smoothstep(6, 8, d);
-      const far = smoothstep(18, 12.5, d);
-      labelMat.current.opacity = reduced ? 1 : near * far * (0.06 + 0.94 * a);
-    }
   });
 
   return (
@@ -227,14 +201,6 @@ export function Station({ station, index, model, gate, reduced, glass, halo, fon
         ))}
         <sprite ref={haloSprite} material={haloMat} scale={[2, 2, 1]} />
       </group>
-      <Billboard position={[-1.0, GATE_R + 0.4, 0]}>
-        {labelTexture ? (
-          <mesh>
-            <planeGeometry args={[1.7, 0.425]} />
-            <meshBasicMaterial ref={labelMat} map={labelTexture} color="#b4b4b4" transparent depthWrite={false} toneMapped={false} fog={false} />
-          </mesh>
-        ) : null}
-      </Billboard>
     </group>
   );
 }
@@ -245,12 +211,10 @@ interface FlareProps {
   readonly model: TimelineModel;
   readonly reduced: boolean;
   readonly halo: CanvasTexture;
-  readonly fonts: boolean;
-  readonly compact: boolean;
 }
 
-/** The promotion moment on the spine: an amber diamond, shock rings, a vertical beam and a label that flares as the visitor arrives. */
-export function Flare({ station, index, model, reduced, halo, fonts, compact }: FlareProps) {
+/** The promotion moment on the spine: an amber diamond, shock rings and a short beam that flare as the visitor arrives. The words are on the card's badge. */
+export function Flare({ station, index, model, reduced, halo }: FlareProps) {
   const promo = station.promotion;
   const back = promo ? monthsBack(model, promo.at) : 0;
   const { position, quaternion } = useMemo(() => {
@@ -264,23 +228,8 @@ export function Flare({ station, index, model, reduced, halo, fonts, compact }: 
   const ringB = useRef<Mesh>(null);
   const beam = useRef<Mesh>(null);
   const haloSprite = useRef<Sprite>(null);
-  const labelMat = useRef<MeshBasicMaterial>(null);
   const armed = useRef(true);
   const flashAt = useRef(-10);
-  const camPos = useMemo(() => new Vector3(), []);
-
-  const labelTexture = useMemo(() => {
-    if (!fonts || !promo || compact) return null;
-    return drawLabel(
-      [
-        { text: `↑ ${promo.label.toUpperCase()}`, font: `600 62px ${MONO}`, color: '#fbbf24', y: 0.42, tracking: 1, glow: true },
-        { text: monthLabel(promo.at), font: `500 44px ${MONO}`, color: '#f59e0b', y: 0.82, tracking: 4, glow: true },
-      ],
-      1280,
-      256,
-    );
-  }, [fonts, compact, promo]);
-  useEffect(() => () => labelTexture?.dispose(), [labelTexture]);
 
   const haloMat = useMemo(
     () =>
@@ -297,14 +246,14 @@ export function Flare({ station, index, model, reduced, halo, fonts, compact }: 
   );
   useEffect(() => () => haloMat.dispose(), [haloMat]);
 
-  useFrame((state) => {
+  useFrame(() => {
     const t = hstore.time;
     const present = reduced ? 1 : 1 - smoothstep(0.3, 0.95, hstore.fs - index);
     if (root.current) {
       root.current.visible = present > 0.01;
-      root.current.scale.setScalar(Math.max(present, 0.001));
+      root.current.scale.setScalar(Math.max(present, 0.001) * (reduced ? OVERVIEW_SCALE : 1));
     }
-    const a = reduced ? 1 : smoothstep(1.0, 0.2, Math.abs(hstore.fs - index));
+    const a = smoothstep(1.0, 0.2, Math.abs((reduced ? 0 : hstore.fs) - index));
     if (!reduced) {
       if (a > 0.55 && armed.current) {
         armed.current = false;
@@ -343,10 +292,6 @@ export function Flare({ station, index, model, reduced, halo, fonts, compact }: 
       const s = 0.9 + 1.1 * k + 1.2 * flash;
       haloSprite.current.scale.set(s, s, 1);
     }
-    if (labelMat.current) {
-      const d = state.camera.position.distanceTo(camPos.copy(position));
-      labelMat.current.opacity = reduced ? 1 : smoothstep(5, 8, d) * smoothstep(26, 10, d) * (0.4 + 0.6 * k);
-    }
   });
 
   if (!promo) return null;
@@ -366,8 +311,8 @@ export function Flare({ station, index, model, reduced, halo, fonts, compact }: 
         <octahedronGeometry args={[1, 0]} />
         <meshBasicMaterial color="#f59e0b" toneMapped={false} />
       </mesh>
-      <mesh ref={beam} position={[0, 1.6, 0]}>
-        <cylinderGeometry args={[0.008, 0.035, 3.2, 8, 1, true]} />
+      <mesh ref={beam} position={[0, 0.75, 0]}>
+        <cylinderGeometry args={[0.006, 0.03, 1.5, 8, 1, true]} />
         <meshBasicMaterial
           color={[1.0, 0.55, 0.08]}
           transparent
@@ -378,14 +323,6 @@ export function Flare({ station, index, model, reduced, halo, fonts, compact }: 
         />
       </mesh>
       <sprite ref={haloSprite} material={haloMat} scale={[2, 2, 1]} />
-      <Billboard position={[0.9, 1.9, 0]}>
-        {labelTexture ? (
-          <mesh>
-            <planeGeometry args={[2.5, 0.5]} />
-            <meshBasicMaterial ref={labelMat} map={labelTexture} transparent depthWrite={false} toneMapped={false} fog={false} />
-          </mesh>
-        ) : null}
-      </Billboard>
     </group>
   );
 }

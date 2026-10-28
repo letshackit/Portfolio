@@ -10,6 +10,7 @@ import { LAST_TIER, type Tier } from '../hero/v2/stage/quality';
 import { hstore } from './historyStore';
 import { Poster } from './Poster';
 import { StageHud } from './StageHud';
+import { StageTags } from './StageTags';
 import { TimelineEntry, type StationState } from './TimelineEntry';
 import { buildModel } from './timelineModel';
 import { usePinStage } from './usePinStage';
@@ -55,6 +56,7 @@ export function Journey() {
   const pin = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLOListElement>(null);
   const stageBox = useRef<HTMLDivElement>(null);
+  const tags = useRef<HTMLDivElement>(null);
   const paused = useOffscreenPause(stageBox);
   const quality = useMemo(() => pinnedQuality(window.location.search), []);
 
@@ -172,6 +174,7 @@ export function Journey() {
                   paused={paused}
                   reduced={reducedMotion}
                   pin={quality}
+                  tags={tags}
                   onReady={onReady}
                   onLost={onFail}
                 />
@@ -179,6 +182,7 @@ export function Journey() {
             ) : null}
           </div>
           <div className="tl3__scrim" aria-hidden="true" />
+          <StageTags model={model} layer={tags} />
           <StageHud model={model} active={active} onJump={jump} live={live} />
         </div>
       </div>

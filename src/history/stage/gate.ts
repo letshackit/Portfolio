@@ -2,6 +2,9 @@ import { EdgesGeometry, ExtrudeGeometry, Path, RingGeometry, Shape } from 'three
 
 export const GATE_R = 0.85;
 
+/** The overview (reduced motion) draws the gates larger, so the still reads as a few big hexes, not a row of specks. */
+export const OVERVIEW_SCALE = 1.7;
+
 export function hexPoints(r: number): [number, number][] {
   return Array.from({ length: 6 }, (_, i) => {
     const a = Math.PI / 6 + (i * Math.PI) / 3;
