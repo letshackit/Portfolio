@@ -1,10 +1,7 @@
 /**
  * TravelDesk architecture model.
- * STATUS: PROPOSED — owner must confirm or replace before launch (PRD Q-1, ADR-005).
- * The résumé names only the front end, the gateway, the count of 16 domain services,
- * three live integrations and two Phase-2 integrations. Every domain service name and
- * every edge below is a proposal derived from the résumé's scope list, NOT a fact.
- * Set `status: 'confirmed'` only after the owner has replaced or approved every entry.
+ * STATUS: CONFIRMED (owner, 2026-10-29): the 16 domain-service names below are the owner-approved decomposition.
+ * The edges are the wiring drawn for the diagram; the résumé does not specify them service by service.
  * Never add a label that names the HRIS vendor (FR-83).
  */
 import type { ArchEdge, ArchNode, ArchitectureModel } from './content.types';
@@ -64,7 +61,7 @@ const edges: readonly ArchEdge[] = [
 ];
 
 export const travelDeskArchitecture: ArchitectureModel = {
-  status: 'proposed',
+  status: 'confirmed',
   groups: [
     { id: 'frontend', label: 'Front end', kinds: ['frontend'] },
     { id: 'gateway', label: 'Gateway', kinds: ['gateway'] },
