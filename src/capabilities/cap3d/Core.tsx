@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Color, EdgesGeometry, IcosahedronGeometry, type Group, type Mesh, type ShaderMaterial } from 'three';
 import { COLORS, createAura, type StageState } from './scene';
 
-const HOT = new Color('#22d3ee').multiplyScalar(2.6);
+const HOT = new Color('#22d3ee').multiplyScalar(0.95);
 const RING_RADII = [1.22, 1.5, 1.82] as const;
 
 /**
@@ -14,7 +14,7 @@ export function Core({ state, segments }: { readonly state: StageState; readonly
   const shell = useRef<Group>(null);
   const rings = useRef<Group>(null);
   const centre = useRef<Mesh>(null);
-  const aura = useMemo<ShaderMaterial>(() => createAura(COLORS.cyan.base, 2.2, 1.7), []);
+  const aura = useMemo<ShaderMaterial>(() => createAura(COLORS.cyan.base, 2.6, 0.8), []);
   const edges = useMemo(() => new EdgesGeometry(new IcosahedronGeometry(1.0, 1), 1), []);
   useEffect(
     () => () => {
@@ -43,7 +43,7 @@ export function Core({ state, segments }: { readonly state: StageState; readonly
   return (
     <group>
       <mesh ref={centre}>
-        <sphereGeometry args={[0.34, segments, segments]} />
+        <sphereGeometry args={[0.26, segments, segments]} />
         <meshBasicMaterial color={HOT} toneMapped={false} />
       </mesh>
       <mesh material={aura}>
@@ -51,7 +51,7 @@ export function Core({ state, segments }: { readonly state: StageState; readonly
       </mesh>
       <group ref={shell}>
         <lineSegments geometry={edges}>
-          <lineBasicMaterial color={COLORS.cyan.hot} transparent opacity={0.85} toneMapped={false} />
+          <lineBasicMaterial color={COLORS.cyan.hot} transparent opacity={0.45} toneMapped={false} />
         </lineSegments>
         <mesh>
           <icosahedronGeometry args={[0.98, 1]} />
@@ -62,11 +62,11 @@ export function Core({ state, segments }: { readonly state: StageState; readonly
         {RING_RADII.map((r, i) => (
           <mesh key={r}>
             <torusGeometry args={[r, 0.007, 6, 96]} />
-            <meshBasicMaterial color={COLORS.cyan.hot} transparent opacity={0.55 - i * 0.12} toneMapped={false} />
+            <meshBasicMaterial color={COLORS.cyan.hot} transparent opacity={0.4 - i * 0.09} toneMapped={false} />
           </mesh>
         ))}
       </group>
-      <pointLight color="#22d3ee" intensity={38} distance={18} decay={2} />
+      <pointLight color="#22d3ee" intensity={26} distance={18} decay={2} />
     </group>
   );
 }

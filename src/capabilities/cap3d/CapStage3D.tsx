@@ -33,7 +33,7 @@ const FOV = 32;
 /** The monitor stays quiet for this long after the first frame: shader compiles are not slow frames. */
 const MONITOR_DELAY_MS = 2200;
 /** Room left for a skill label on each side of the open ring, in CSS pixels. */
-const LABEL_ROOM_PX = 175;
+const LABEL_ROOM_PX = 225;
 
 /** Distance from the camera to the active hub: constant by construction, since the camera always flies the same arc. */
 const HUB_DISTANCE = Math.hypot(
@@ -43,7 +43,7 @@ const HUB_DISTANCE = Math.hypot(
 
 function Effects({ q }: { readonly q: Quality }) {
   const effects = [];
-  if (q.bloom) effects.push(<Bloom key="bloom" intensity={0.95} luminanceThreshold={0.85} luminanceSmoothing={0.25} mipmapBlur radius={0.72} />);
+  if (q.bloom) effects.push(<Bloom key="bloom" intensity={0.7} luminanceThreshold={0.9} luminanceSmoothing={0.25} mipmapBlur radius={0.72} />);
   effects.push(<ToneMapping key="tm" mode={ToneMappingMode.ACES_FILMIC} />);
   if (q.noise) effects.push(<Noise key="noise" premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.035} />);
   effects.push(<Vignette key="vig" offset={0.3} darkness={0.85} />);

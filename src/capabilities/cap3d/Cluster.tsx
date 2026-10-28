@@ -14,7 +14,6 @@ import {
   type Mesh,
   MeshBasicMaterial,
   SphereGeometry,
-  Vector3,
   type MeshStandardMaterial,
   type PointLight,
   type ShaderMaterial,
@@ -67,10 +66,6 @@ export function Cluster({ index, count, group, look, active, state, segments, un
   const { tone, shape } = look;
   const palette = COLORS[tone];
   const camera = useThree((s) => s.camera);
-  const size = useThree((s) => s.size);
-  const tag = useRef<HTMLDivElement>(null);
-  const ndc = useMemo(() => new Vector3(), []);
-  const focus = useMemo(() => new Vector3(), []);
   const root = useRef<Group>(null);
   const hub = useRef<Group>(null);
   const solid = useRef<MeshStandardMaterial>(null);
@@ -128,12 +123,13 @@ export function Cluster({ index, count, group, look, active, state, segments, un
       hub.current.rotation.x = Math.sin(t * 0.4 + index) * 0.3;
       hub.current.scale.setScalar(HUB_R + (HUB_R_ACTIVE - HUB_R) * e);
     }
-    if (solid.current) solid.current.emissiveIntensity = 0.12 + e * 0.42;
-    if (edgeMat.current) edgeMat.current.color.copy(palette.hot).multiplyScalar(0.8 + e * 2.6);
-    if (light.current) light.current.intensity = 1.2 + e * 14;
+    if (solid.current) solid.current.emissiveIntensity = 0.08 + e * 0.95;
+    if (edgeMat.current) edgeMat.current.color.copy(palette.hot).multiplyScalar(0.5 + e * 3.4);
+    if (light.current) light.current.intensity = 0.6 + e * 20;
 
-    nodeMaterial.color.copy(palette.base).multiplyScalar(0.5 + e * 1.1);
-    if (tetherMat.current) tetherMat.current.opacity = 0.1 + e * 0.5;
+    aura.uniforms.k.value = 0.3 + e * 0.9;
+    nodeMaterial.color.copy(palette.base).multiplyScalar(0.28 + e * 1.25);
+    if (tetherMat.current) tetherMat.current.opacity = 0.06 + e * 0.58;
 
     const rx = rxPx * unitsPerPx;
     const ry = ryPx * unitsPerPx;
@@ -154,17 +150,6 @@ export function Cluster({ index, count, group, look, active, state, segments, un
     }
     const tg = tether.current?.geometry;
     if (tg) tg.attributes.position.needsUpdate = true;
-
-    // An inactive hub's name tag steps aside when its hub sits behind the open cluster or near the frame edge.
-    if (tag.current) {
-      ndc.copy(g.position).project(camera);
-      focus.copy(state.look).project(camera);
-      const dx = ((ndc.x - focus.x) * size.width) / 2;
-      const dy = ((ndc.y - focus.y) * size.height) / 2;
-      const hide = Math.hypot(dx, dy) < 230 || Math.abs(ndc.x) > 0.86 || Math.abs(ndc.y) > 0.88 || ndc.z > 1;
-      tag.current.style.opacity = hide ? '0' : '1';
-      tag.current.style.pointerEvents = hide ? 'none' : 'auto';
-    }
 
     const k = state.pulse[index];
     if (shock.current && shockMat.current) {
@@ -221,7 +206,7 @@ export function Cluster({ index, count, group, look, active, state, segments, un
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" count={n * 2} array={tetherPositions} itemSize={3} />
         </bufferGeometry>
-        <lineBasicMaterial ref={tetherMat} color={palette.base} transparent opacity={0.1} toneMapped={false} />
+        <lineBasicMaterial ref={tetherMat} color={palette.hot} transparent opacity={0.1} toneMapped={false} />
       </lineSegments>
 
       {group.skills.map((skill, i) => (
@@ -246,16 +231,6 @@ export function Cluster({ index, count, group, look, active, state, segments, un
           ) : null}
         </mesh>
       ))}
-
-      {active ? null : (
-        <Html position={[0, -(HUB_R + 0.36), 0]} zIndexRange={[13, 0]}>
-          <div ref={tag} className="cc-hubtag" data-tone={tone} onClick={select} onPointerEnter={hoverIn} onPointerLeave={hoverOut}>
-            <span className="cc-hubtag__idx">{String(index + 1).padStart(2, '0')}</span>
-            <span className="cc-hubtag__name">{group.name}</span>
-            <span className="cc-hubtag__n">{n}</span>
-          </div>
-        </Html>
-      )}
     </group>
   );
 }

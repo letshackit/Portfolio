@@ -54,10 +54,13 @@ export interface NodeSlot {
  */
 export function nodeSlot(i: number, n: number): NodeSlot {
   const a = Math.PI / 2 - (i / Math.max(1, n)) * TAU;
-  const pull = i % 2 === 0 ? 1 : 0.82;
-  const x = Math.cos(a) * pull;
-  const y = Math.sin(a) * pull;
   const c = Math.cos(a);
+  // Only the pole nodes stagger (their labels sit side by side); flank labels run outward on a clean ellipse, so no
+  // tether passes through a neighbour's label.
+  const pole = Math.abs(c) <= 0.38;
+  const pull = pole && i % 2 === 1 ? 0.8 : 1;
+  const x = c * pull;
+  const y = Math.sin(a) * pull;
   const side: LabelSide = c > 0.38 ? 'right' : c < -0.38 ? 'left' : Math.sin(a) >= 0 ? 'above' : 'below';
   return { x, y, side };
 }
