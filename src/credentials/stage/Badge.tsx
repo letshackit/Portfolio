@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { AdditiveBlending, Color, MathUtils, MeshBasicMaterial, type Group, type Sprite } from 'three';
-import { FILL, type BadgeSpec } from '../slots';
+import { FILL, type BadgeSpec, type BodyKey } from '../slots';
 import type { VaultStore } from '../vaultStore';
 import { createGlyphTexture } from './glyph';
 import { frontZ, hdr, type Kit } from './kit';
@@ -16,13 +16,17 @@ interface BadgeProps {
   readonly still: boolean;
 }
 
-/** Where the mark sits on each body, and how big. */
-const GLYPH = {
-  cert: { y: -0.5, w: 1.4 },
+/** Where the mark sits on each body, and how big. The shield narrows toward its point, so its mark is smaller and higher. */
+const GLYPH: Readonly<Record<BodyKey, { y: number; w: number }>> = {
+  hex: { y: -0.5, w: 1.4 },
+  octa: { y: -0.5, w: 1.4 },
+  shield: { y: -0.36, w: 1.05 },
+  disc: { y: -0.5, w: 1.35 },
+  square: { y: -0.46, w: 1.4 },
   stone: { y: -0.62, w: 1.25 },
-  hero: { y: -0.6, w: 1.3 },
+  hero: { y: -0.76, w: 1.3 },
   paper: { y: 0, w: 0 },
-} as const;
+};
 
 const TAU = Math.PI * 2;
 /** Poses for reduced motion: each badge turned a little differently so the row does not look stamped. */
@@ -100,18 +104,20 @@ export function Badge({ spec, index, store, kit, still }: BadgeProps) {
   const root = useRef<Group>(null);
   const sway = useRef<Group>(null);
   const halo = useRef<Sprite>(null);
+  const warm = useRef<Sprite>(null);
   const s = useRef({ t: 0, hover: 0, spin: 0, spinTarget: 0, was: false, tx: 0, ty: 0 });
-  const { kind } = spec;
-  const front = frontZ(kind) + 0.012;
+  const { kind, body } = spec;
+  const front = frontZ(body) + 0.012;
   const glyph = useMemo(() => (spec.main ? createGlyphTexture(spec.top, spec.main) : null), [spec.top, spec.main]);
   const glyphMat = useMemo(
     () =>
       glyph
-        ? new MeshBasicMaterial({ map: glyph, transparent: true, depthWrite: false, toneMapped: false, color: new Color(1.7, 1.7, 1.7) })
+        ? new MeshBasicMaterial({ map: glyph, transparent: true, depthWrite: false, toneMapped: false, color: new Color(2.1, 2.1, 2.1) })
         : null,
     [glyph],
   );
   const haloColor = useMemo(() => hdr('#22d3ee', 1), []);
+  const warmColor = useMemo(() => hdr('#f59e0b', 1), []);
   useEffect(
     () => () => {
       glyph?.dispose();
@@ -163,20 +169,24 @@ export function Badge({ spec, index, store, kit, still }: BadgeProps) {
     w.rotation.x = (still ? 0.1 : Math.sin(time * 0.33 + phase) * 0.07) + st.ty;
 
     if (halo.current) halo.current.material.opacity = 0.13 + 0.17 * st.hover;
+    if (warm.current) warm.current.material.opacity = (kind === 'paper' ? 0.2 : kind === 'cert' ? 0.07 : 0.16) + 0.14 * st.hover;
   });
 
-  const gl = GLYPH[kind];
+  const gl = GLYPH[body];
   return (
     <group ref={root} visible={false}>
       <sprite ref={halo} scale={[4.6, 4.6, 1]} position={[0, 0, -0.9]}>
         <spriteMaterial map={kit.soft} color={haloColor} transparent opacity={0.13} blending={AdditiveBlending} depthWrite={false} />
       </sprite>
+      <sprite ref={warm} scale={[3.2, 3.2, 1]} position={[0.9, -0.7, -0.8]}>
+        <spriteMaterial map={kit.soft} color={warmColor} transparent opacity={0.1} blending={AdditiveBlending} depthWrite={false} />
+      </sprite>
       {kind === 'paper' ? null : <Reticle kit={kit} still={still} big={kind === 'hero'} />}
       {kind === 'hero' ? <Orbits kit={kit} still={still} /> : null}
       <group ref={sway}>
-        <mesh geometry={kit.body[kind]} material={kit.glass[kind]} />
-        <mesh geometry={kit.body[kind]} material={kit.rim} />
-        <lineSegments geometry={kit.edges[kind]} material={kit.edge} />
+        <mesh geometry={kit.body[body]} material={kit.glass[body]} />
+        <mesh geometry={kit.body[body]} material={kit.rim[body]} />
+        <lineSegments geometry={kit.edges[body]} material={kit.edge} />
         <MotifBody motif={spec.motif} kit={kit} still={still} />
         {glyphMat ? (
           <>

@@ -114,14 +114,16 @@ function World({ specs, store, tier, reduced, onReady }: { specs: readonly Badge
       <Environment resolution={256} frames={1}>
         {/* Studio strips the glass can pick up: cyan from the left, a warm key from the right, a soft box above and in front. */}
         <Lightformer form="rect" intensity={5} color="#22d3ee" position={[-7, 1, 2]} scale={[6, 12, 1]} rotation-y={Math.PI / 2} />
-        <Lightformer form="rect" intensity={3.2} color="#f59e0b" position={[7, 3, 3]} scale={[4, 9, 1]} rotation-y={-Math.PI / 2} />
+        <Lightformer form="rect" intensity={6} color="#f59e0b" position={[7, 2, 3]} scale={[4, 10, 1]} rotation-y={-Math.PI / 2} />
         <Lightformer form="rect" intensity={6} color="#ffffff" position={[0, 7, 1]} scale={[14, 3, 1]} rotation-x={Math.PI / 2} />
         <Lightformer form="rect" intensity={3} color="#bff6ff" position={[-3.5, 2.5, 8]} scale={[4, 2, 1]} rotation-y={Math.PI} />
         <Lightformer form="rect" intensity={7} color="#ffffff" position={[-3.6, 0, 5]} scale={[0.5, 9, 1]} rotation-y={Math.PI * 0.8} />
         <Lightformer form="rect" intensity={7} color="#ffffff" position={[3.6, 0, 5]} scale={[0.5, 9, 1]} rotation-y={-Math.PI * 0.8} />
+        <Lightformer form="rect" intensity={3} color="#f59e0b" position={[4, -5, 3]} scale={[8, 2, 1]} rotation-x={-Math.PI / 2} />
         <Lightformer form="rect" intensity={1.6} color="#22d3ee" position={[0, -6, 2]} scale={[12, 2, 1]} rotation-x={-Math.PI / 2} />
       </Environment>
       <directionalLight position={[-300, 400, 900]} intensity={1.1} color="#bff6ff" />
+      <directionalLight position={[500, -200, 700]} intensity={0.9} color="#f59e0b" />
       <Motes q={q} kit={kit} still={reduced} />
       {specs.map((spec, i) => (
         <Badge key={spec.id} spec={spec} index={i} store={store} kit={kit} still={reduced} />

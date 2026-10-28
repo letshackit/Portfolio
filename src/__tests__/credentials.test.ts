@@ -33,6 +33,8 @@ describe('credentials vault', () => {
       expect(spec.main.length).toBeGreaterThan(0);
     }
     expect(specFor(publication.id, '').kind).toBe('paper');
+    // Five certifications, five different silhouettes (the critic's "samey hexagons").
+    expect(new Set(certifications.map((c) => specFor(c.id, c.issuer).body)).size).toBe(certifications.length);
   });
 
   it('degrades monotonically and never past the last tier', () => {

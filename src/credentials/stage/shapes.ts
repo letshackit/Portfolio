@@ -18,10 +18,10 @@ export function roundedPolygon(points: readonly Vector2[], round: number): Shape
   return shape;
 }
 
-/** Pointy-top regular polygon of circumradius 1. */
-export function regularPolygon(sides: number): Vector2[] {
+/** Pointy-top regular polygon of circumradius 1 (`turn` rotates it, in radians). */
+export function regularPolygon(sides: number, turn = 0): Vector2[] {
   return Array.from({ length: sides }, (_, i) => {
-    const a = Math.PI / 2 + (i / sides) * Math.PI * 2;
+    const a = Math.PI / 2 + turn + (i / sides) * Math.PI * 2;
     return new Vector2(Math.cos(a), Math.sin(a));
   });
 }
@@ -30,6 +30,11 @@ export function rectPoints(w: number, h: number): Vector2[] {
   const x = w / 2;
   const y = h / 2;
   return [new Vector2(-x, y), new Vector2(-x, -y), new Vector2(x, -y), new Vector2(x, y)];
+}
+
+/** A heraldic shield: flat shoulders, a low peak on top, a point at the bottom. Half-height 1. */
+export function shieldPoints(): Vector2[] {
+  return [new Vector2(0, 1), new Vector2(0.84, 0.8), new Vector2(0.84, -0.18), new Vector2(0, -1), new Vector2(-0.84, -0.18), new Vector2(-0.84, 0.8)];
 }
 
 /** The cornerstone: a tall slab with a peaked top, like a gate stone or a shield. Half-height 1. */

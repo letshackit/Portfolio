@@ -1,8 +1,8 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { BufferGeometry, EdgesGeometry, BoxGeometry, Float32BufferAttribute, InstancedMesh, Object3D, type Group, type Mesh } from 'three';
+import { BufferGeometry, EdgesGeometry, BoxGeometry, Float32BufferAttribute, InstancedMesh, MeshBasicMaterial, Object3D, type Group, type Mesh } from 'three';
 import type { Motif } from '../slots';
-import type { Kit } from './kit';
+import { hdr, type Kit } from './kit';
 import { nearestEdges, spherePoints } from './shapes';
 
 interface MotifProps {
@@ -25,7 +25,7 @@ function Spinner({ still, speed = 0.55, tilt = 0, children }: { still: boolean; 
   );
 }
 
-/** IIIT-B: a neural lattice, with one amber signal hopping node to node (the only agent activity in the vault). */
+/** IIIT-B: a neural lattice, with one amber signal hopping node to node (agent activity; the other badges carry a single amber accent each). */
 function Lattice({ kit, still }: MotifProps) {
   const nodes = useMemo(() => spherePoints(20), []);
   const edges = useMemo(() => nearestEdges(nodes, 3), [nodes]);
@@ -62,14 +62,14 @@ function Lattice({ kit, still }: MotifProps) {
     m.position.set(nodes[a][0] + (nodes[b][0] - nodes[a][0]) * e, nodes[a][1] + (nodes[b][1] - nodes[a][1]) * e, nodes[a][2] + (nodes[b][2] - nodes[a][2]) * e);
   });
   return (
-    <group scale={0.6} position={[0, 0.2, 0]}>
+    <group scale={0.5} position={[0, 0.34, 0]}>
       <Spinner still={still} speed={0.4} tilt={0.25}>
         <lineSegments geometry={lines} material={kit.cyanLine} />
         <instancedMesh ref={inst} args={[undefined, undefined, nodes.length]} material={kit.cyanBasic}>
           <sphereGeometry args={[1, 14, 10]} />
         </instancedMesh>
         <mesh ref={pulse} material={kit.amber}>
-          <sphereGeometry args={[0.12, 14, 10]} />
+          <sphereGeometry args={[0.16, 14, 10]} />
         </mesh>
       </Spinner>
     </group>
@@ -101,8 +101,8 @@ function Gantt({ kit }: MotifProps) {
   ];
   return (
     <group position={[0, 0.28, 0]} scale={0.72}>
-      {rows.map(([x, y, w]) => (
-        <mesh key={y} position={[x, y, 0]} material={kit.cyanSolid}>
+      {rows.map(([x, y, w], i) => (
+        <mesh key={y} position={[x, y, 0]} material={i === 1 ? kit.amber : kit.cyanSolid}>
           <boxGeometry args={[w, 0.13, 0.14]} />
         </mesh>
       ))}
@@ -142,6 +142,9 @@ function Cloud({ kit, still }: MotifProps) {
             <sphereGeometry args={[r, 24, 16]} />
           </mesh>
         ))}
+        <mesh position={[0.02, 0.5, 0.1]} material={kit.amber}>
+          <sphereGeometry args={[0.085, 16, 12]} />
+        </mesh>
       </Spinner>
     </group>
   );
@@ -156,8 +159,8 @@ function Shield({ kit, still }: MotifProps) {
           <icosahedronGeometry args={[0.5, 0]} />
           <meshBasicMaterial color={kit.cyanLine.color} wireframe />
         </mesh>
-        <mesh material={kit.cyanSolid}>
-          <octahedronGeometry args={[0.24, 0]} />
+        <mesh material={kit.amber}>
+          <octahedronGeometry args={[0.22, 0]} />
         </mesh>
       </Spinner>
     </group>
@@ -179,8 +182,8 @@ function Orbit({ kit, still }: MotifProps) {
         <sphereGeometry args={[0.17, 20, 14]} />
       </mesh>
       <group ref={sat}>
-        <mesh position={[0.46, 0, 0]} material={kit.cyanBasic}>
-          <sphereGeometry args={[0.07, 12, 10]} />
+        <mesh position={[0.46, 0, 0]} material={kit.amber}>
+          <sphereGeometry args={[0.085, 12, 10]} />
         </mesh>
       </group>
     </group>
@@ -190,13 +193,19 @@ function Orbit({ kit, still }: MotifProps) {
 /** The publication: lines of text on a page. */
 function Page({ kit }: MotifProps) {
   const widths = [0.78, 0.9, 0.62, 0.9, 0.84, 0.5];
+  // A lit sheet under the lines: the paper is the one object with nothing but dark wall behind it, and read as a grey slab.
+  const sheet = useMemo(() => new MeshBasicMaterial({ color: hdr('#22d3ee', 0.55), transparent: true, opacity: 0.5, toneMapped: false, depthWrite: false }), []);
+  useLayoutEffect(() => () => sheet.dispose(), [sheet]);
   return (
     <group position={[0, 0.1, 0]}>
-      <mesh position={[-0.2, 0.62, 0]} material={kit.cyanBasic}>
+      <mesh position={[0, 0.0, -0.03]} material={sheet}>
+        <planeGeometry args={[1.14, 1.76]} />
+      </mesh>
+      <mesh position={[-0.2, 0.62, 0]} material={kit.amber}>
         <boxGeometry args={[0.55, 0.1, 0.03]} />
       </mesh>
       {widths.map((w, i) => (
-        <mesh key={i} position={[(w - 0.9) / 2 - 0.0, 0.3 - i * 0.18, 0]} material={kit.cyanSolid}>
+        <mesh key={i} position={[(w - 0.9) / 2 - 0.0, 0.3 - i * 0.18, 0]} material={i === 2 ? kit.amber : kit.cyanBasic}>
           <boxGeometry args={[w, 0.045, 0.04]} />
         </mesh>
       ))}

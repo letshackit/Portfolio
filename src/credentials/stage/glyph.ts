@@ -18,6 +18,13 @@ function paint(canvas: HTMLCanvasElement, top: string, main: string): void {
   if (!g) return;
   const { width: w, height: h } = canvas;
   g.clearRect(0, 0, w, h);
+  // A dark, softly edged plate under the mark: the glass behind it is bright, so without one the letters wash out.
+  const plate = g.createRadialGradient(w / 2, h * 0.56, h * 0.05, w / 2, h * 0.56, w * 0.5);
+  plate.addColorStop(0, 'rgba(2, 14, 20, 0.78)');
+  plate.addColorStop(0.7, 'rgba(2, 14, 20, 0.6)');
+  plate.addColorStop(1, 'rgba(2, 14, 20, 0)');
+  g.fillStyle = plate;
+  g.fillRect(0, 0, w, h);
   g.textBaseline = 'alphabetic';
   g.textAlign = 'left';
   // Fit the mark to 86 % of the width, then size the small line from it.
@@ -25,17 +32,17 @@ function paint(canvas: HTMLCanvasElement, top: string, main: string): void {
   g.font = `600 ${size}px ${FAMILY}`;
   const probe = [...main].reduce((a, ch) => a + g.measureText(ch).width, 0) + size * 0.06 * Math.max(0, main.length - 1);
   if (probe > w * 0.86) size *= (w * 0.86) / probe;
-  g.fillStyle = '#e9fdff';
-  g.shadowColor = 'rgba(34, 211, 238, 0.9)';
-  g.shadowBlur = size * 0.22;
+  g.fillStyle = '#ffffff';
+  g.shadowColor = 'rgba(34, 211, 238, 1)';
+  g.shadowBlur = size * 0.3;
   g.font = `600 ${size}px ${FAMILY}`;
   tracked(g, main, w / 2, h * 0.78, size * 0.06);
   g.shadowBlur = 0;
   const small = Math.min(h * 0.17, size * 0.46);
   g.font = `500 ${small}px ${FAMILY}`;
-  g.fillStyle = '#67e8f9';
+  g.fillStyle = '#a5f3fc';
   tracked(g, top, w / 2, h * 0.3, small * 0.28);
-  g.fillStyle = 'rgba(103, 232, 249, 0.55)';
+  g.fillStyle = 'rgba(245, 158, 11, 0.95)';
   g.fillRect(w * 0.3, h * 0.4, w * 0.4, Math.max(2, h * 0.008));
 }
 

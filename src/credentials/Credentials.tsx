@@ -56,6 +56,7 @@ function Card({ credential, spec, store, className, children }: CardProps) {
     <li
       className={`cred ${className}`}
       data-kind={spec.kind}
+      data-body={spec.body}
       onPointerEnter={() => {
         store.hover = id;
       }}
@@ -86,7 +87,10 @@ function Card({ credential, spec, store, className, children }: CardProps) {
  */
 export function Credentials() {
   const { education } = content.history;
-  const { ui } = content;
+  const { ui, nav } = content;
+  // Same "NN / SECTION" eyebrow as every sibling section, carrying the History number, with this block's own name.
+  const navIndex = nav.findIndex((item) => item.anchor === 'history');
+  const eyebrow = `${String(navIndex + 2).padStart(2, '0')} / ${nav[navIndex]?.label ?? ''} · Credentials`;
   const { reducedMotion } = usePrefs();
   const rootRef = useRef<HTMLDivElement>(null);
   const fxRef = useRef<HTMLDivElement>(null);
@@ -198,7 +202,13 @@ export function Credentials() {
       </div>
 
       <div className="vault__body">
-        <h3 className="vault__heading">{education.heading}</h3>
+        <div className="vault__head">
+          <p className="section-heading__eyebrow mono-label">
+            <span className="section-heading__rule" aria-hidden="true" />
+            {eyebrow}
+          </p>
+          <h3 className="vault__heading">{education.heading}</h3>
+        </div>
 
         <section className="vault__group" aria-labelledby="vault-degrees">
           <h4 id="vault-degrees" className="vault__label mono-label">

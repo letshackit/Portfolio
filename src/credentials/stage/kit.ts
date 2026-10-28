@@ -13,20 +13,24 @@ import {
   ShaderMaterial,
   type ExtrudeGeometry,
 } from 'three';
-import type { BadgeKind } from '../slots';
+import type { BodyKey } from '../slots';
 import { createSoftTexture } from './glyph';
 import type { Quality } from './quality';
-import { circleGeometry, monolithPoints, rectPoints, regularPolygon, roundedPolygon, slab } from './shapes';
+import { circleGeometry, monolithPoints, rectPoints, regularPolygon, roundedPolygon, shieldPoints, slab } from './shapes';
 
 /** Bevelled slab depth and bevel per kind, in badge units (half-height 1). The front face sits at depth / 2 + bevel. */
-export const BODY: Readonly<Record<BadgeKind, { depth: number; bevel: number }>> = {
-  cert: { depth: 0.3, bevel: 0.075 },
+export const BODY: Readonly<Record<BodyKey, { depth: number; bevel: number }>> = {
+  hex: { depth: 0.3, bevel: 0.075 },
+  octa: { depth: 0.3, bevel: 0.075 },
+  shield: { depth: 0.3, bevel: 0.075 },
+  disc: { depth: 0.3, bevel: 0.075 },
+  square: { depth: 0.3, bevel: 0.075 },
   stone: { depth: 0.46, bevel: 0.075 },
   hero: { depth: 0.62, bevel: 0.085 },
   paper: { depth: 0.1, bevel: 0.04 },
 };
 
-export function frontZ(kind: BadgeKind): number {
+export function frontZ(kind: BodyKey): number {
   return BODY[kind].depth / 2 + BODY[kind].bevel;
 }
 
@@ -37,11 +41,12 @@ export function hdr(hex: string, boost: number): Color {
 
 /** Everything the badges share: materials, geometries, textures. Built once per quality tier, disposed with it. */
 export interface Kit {
-  readonly glass: Readonly<Record<BadgeKind, MeshPhysicalMaterial>>;
-  readonly body: Readonly<Record<BadgeKind, ExtrudeGeometry>>;
-  readonly edges: Readonly<Record<BadgeKind, EdgesGeometry>>;
+  readonly glass: Readonly<Record<BodyKey, MeshPhysicalMaterial>>;
+  readonly body: Readonly<Record<BodyKey, ExtrudeGeometry>>;
+  readonly edges: Readonly<Record<BodyKey, EdgesGeometry>>;
   readonly edge: LineBasicMaterial;
-  readonly rim: ShaderMaterial;
+  /** Fresnel shell per body: cyan on the silhouette, with a warm amber rim on the lower right (more on the hero). */
+  readonly rim: Readonly<Record<BodyKey, ShaderMaterial>>;
   readonly cyanBasic: MeshBasicMaterial;
   readonly cyanSolid: MeshStandardMaterial;
   readonly cyanLine: LineBasicMaterial;
@@ -53,12 +58,12 @@ export interface Kit {
   dispose(): void;
 }
 
-function glassFor(q: Quality, kind: BadgeKind): MeshPhysicalMaterial {
+function glassFor(q: Quality, kind: BodyKey): MeshPhysicalMaterial {
   const hero = kind === 'hero';
   return new MeshPhysicalMaterial({
     color: new Color('#ffffff'),
-    emissive: new Color('#0b4a58'),
-    emissiveIntensity: hero ? 0.14 : 0.1,
+    emissive: new Color(kind === 'paper' ? '#0f7a8c' : '#0b4a58'),
+    emissiveIntensity: kind === 'paper' ? 0.5 : hero ? 0.16 : 0.12,
     metalness: 0,
     roughness: hero ? 0.04 : 0.03,
     transmission: q.transmission ? 1 : 0,
@@ -81,27 +86,41 @@ function glassFor(q: Quality, kind: BadgeKind): MeshPhysicalMaterial {
 }
 
 export function createKit(q: Quality): Kit {
-  const kinds: BadgeKind[] = ['cert', 'stone', 'hero', 'paper'];
-  const glass = Object.fromEntries(kinds.map((k) => [k, glassFor(q, k)])) as Record<BadgeKind, MeshPhysicalMaterial>;
+  const kinds: BodyKey[] = ['hex', 'octa', 'shield', 'disc', 'square', 'stone', 'hero', 'paper'];
+  const glass = Object.fromEntries(kinds.map((k) => [k, glassFor(q, k)])) as Record<BodyKey, MeshPhysicalMaterial>;
   const body = {
-    cert: slab(roundedPolygon(regularPolygon(6), 0.16), BODY.cert.depth, BODY.cert.bevel),
+    hex: slab(roundedPolygon(regularPolygon(6), 0.16), BODY.hex.depth, BODY.hex.bevel),
+    octa: slab(roundedPolygon(regularPolygon(8, Math.PI / 8), 0.14), BODY.octa.depth, BODY.octa.bevel),
+    shield: slab(roundedPolygon(shieldPoints(), 0.12), BODY.shield.depth, BODY.shield.bevel),
+    disc: slab(roundedPolygon(regularPolygon(48), 0.3), BODY.disc.depth, BODY.disc.bevel),
+    square: slab(roundedPolygon(rectPoints(1.64, 1.64), 0.2), BODY.square.depth, BODY.square.bevel),
     stone: slab(roundedPolygon(rectPoints(1.5, 2), 0.09), BODY.stone.depth, BODY.stone.bevel),
     hero: slab(roundedPolygon(monolithPoints(), 0.07), BODY.hero.depth, BODY.hero.bevel),
     paper: slab(roundedPolygon(rectPoints(1.4, 2), 0.05), BODY.paper.depth, BODY.paper.bevel),
-  } satisfies Record<BadgeKind, ExtrudeGeometry>;
-  const edges = Object.fromEntries(kinds.map((k) => [k, new EdgesGeometry(body[k], 28)])) as unknown as Record<BadgeKind, EdgesGeometry>;
+  } satisfies Record<BodyKey, ExtrudeGeometry>;
+  const edges = Object.fromEntries(kinds.map((k) => [k, new EdgesGeometry(body[k], 28)])) as unknown as Record<BodyKey, EdgesGeometry>;
   const edge = new LineBasicMaterial({ color: hdr('#8ff1ff', 1.7), transparent: true, opacity: 0.8 });
-  // Fresnel shell: the glass's silhouette and bevels glow cyan, the face stays almost clear.
-  const rim = new ShaderMaterial({
-    uniforms: { uColor: { value: new Color('#22d3ee') } },
-    vertexShader: `varying vec3 vN; varying vec3 vV;
+  // Fresnel shell: the glass's silhouette and bevels glow cyan, the face stays almost clear. Edges that face the lower
+  // right take a warm amber instead, so the object is lit cyan from one side and amber from the other, like the hero.
+  const makeRim = (warm: number) =>
+    new ShaderMaterial({
+      uniforms: { uColor: { value: new Color('#22d3ee') }, uWarm: { value: new Color('#f59e0b') }, uMix: { value: warm } },
+      vertexShader: `varying vec3 vN; varying vec3 vV;
       void main() { vN = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position, 1.0); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform vec3 uColor; varying vec3 vN; varying vec3 vV;
-      void main() { float f = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.4); gl_FragColor = vec4(uColor * (0.1 + f * 3.2), 1.0); }`,
-    transparent: true,
-    blending: AdditiveBlending,
-    depthWrite: false,
-  });
+      fragmentShader: `uniform vec3 uColor; uniform vec3 uWarm; uniform float uMix; varying vec3 vN; varying vec3 vV;
+      void main() {
+        vec3 n = normalize(vN);
+        float f = pow(1.0 - abs(dot(n, normalize(vV))), 2.4);
+        float side = smoothstep(0.05, 0.75, n.x * 0.85 - n.y * 0.5);
+        vec3 c = mix(uColor, uWarm * 1.15, side * uMix);
+        gl_FragColor = vec4(c * (0.1 + f * 3.2), 1.0);
+      }`,
+      transparent: true,
+      blending: AdditiveBlending,
+      depthWrite: false,
+    });
+  const WARM: Record<BodyKey, number> = { hero: 0.75, stone: 0.7, hex: 0.5, octa: 0.5, shield: 0.5, disc: 0.5, square: 0.5, paper: 1 };
+  const rim = Object.fromEntries(kinds.map((k) => [k, makeRim(WARM[k])])) as Record<BodyKey, ShaderMaterial>;
   const cyanBasic = new MeshBasicMaterial({ color: hdr('#22d3ee', 2.4), toneMapped: false, transparent: true });
   const cyanSolid = new MeshStandardMaterial({
     color: new Color('#062a31'),
@@ -142,7 +161,8 @@ export function createKit(q: Quality): Kit {
       for (const m of Object.values(glass)) m.dispose();
       for (const g of Object.values(body)) g.dispose();
       for (const g of Object.values(edges)) g.dispose();
-      for (const m of [rim, edge, cyanBasic, cyanSolid, cyanLine, amber, ring, dash]) m.dispose();
+      for (const m of Object.values(rim)) m.dispose();
+      for (const m of [edge, cyanBasic, cyanSolid, cyanLine, amber, ring, dash]) m.dispose();
       circle.dispose();
       soft.dispose();
     },
