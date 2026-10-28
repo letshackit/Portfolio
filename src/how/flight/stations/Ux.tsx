@@ -129,8 +129,8 @@ function Connectors() {
 function Swatches() {
   const group = useRef<Group>(null);
   const mats = useMemo(() => SWATCHES.map((c) => new MeshBasicMaterial({ color: new Color(c).multiplyScalar(c === '#22d3ee' || c === '#fbbf24' ? 1.6 : 1), transparent: true, opacity: 0, toneMapped: false, fog: true })), []);
-  const tagA = useMemo(() => new MeshBasicMaterial({ map: tagTexture('OBSIDIAN COMMAND · DESIGN SYSTEM', 'cyan', 16), transparent: true, opacity: 0, toneMapped: false, fog: true }), []);
-  const tagB = useMemo(() => new MeshBasicMaterial({ map: tagTexture('CONFIGURATION ENGINE', 'amber', 10), transparent: true, opacity: 0, toneMapped: false, fog: true }), []);
+  const tagA = useMemo(() => new MeshBasicMaterial({ map: tagTexture('OBSIDIAN COMMAND · DESIGN SYSTEM', 'cyan', 16), transparent: true, depthTest: false, depthWrite: false, opacity: 0, toneMapped: false, fog: true }), []);
+  const tagB = useMemo(() => new MeshBasicMaterial({ map: tagTexture('CONFIGURATION ENGINE', 'amber', 10), transparent: true, depthTest: false, depthWrite: false, opacity: 0, toneMapped: false, fog: true }), []);
   const knobs = useRef<Array<Mesh | null>>([]);
   const trackMat = useMemo(() => new MeshBasicMaterial({ color: COLORS.cyan.clone().multiplyScalar(0.5), transparent: true, opacity: 0, toneMapped: false, fog: true }), []);
   const knobMat = useMemo(() => new MeshBasicMaterial({ color: COLORS.amberHi.clone().multiplyScalar(2), transparent: true, opacity: 0, toneMapped: false, fog: true }), []);
@@ -160,7 +160,7 @@ function Swatches() {
   });
   return (
     <group ref={group} position={[0, -1.42, 0.1]}>
-      <mesh material={tagA} position={[-1.05, 0.24, 0]}>
+      <mesh material={tagA} renderOrder={20} position={[-1.05, 0.24, 0]}>
         <planeGeometry args={[1.9, 0.12]} />
       </mesh>
       {SWATCHES.map((c, i) => (
@@ -168,7 +168,7 @@ function Swatches() {
           <planeGeometry args={[0.21, 0.21]} />
         </mesh>
       ))}
-      <mesh material={tagB} position={[1.35, 0.24, 0]}>
+      <mesh material={tagB} renderOrder={20} position={[1.35, 0.24, 0]}>
         <planeGeometry args={[1.2, 0.12]} />
       </mesh>
       {[0, 1, 2].map((i) => (

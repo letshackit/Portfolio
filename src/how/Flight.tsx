@@ -20,6 +20,29 @@ import { useProximity } from './useProximity';
 const stages = content.howIWork.stages;
 const pad = (n: number) => String(n).padStart(2, '0');
 
+/** Foot of a panel: how much of the product is built at this stage, and the next stage names ghosted beyond the rail. */
+function StageFoot({ index }: { index: number }) {
+  const ahead = stages.slice(index + 1, index + 3);
+  return (
+    <p className="mono-caption stage-panel__foot">
+      <span className="stage-panel__foot-next" aria-hidden="true">
+        {ahead.length > 0 ? (
+          <>
+            <span>{flightCopy.next}</span>
+            {ahead.map((n) => (
+              <span className="stage-panel__foot-ghost" key={n.id}>
+                {pad(n.index)} {n.shortLabel}
+              </span>
+            ))}
+          </>
+        ) : (
+          <span>{flightCopy.done}</span>
+        )}
+      </span>
+    </p>
+  );
+}
+
 type StageComponent = ComponentType<FlightStageProps>;
 
 /** Portrait screens and narrow windows get the vertical conduit; everything else flies down the track. */
@@ -70,6 +93,8 @@ export function Flight({ quality, onFail }: FlightProps) {
   const lineRef = useRef<HTMLSpanElement>(null);
   const fillRef = useRef<HTMLSpanElement>(null);
   const packetRef = useRef<HTMLSpanElement>(null);
+  const meterFillRef = useRef<HTMLSpanElement>(null);
+  const meterValueRef = useRef<HTMLSpanElement>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const handleRef = useRef<FlightHandle | null>(null);
   const [active, setActive] = useState(0);
@@ -113,12 +138,14 @@ export function Flight({ quality, onFail }: FlightProps) {
       const line = lineRef.current;
       const fill = fillRef.current;
       const packet = packetRef.current;
+      const meterFill = meterFillRef.current;
+      const meterValue = meterValueRef.current;
       const tabs = tabRefs.current.filter((el): el is HTMLButtonElement => el !== null);
-      if (!root || !line || !fill || !packet) return;
+      if (!root || !line || !fill || !packet || !meterFill || !meterValue) return;
       import('./flightMotion')
         .then((mod) =>
           mod.startFlight(
-            { root, line, fill, packet, tabs },
+            { root, line, fill, packet, meterFill, meterValue, tabs },
             (index) => {
               const stage = stages[index];
               if (!stage) return;
@@ -252,10 +279,22 @@ export function Flight({ quality, onFail }: FlightProps) {
               <span aria-hidden="true"> / {pad(stages.length)}</span>
               <span className="flight__counter-name"> · {current?.shortLabel}</span>
             </p>
-            <p className="mono-caption flight__hint" data-gone={flown || undefined} aria-hidden="true">
-              <span className="flight__hint-arrow" />
-              {vertical ? flightCopy.hintVertical : flightCopy.hint}
-            </p>
+            <div className="flight__mid">
+              <div className="flight__meter" aria-hidden="true">
+                <span className="mono-label flight__meter-label">{flightCopy.meter}</span>
+                <span className="flight__meter-track">
+                  <span className="flight__meter-fill" ref={meterFillRef} />
+                  <span className="flight__meter-cuts" />
+                </span>
+                <span className="mono-label flight__meter-value" ref={meterValueRef}>
+                  0%
+                </span>
+              </div>
+              <p className="mono-caption flight__hint" data-gone={flown || undefined} aria-hidden="true">
+                <span className="flight__hint-arrow" />
+                {vertical ? flightCopy.hintVertical : flightCopy.hint}
+              </p>
+            </div>
             <ul className="mono-caption flight__legend" aria-hidden="true">
               <li>
                 <span className="flight__key flight__key--packet" />
@@ -282,7 +321,7 @@ export function Flight({ quality, onFail }: FlightProps) {
                   data-active={isActive || undefined}
                   {...(isActive ? {} : { inert: '' })}
                 >
-                  <StagePanel stage={stage} play={isActive && onScreen} />
+                  <StagePanel stage={stage} play={isActive && onScreen} verb={flightCopy.verbs[i]} built={Math.round(((i + 1) / stages.length) * 100)} footer={<StageFoot index={i} />} />
                 </div>
               );
             })}

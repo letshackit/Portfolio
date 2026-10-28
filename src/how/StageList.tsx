@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePrefs } from '../app/providers/prefsContext';
 import { useUi } from '../app/providers/uiContext';
 import { content } from '../data/content';
+import { flightCopy } from './flightCopy';
 import { StagePanel } from './StagePanel';
 import { StationGlyph } from './StationGlyph';
 import { useOnScreen } from './useOnScreen';
@@ -112,7 +113,12 @@ export function StageList() {
               <div className="stepper-list__art">
                 <StationGlyph id={stage.id} />
               </div>
-              <StagePanel stage={stage} play={onScreen && i === lit} />
+              <StagePanel
+                stage={stage}
+                play={onScreen && i === lit}
+                verb={flightCopy.verbs[i]}
+                built={Math.round(((i + 1) / stages.length) * 100)}
+              />
             </li>
           );
         })}

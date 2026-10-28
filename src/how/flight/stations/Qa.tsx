@@ -50,7 +50,7 @@ function Gate({ i }: { i: number }) {
     () => new MeshBasicMaterial({ color: COLORS.amberHi.clone().multiplyScalar(2.2), transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false, fog: true }),
     [],
   );
-  const tagMat = useMemo(() => new MeshBasicMaterial({ map: tagTexture(g.name, 'cyan', 10), transparent: true, opacity: 0, toneMapped: false, fog: true }), [g.name]);
+  const tagMat = useMemo(() => new MeshBasicMaterial({ map: tagTexture(g.name, 'cyan', 10), transparent: true, depthTest: false, depthWrite: false, opacity: 0, toneMapped: false, fog: true }), [g.name]);
   const leaderGeo = useMemo(() => {
     const geo = new BufferGeometry();
     geo.setAttribute('position', new Float32BufferAttribute([0, -RADIUS, 0, 0, -RADIUS - 0.3, 0], 3));
@@ -139,7 +139,7 @@ function Gate({ i }: { i: number }) {
         <planeGeometry args={[0.014, RADIUS * 1.7]} />
       </mesh>
       <lineSegments geometry={leaderGeo} material={leaderMat} />
-      <mesh material={tagMat} position={[0, -RADIUS - 0.4, 0]}>
+      <mesh material={tagMat} renderOrder={20} position={[0, -RADIUS - 0.4, 0]}>
         <planeGeometry args={[1.3, 0.13]} />
       </mesh>
     </group>

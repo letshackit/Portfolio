@@ -160,6 +160,60 @@
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--t-1) 5%, transparent);
 }
 
+/* The verb: what the work at this stage is called. Amber, because it is the agent's work, not the structure. */
+.stage-panel__verb {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--amber-400);
+  letter-spacing: 0.16em;
+}
+
+.stage-panel__verb-rule {
+  width: var(--s-5);
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--amber-500));
+}
+
+/* The foot: where this stage sits in the build, and what is ghosted ahead. */
+.stage-panel__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) var(--s-4);
+  color: var(--t-3);
+}
+
+.stage-panel__built {
+  margin-left: auto;
+  color: var(--t-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stage-panel__built b {
+  color: var(--amber-400);
+  font-weight: 500;
+}
+
+.stage-panel__foot-next {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  margin-left: auto;
+}
+
+.stage-panel__foot-ghost {
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--t-2) 70%, transparent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.stage-panel__foot-ghost + .stage-panel__foot-ghost {
+  -webkit-text-stroke-color: color-mix(in srgb, var(--t-2) 32%, transparent);
+}
+
 .stage-panel__text {
   color: var(--t-1);
   font-size: 0.9375rem;
@@ -182,7 +236,7 @@
 
 .stage-panel__number .mono-metric {
   font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.5rem);
-  color: var(--cyan-400);
+  color: var(--amber-400);
   font-variant-numeric: tabular-nums;
 }
 
@@ -324,11 +378,12 @@
 
   .stepper-list .stage-panel {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto auto 1fr;
     column-gap: var(--s-6);
   }
 
   .stepper-list .stage-panel > .stage-panel__top,
+  .stepper-list .stage-panel > .stage-panel__verb,
   .stepper-list .stage-panel > h3,
   .stepper-list .stage-panel > .stage-panel__summary {
     grid-column: 1;
@@ -336,7 +391,11 @@
 
   .stepper-list .stage-panel__artifact {
     grid-column: 2;
-    grid-row: 1 / span 3;
+    grid-row: 1 / span 5;
+    align-self: start;
+  }
+
+  .stepper-list .stage-panel > .stage-panel__verb {
     align-self: start;
   }
 }
@@ -460,6 +519,6 @@
 
   .stepper-list .stage-panel > .stage-panel__artifact {
     grid-column: 2;
-    grid-row: 1 / span 3;
+    grid-row: 1 / span 5;
   }
 }

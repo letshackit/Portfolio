@@ -70,7 +70,7 @@ export function Jira({ stage }: Props) {
   const headers = useMemo(
     () =>
       Array.from({ length: epics }, (_, c) =>
-        new MeshBasicMaterial({ map: labelTexture({ text: `E${String(c + 1).padStart(2, '0')}`, color: '#fbbf24', aspect: 3, plate: 'rgba(7,12,16,0.6)' }), transparent: true, opacity: 0, toneMapped: false, fog: true }),
+        new MeshBasicMaterial({ map: labelTexture({ text: `E${String(c + 1).padStart(2, '0')}`, color: '#fbbf24', aspect: 3, plate: 'rgba(5,9,12,0.9)' }), transparent: true, depthTest: false, opacity: 0, toneMapped: false, fog: true }),
       ),
     [epics],
   );

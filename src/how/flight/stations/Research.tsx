@@ -124,7 +124,7 @@ export function Research({ stage, quality }: Props) {
         tex: labelTexture({
           text: t.n,
           color: t.bench ? '#fbbf24' : '#67e8f9',
-          plate: 'rgba(7,12,16,0.7)',
+          plate: 'rgba(5,9,12,0.93)',
           edge: t.bench ? 'rgba(245,158,11,0.7)' : 'rgba(34,211,238,0.5)',
         }),
         end: new Vector3(slot[0], slot[1], 0.3),
@@ -135,7 +135,7 @@ export function Research({ stage, quality }: Props) {
   }, []);
   const tagMeshes = useRef<Array<Mesh | null>>([]);
   const tagMats = useMemo(
-    () => tags.map((t) => new MeshBasicMaterial({ map: t.tex, transparent: true, depthWrite: false, toneMapped: false, fog: true, side: DoubleSide })),
+    () => tags.map((t) => new MeshBasicMaterial({ map: t.tex, transparent: true, depthTest: false, depthWrite: false, toneMapped: false, fog: true, side: DoubleSide })),
     [tags],
   );
   const leaderGeo = useMemo(() => {
@@ -249,6 +249,7 @@ export function Research({ stage, quality }: Props) {
             tagMeshes.current[i] = el;
           }}
           material={tagMats[i]}
+          renderOrder={20}
           visible={false}
         >
           <planeGeometry args={[t.bench ? 1.5 : 1.06, t.bench ? 0.19 : 0.135]} />

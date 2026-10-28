@@ -1,8 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { Vector3 } from 'three';
-import { DWELL, STATIONS, activeStation, assemble, passed, progressForStation, progressToS, stationVisible } from '../how/flight/timeline';
+import { DWELL, STATIONS, activeStation, assemble, builtFraction, passed, progressForStation, progressToS, stationVisible } from '../how/flight/timeline';
 import { dprFor, LAST_TIER, pinnedQuality, startTier, stepDown, TIERS } from '../how/flight/quality';
 import { cameraArc, makeLayout, pathPoint, pathTangent, stationArc } from '../how/flight/track';
+
+describe('product built meter', () => {
+  it('runs 0 to 100 %, only ever up, and reads (i + 1) / 7 when the camera rests on station i', () => {
+    expect(builtFraction(progressToS(-1))).toBe(0);
+    expect(builtFraction(progressToS(1))).toBe(1);
+    let prev = -1;
+    for (let i = 0; i <= 200; i += 1) {
+      const f = builtFraction(progressToS(i / 200));
+      expect(f).toBeGreaterThanOrEqual(prev);
+      prev = f;
+    }
+    for (let i = 0; i < STATIONS; i += 1) expect(builtFraction(i)).toBeCloseTo((i + 1) / STATIONS, 6);
+  });
+});
 
 describe('flight timeline', () => {
   it('maps scroll to the camera monotonically, from before station 1 to just past station 7', () => {

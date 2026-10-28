@@ -43,6 +43,15 @@ export function progressForStation(index: number): number {
   return (lo + hi) / 2;
 }
 
+/**
+ * How much of the product is built when the camera is at `s`, 0..1. Station i at rest means i + 1 of 7 stages are done,
+ * so the meter reads 14 % on Research, 43 % on UX and 100 % on Deploy; the run-in before Research climbs from 0.
+ */
+export function builtFraction(s: number): number {
+  if (s <= 0) return clamp01((s - S_START) / -S_START) / STATIONS;
+  return clamp01((s + 1) / STATIONS);
+}
+
 /** The station the HUD names while the camera is at `s`. */
 export function activeStation(s: number): number {
   return Math.min(STATIONS - 1, Math.max(0, Math.round(s)));

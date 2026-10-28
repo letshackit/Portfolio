@@ -94,7 +94,7 @@ export function labelTexture(spec: TextSpec): CanvasTexture {
 }
 
 /** A big numeral with a small caption beneath, for the floating metrics (aspect 2:1). */
-export function metricTexture(figure: string, caption: string, color = CYAN_HI): CanvasTexture {
+export function metricTexture(figure: string, caption: string, color = AMBER): CanvasTexture {
   return canvasTexture(`metric|${figure}|${caption}|${color}`, 512, 256, (g, w, h) => {
     g.textAlign = 'center';
     g.textBaseline = 'alphabetic';
@@ -396,7 +396,66 @@ export function tagTexture(text: string, tone: 'cyan' | 'amber' = 'cyan', aspect
     aspect,
     text,
     color: tone === 'amber' ? AMBER : CYAN_HI,
-    plate: 'rgba(7,12,16,0.72)',
+    plate: 'rgba(5,9,12,0.93)',
     edge: tone === 'amber' ? 'rgba(245,158,11,0.7)' : 'rgba(34,211,238,0.55)',
+  });
+}
+
+/** Word-wrap `text` into at most `max` lines no wider than `width` in the current font; the last line is clipped, never dropped. */
+function wrapLines(g: CanvasRenderingContext2D, text: string, width: number, max: number): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    const next = line ? `${line} ${word}` : word;
+    if (g.measureText(next).width > width && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, max);
+}
+
+/**
+ * A docking spec card: an opaque dark plate (so nothing bright behind it can wash it out), corner brackets, a small
+ * label, a big amber figure and a wrapped caption. 16:9.
+ */
+export function specCardTexture(label: string, figure: string, caption: string, tone: 'cyan' | 'amber' = 'cyan'): CanvasTexture {
+  return canvasTexture(`spec|${label}|${figure}|${caption}|${tone}`, 576, 324, (g, w, h) => {
+    const edge = tone === 'amber' ? '#f59e0b' : '#22d3ee';
+    g.fillStyle = 'rgba(5,9,12,0.96)';
+    g.fillRect(0, 0, w, h);
+    g.strokeStyle = tone === 'amber' ? 'rgba(245,158,11,0.45)' : 'rgba(34,211,238,0.4)';
+    g.lineWidth = 2;
+    g.strokeRect(1, 1, w - 2, h - 2);
+    g.strokeStyle = edge;
+    g.lineWidth = 6;
+    const b = 34;
+    for (const [x, y, dx, dy] of [[3, 3, 1, 1], [w - 3, 3, -1, 1], [3, h - 3, 1, -1], [w - 3, h - 3, -1, -1]] as const) {
+      g.beginPath();
+      g.moveTo(x + dx * b, y);
+      g.lineTo(x, y);
+      g.lineTo(x, y + dy * b);
+      g.stroke();
+    }
+    g.textBaseline = 'alphabetic';
+    g.textAlign = 'left';
+    g.font = `500 26px ${MONO}`;
+    g.fillStyle = edge;
+    g.fillText(label.toUpperCase(), 36, 62);
+    let px = 150;
+    g.font = `600 ${px}px ${MONO}`;
+    while (g.measureText(figure).width > w - 72 && px > 50) {
+      px -= 6;
+      g.font = `600 ${px}px ${MONO}`;
+    }
+    g.fillStyle = AMBER;
+    g.fillText(figure, 32, 62 + px * 0.9);
+    g.font = `500 25px ${MONO}`;
+    g.fillStyle = INK;
+    const lines = wrapLines(g, caption.toUpperCase(), w - 72, 2);
+    lines.forEach((ln, i) => g.fillText(ln, 36, h - 24 - (lines.length - 1 - i) * 32));
   });
 }

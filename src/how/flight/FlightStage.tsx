@@ -85,7 +85,7 @@ function World({ stages, tier, portrait, onReady }: WorldProps) {
         {qa ? <Qa /> : null}
       </Station>
       <Station index={6} layout={layout}>
-        {deploy ? <Deploy stage={deploy} /> : null}
+        {deploy ? <Deploy stage={deploy} portrait={portrait} /> : null}
       </Station>
       <DeployServer layout={layout} />
       <Effects q={q} />

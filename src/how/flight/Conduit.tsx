@@ -132,9 +132,9 @@ function Ties({ layout }: { layout: TrackLayout }) {
       const behind = arc < camArc ? 0.75 : 0.12;
       const near = Math.exp(-Math.pow((arc - packetArc) / 1.3, 2));
       tmp.copy(COLORS.cyan).multiplyScalar(behind);
-      tmp.r += COLORS.amberHi.r * near * 0.7;
-      tmp.g += COLORS.amberHi.g * near * 0.7;
-      tmp.b += COLORS.amberHi.b * near * 0.7;
+      tmp.r += COLORS.amberHi.r * near * 0.28;
+      tmp.g += COLORS.amberHi.g * near * 0.28;
+      tmp.b += COLORS.amberHi.b * near * 0.28;
       mesh.setColorAt(i, tmp);
     });
     mesh.instanceColor.needsUpdate = true;
@@ -321,7 +321,7 @@ function Packet({ layout }: { layout: TrackLayout }) {
       if (layout.portrait) P.z = 0.4;
       pos.setXYZ(i, P.x, P.y, P.z);
       const f = Math.pow(1 - i / TRAIL, 2.2);
-      colr.setXYZ(i, 1.3 * f, 0.55 * f, 0.05 * f);
+      colr.setXYZ(i, 0.95 * f, 0.42 * f, 0.04 * f);
     }
     pos.needsUpdate = true;
     colr.needsUpdate = true;
@@ -331,12 +331,12 @@ function Packet({ layout }: { layout: TrackLayout }) {
     <>
       <group ref={group}>
         <mesh ref={core}>
-          <octahedronGeometry args={[0.11, 0]} />
-          <meshBasicMaterial color={[2.6, 1.25, 0.1]} toneMapped={false} fog={false} />
+          <octahedronGeometry args={[0.085, 0]} />
+          <meshBasicMaterial color={[1.55, 0.8, 0.08]} toneMapped={false} fog={false} />
         </mesh>
         <mesh ref={ring}>
-          <torusGeometry args={[0.2, 0.008, 6, 40]} />
-          <meshBasicMaterial color={[1.8, 0.95, 0.08]} toneMapped={false} fog={false} />
+          <torusGeometry args={[0.17, 0.006, 6, 40]} />
+          <meshBasicMaterial color={[1.3, 0.7, 0.07]} toneMapped={false} fog={false} />
         </mesh>
       </group>
       <points ref={trail} geometry={trailGeo} material={trailMat} frustumCulled={false} />

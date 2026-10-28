@@ -50,7 +50,7 @@ export function Prototype({ stage }: Props) {
     [months],
   );
   const monthTrack = useMemo(() => new MeshBasicMaterial({ color: COLORS.cyan.clone().multiplyScalar(0.35), transparent: true, opacity: 0, toneMapped: false, fog: true }), []);
-  const tag = useMemo(() => new MeshBasicMaterial({ map: tagTexture('BUILT IN CURSOR · NODE.JS', 'amber', 12), transparent: true, opacity: 0, toneMapped: false, fog: true }), []);
+  const tag = useMemo(() => new MeshBasicMaterial({ map: tagTexture('BUILT IN CURSOR · NODE.JS', 'amber', 12), transparent: true, depthTest: false, depthWrite: false, opacity: 0, toneMapped: false, fog: true }), []);
   const big = stage.numbers[0];
   const bigMat = useMemo(
     () => (big ? new MeshBasicMaterial({ map: metricTexture(big.value, big.label), transparent: true, opacity: 0, depthWrite: false, toneMapped: false, fog: true }) : null),
@@ -58,7 +58,7 @@ export function Prototype({ stage }: Props) {
   );
   const monthLabel = stage.numbers[1];
   const monthLabelMat = useMemo(
-    () => (monthLabel ? new MeshBasicMaterial({ map: tagTexture(`${monthLabel.value} ${monthLabel.label.toUpperCase()}`, 'cyan', 12), transparent: true, opacity: 0, toneMapped: false, fog: true }) : null),
+    () => (monthLabel ? new MeshBasicMaterial({ map: tagTexture(`${monthLabel.value} ${monthLabel.label.toUpperCase()}`, 'cyan', 12), transparent: true, depthTest: false, depthWrite: false, opacity: 0, toneMapped: false, fog: true }) : null),
     [monthLabel],
   );
 
@@ -148,7 +148,7 @@ export function Prototype({ stage }: Props) {
           <planeGeometry args={[1.2, 0.6]} />
         </mesh>
       ) : null}
-      <mesh material={tag} position={[0, -1.42, 0.05]}>
+      <mesh material={tag} renderOrder={20} position={[0, -1.42, 0.05]}>
         <planeGeometry args={[1.8, 0.15]} />
       </mesh>
       <group position={[0, -1.66, 0.05]}>
@@ -164,7 +164,7 @@ export function Prototype({ stage }: Props) {
         ))}
       </group>
       {monthLabelMat ? (
-        <mesh material={monthLabelMat} position={[0, -1.9, 0.05]}>
+        <mesh material={monthLabelMat} renderOrder={20} position={[0, -1.9, 0.05]}>
           <planeGeometry args={[1.5, 0.125]} />
         </mesh>
       ) : null}

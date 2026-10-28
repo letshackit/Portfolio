@@ -8,7 +8,7 @@ import { gsap } from 'gsap';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { BREAKPOINTS } from '../config';
-import { activeStation, clamp01, ENTER_P, flight, progressForStation, progressToS, resetFlight, STATIONS } from './flight/timeline';
+import { activeStation, builtFraction, clamp01, ENTER_P, flight, progressForStation, progressToS, resetFlight, STATIONS } from './flight/timeline';
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 ScrollTrigger.config({ ignoreMobileResize: true });
@@ -24,6 +24,9 @@ export interface FlightElements {
   readonly line: HTMLElement;
   readonly fill: HTMLElement;
   readonly packet: HTMLElement;
+  /** Cumulative "product built" meter: a bar scaled on X and its percentage text. */
+  readonly meterFill: HTMLElement;
+  readonly meterValue: HTMLElement;
   readonly tabs: readonly HTMLElement[];
 }
 
@@ -66,12 +69,13 @@ export async function startFlight(
   await waitForSmoother(isCancelled);
   if (isCancelled()) return null;
 
-  const { root, line, fill, packet, tabs } = els;
+  const { root, line, fill, packet, meterFill, meterValue, tabs } = els;
   const last = STATIONS - 1;
   let lineWidth = 0;
   let current = 0;
   let target = 0;
   let lastIndex = -1;
+  let lastPct = -1;
   let lockIndex: number | null = null;
   let lockTimer = 0;
   let ticking = false;
@@ -89,6 +93,13 @@ export async function startFlight(
     const f = clamp01(s / last);
     fill.style.transform = `scaleX(${f.toFixed(4)})`;
     packet.style.transform = `translate3d(${(f * lineWidth).toFixed(2)}px,-50%,0)`;
+    const built = builtFraction(s);
+    meterFill.style.transform = `scaleX(${built.toFixed(4)})`;
+    const pct = Math.round(built * 100);
+    if (pct !== lastPct) {
+      lastPct = pct;
+      meterValue.textContent = `${pct}%`;
+    }
     for (let i = 0; i < tabs.length; i += 1) {
       const isLit = s >= i - 0.02;
       if (lit[i] !== isLit) {
@@ -193,6 +204,8 @@ export async function startFlight(
       root.removeAttribute('data-engine');
       fill.style.transform = '';
       packet.style.transform = '';
+      meterFill.style.transform = '';
+      meterValue.textContent = '0%';
       for (const tab of tabs) tab.removeAttribute('data-lit');
       resetFlight();
     },
