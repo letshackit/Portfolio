@@ -1,26 +1,458 @@
 /*
- * Capabilities: four glass cards in the same staged world as How I work and Deployments (.stage-world, sectionIntro.css).
- * Four columns from 1280, two from 768, one below. Reveal is a staggered rise driven by [data-armed]/[data-in] on the
- * grid (useReveal); transform and opacity only. Without scripting or under reduced motion the cards are plain and lit.
+ * Capabilities. Desktop: .cc, a framed WebGL stage (camera flying between four domain clusters round a core) with a DOM
+ * rail of domains beside it. Everywhere else: .cap-grid, four lit cards with a miniature of the cluster. Both sit in the
+ * same staged world as How I work and Deployments (.stage-world, sectionIntro.css). Colours come from the tokens; the
+ * 3D scene's own palette (scene.ts) is the same two hues. Only transform and opacity animate.
  */
+
+/* ---------- Stage (desktop, WebGL) ---------- */
+.cc {
+  --tone: var(--cyan-500);
+  --tone-text: var(--cyan-400);
+  --tone-fill: var(--fill-cyan);
+  --tone-line: var(--line-3);
+  --rail: 276px;
+  position: relative;
+  isolation: isolate;
+  height: clamp(640px, 84vh, 780px);
+  overflow: hidden;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-3);
+  background: #07080a;
+  box-shadow: var(--glass-hi), var(--glass-drop), 0 0 80px -30px var(--glow-cyan);
+}
+
+.cc[data-tone="amber"] {
+  --tone: var(--amber-500);
+  --tone-text: var(--amber-400);
+  --tone-fill: var(--fill-amber);
+  --tone-line: var(--line-amber);
+}
+
+/* Poster: the lit scene's glow as a static field, so the canvas fades in over it without a jump. */
+.cc__poster {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 34% 46% at 62% 50%, rgba(34, 211, 238, 0.13), transparent 70%),
+    radial-gradient(ellipse 22% 30% at 82% 70%, rgba(245, 158, 11, 0.07), transparent 70%),
+    linear-gradient(to right, var(--grid-minor) 1px, transparent 1px) 0 0 / var(--grid-cell) var(--grid-cell),
+    linear-gradient(to bottom, var(--grid-minor) 1px, transparent 1px) 0 0 / var(--grid-cell) var(--grid-cell),
+    #07080a;
+}
+
+.cc__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 700ms var(--e-out);
+}
+
+.cc[data-stage="ready"] .cc__canvas {
+  opacity: 1;
+}
+
+/* Darkens the corners under the HUD and the rail so mono text keeps its contrast over the lit scene. */
+.cc__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, rgba(7, 8, 10, 0.78) 0, rgba(7, 8, 10, 0.4) calc(var(--rail) + 40px), transparent calc(var(--rail) + 160px)),
+    linear-gradient(to bottom, rgba(7, 8, 10, 0.7) 0, transparent 90px),
+    linear-gradient(to top, rgba(7, 8, 10, 0.75) 0, transparent 90px);
+}
+
+/* Corner ticks, the frame language of the stage cards. */
+.cc::before,
+.cc::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 6;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top left / var(--tick) 1px no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top left / 1px var(--tick) no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top right / var(--tick) 1px no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top right / 1px var(--tick) no-repeat;
+}
+
+.cc::after {
+  transform: scaleY(-1);
+}
+
+.cc__hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-5);
+  padding: 0 var(--s-5);
+  pointer-events: none;
+}
+
+.cc__hud--top {
+  top: var(--s-4);
+}
+
+.cc__hud--bottom {
+  bottom: var(--s-4);
+}
+
+.cc__hud-n {
+  color: var(--tone-text);
+}
+
+.cc__hint {
+  margin-inline: auto;
+}
+
+.cc__mode {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.cc__dot {
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--t-3);
+}
+
+.cc__mode[data-live] {
+  color: var(--amber-400);
+}
+
+.cc__mode[data-live] .cc__dot {
+  border-color: var(--amber-500);
+  background: var(--amber-500);
+  box-shadow: 0 0 10px var(--amber-500);
+}
+
+.cc__loading {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  padding-left: calc(var(--rail) + 40px);
+  pointer-events: none;
+}
+
+.cc__legend {
+  position: absolute;
+  z-index: 5;
+  left: var(--s-5);
+  bottom: 52px;
+  display: grid;
+  gap: var(--s-2);
+  pointer-events: none;
+}
+
+.cc__legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.cc__legend li::before {
+  content: "";
+  width: 18px;
+  height: 2px;
+  background: var(--cyan-500);
+  box-shadow: 0 0 8px var(--cyan-500);
+}
+
+.cc__legend li[data-tone="amber"]::before {
+  background: var(--amber-500);
+  box-shadow: 0 0 8px var(--amber-500);
+}
+
+/* Rail: the real interface. A glass column of four domains; the open one shows its proof line. */
+.cc__rail {
+  position: absolute;
+  z-index: 8;
+  top: 56px;
+  left: var(--s-5);
+  width: var(--rail);
+  display: grid;
+  gap: var(--s-2);
+  align-content: start;
+}
+
+.cc-dom {
+  --tone: var(--cyan-500);
+  --tone-text: var(--cyan-400);
+  position: relative;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--g-0) 72%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+  transition: border-color var(--d-slow) var(--e-out), background var(--d-slow) var(--e-out), box-shadow var(--d-slow) var(--e-out);
+}
+
+.cc-dom[data-tone="amber"] {
+  --tone: var(--amber-500);
+  --tone-text: var(--amber-400);
+}
+
+.cc-dom[data-active] {
+  border-color: color-mix(in srgb, var(--tone) 55%, transparent);
+  background: color-mix(in srgb, var(--tone) 9%, color-mix(in srgb, var(--g-0) 78%, transparent));
+  box-shadow: 0 0 40px -14px color-mix(in srgb, var(--tone) 60%, transparent);
+}
+
+.cc-dom__tab {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--s-3) var(--s-4);
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: var(--t-2);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.cc-dom__idx,
+.cc-dom__n {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-caption);
+  letter-spacing: var(--ls-mono-caption);
+  color: var(--t-3);
+}
+
+.cc-dom__name {
+  font-size: 1.0625rem;
+  font-weight: var(--w-semibold);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: var(--t-2);
+  transition: color var(--d-base) var(--e-out);
+}
+
+.cc-dom__n {
+  min-width: 2ch;
+  text-align: right;
+}
+
+.cc-dom__tab:hover .cc-dom__name,
+.cc-dom[data-active] .cc-dom__name {
+  color: var(--t-1);
+}
+
+.cc-dom[data-active] .cc-dom__idx,
+.cc-dom[data-active] .cc-dom__n {
+  color: var(--tone-text);
+}
+
+/* Auto-cycle progress: a hairline that fills across the open domain's tab. */
+.cc-dom__timer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--tone);
+  transform-origin: left;
+  animation: cc-timer var(--auto) linear forwards;
+}
+
+@keyframes cc-timer {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The open panel grows from zero height; closed ones are inert, so Tab skips their links. */
+.cc-dom__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--d-slow) var(--e-out);
+}
+
+.cc-dom[data-active] .cc-dom__panel {
+  grid-template-rows: 1fr;
+}
+
+.cc-dom__inner {
+  display: grid;
+  gap: var(--s-2);
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 var(--s-4);
+  opacity: 0;
+  transition: opacity var(--d-slow) var(--e-out);
+}
+
+.cc-dom[data-active] .cc-dom__inner {
+  padding-bottom: var(--s-4);
+  opacity: 1;
+}
+
+.cc-dom__link {
+  display: inline-block;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--t-1);
+}
+
+.cc-dom__link .icon {
+  margin-left: var(--s-2);
+  vertical-align: -2px;
+  color: var(--tone-text);
+}
+
+/* ---------- Labels drawn by the 3D scene (DOM, projected each frame) ---------- */
+.cc-skill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: max-content;
+  max-width: 200px;
+  padding: 4px 9px;
+  border: 1px solid color-mix(in srgb, var(--cyan-500) 38%, transparent);
+  border-radius: var(--r-1);
+  background: rgba(7, 8, 10, 0.78);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  color: var(--t-1);
+  pointer-events: none;
+  user-select: none;
+  animation: cc-skill-in 520ms var(--e-out) var(--d, 0ms) both;
+}
+
+.cc-skill[data-tone="amber"] {
+  border-color: color-mix(in srgb, var(--amber-500) 45%, transparent);
+}
+
+.cc-skill--right {
+  transform: translate(14px, -50%);
+}
+
+.cc-skill--left {
+  transform: translate(calc(-100% - 14px), -50%);
+  text-align: right;
+}
+
+.cc-skill--above {
+  transform: translate(-50%, calc(-100% - 12px));
+  text-align: center;
+}
+
+.cc-skill--below {
+  transform: translate(-50%, 12px);
+  text-align: center;
+}
+
+@keyframes cc-skill-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.cc-hubtag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 5px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: rgba(7, 8, 10, 0.72);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--t-2);
+  transform: translate(-50%, 0);
+  cursor: pointer;
+  transition: color var(--d-base) var(--e-out), border-color var(--d-base) var(--e-out), opacity var(--d-slow) var(--e-out);
+}
+
+.cc-hubtag__idx,
+.cc-hubtag__n {
+  color: var(--t-3);
+}
+
+.cc-hubtag[data-active] {
+  border-color: var(--cyan-500);
+  color: var(--t-1);
+}
+
+.cc-hubtag[data-tone="amber"][data-active] {
+  border-color: var(--amber-500);
+}
+
+.cc-hubtag[data-active] .cc-hubtag__idx {
+  color: var(--cyan-400);
+}
+
+.cc-hubtag[data-tone="amber"][data-active] .cc-hubtag__idx {
+  color: var(--amber-400);
+}
+
+/* ---------- Stacked variant: four lit cards (phones, tablets, reduced motion, no WebGL) ---------- */
 .cap-grid {
   display: grid;
   gap: var(--s-4);
 }
 
 .cap-card {
+  --tone: var(--cyan-500);
+  --tone-text: var(--cyan-400);
+  --tone-glow: var(--glow-cyan);
   position: relative;
   display: grid;
   gap: var(--s-4);
   align-content: start;
   padding: var(--s-5);
-  background: var(--glass-fill);
-  border: 1px solid var(--glass-edge);
+  background:
+    radial-gradient(ellipse 70% 60% at 100% 0%, color-mix(in srgb, var(--tone) 14%, transparent), transparent 70%),
+    var(--glass-fill);
+  border: 1px solid color-mix(in srgb, var(--tone) 28%, transparent);
   border-radius: var(--r-3);
-  box-shadow: var(--glass-hi), var(--glass-drop);
+  box-shadow: var(--glass-hi), var(--glass-drop), 0 0 50px -22px var(--tone-glow);
   -webkit-backdrop-filter: blur(14px) saturate(1.25);
   backdrop-filter: blur(14px) saturate(1.25);
   transition: border-color var(--d-slow) var(--e-out), box-shadow var(--d-slow) var(--e-out);
+}
+
+.cap-card[data-tone="amber"] {
+  --tone: var(--amber-500);
+  --tone-text: var(--amber-400);
+  --tone-glow: var(--glow-amber);
 }
 
 /* Corner ticks, top pair and bottom pair, same frame language as the stage cards. */
@@ -31,13 +463,13 @@
   inset: -1px;
   pointer-events: none;
   border-radius: inherit;
-  opacity: 0.5;
+  opacity: 0.6;
   transition: opacity var(--d-slow) var(--e-out);
   background:
-    linear-gradient(var(--cyan-500), var(--cyan-500)) top left / var(--tick) 1px no-repeat,
-    linear-gradient(var(--cyan-500), var(--cyan-500)) top left / 1px var(--tick) no-repeat,
-    linear-gradient(var(--cyan-500), var(--cyan-500)) top right / var(--tick) 1px no-repeat,
-    linear-gradient(var(--cyan-500), var(--cyan-500)) top right / 1px var(--tick) no-repeat;
+    linear-gradient(var(--tone), var(--tone)) top left / var(--tick) 1px no-repeat,
+    linear-gradient(var(--tone), var(--tone)) top left / 1px var(--tick) no-repeat,
+    linear-gradient(var(--tone), var(--tone)) top right / var(--tick) 1px no-repeat,
+    linear-gradient(var(--tone), var(--tone)) top right / 1px var(--tick) no-repeat;
 }
 
 .cap-card::after {
@@ -46,11 +478,8 @@
 
 .cap-card:hover,
 .cap-card:focus-within {
-  border-color: var(--line-3);
-  box-shadow:
-    var(--glass-hi),
-    var(--glass-drop),
-    0 0 60px -14px var(--glow-cyan);
+  border-color: color-mix(in srgb, var(--tone) 60%, transparent);
+  box-shadow: var(--glass-hi), var(--glass-drop), 0 0 70px -14px var(--tone-glow);
 }
 
 .cap-card:hover::before,
@@ -58,6 +487,19 @@
 .cap-card:focus-within::before,
 .cap-card:focus-within::after {
   opacity: 1;
+}
+
+.cap-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.cap-card__heading {
+  display: grid;
+  gap: var(--s-4);
+  min-width: 0;
 }
 
 .cap-card__eyebrow {
@@ -70,7 +512,7 @@
   content: "";
   width: var(--s-5);
   height: 1px;
-  background: var(--cyan-500);
+  background: var(--tone);
 }
 
 .cap-card__title {
@@ -89,9 +531,9 @@
 
 .cap-chip {
   padding: var(--s-1) var(--s-2);
-  border: var(--hairline);
+  border: 1px solid color-mix(in srgb, var(--tone) 22%, transparent);
   border-radius: var(--r-1);
-  background: color-mix(in srgb, var(--t-1) 3%, transparent);
+  background: color-mix(in srgb, var(--tone) 6%, transparent);
   font-family: var(--font-mono);
   font-size: var(--fs-mono-caption);
   line-height: var(--lh-mono-caption);
@@ -115,7 +557,57 @@
   min-height: var(--tap);
 }
 
-/* Staggered reveal */
+/* Miniature of the 3D cluster: hub, one satellite per skill, a slow turning ring. */
+.cap-glyph {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  overflow: visible;
+}
+
+.cap-glyph__orbit {
+  stroke: color-mix(in srgb, var(--tone) 30%, transparent);
+  stroke-width: 0.8;
+  stroke-dasharray: 2 4;
+}
+
+.cap-glyph__spoke {
+  stroke: color-mix(in srgb, var(--tone) 38%, transparent);
+  stroke-width: 0.7;
+}
+
+.cap-glyph__sat {
+  fill: var(--tone-text);
+}
+
+.cap-glyph__hub {
+  stroke: var(--tone-text);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  fill: color-mix(in srgb, var(--tone) 12%, transparent);
+}
+
+.cap-glyph__core {
+  fill: var(--t-1);
+}
+
+.cap-glyph__ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cap-turn 48s linear infinite;
+}
+
+.cap-glyph {
+  color: var(--tone-text);
+}
+
+@keyframes cap-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Light-up: cards rise in a stagger, then each hub draws itself. */
 .cap-grid[data-armed] .cap-card {
   opacity: 0;
   transform: translate3d(0, 28px, 0);
@@ -131,6 +623,38 @@
     box-shadow var(--d-slow) var(--e-out);
 }
 
+.cap-grid[data-in] .cap-glyph__hub {
+  animation: cap-draw 1100ms var(--e-out) calc(var(--i) * 110ms + 350ms) both;
+}
+
+.cap-grid[data-in] .cap-glyph__sat {
+  animation: cap-light 700ms var(--e-out) calc(var(--i) * 110ms + 600ms) both;
+}
+
+@keyframes cap-draw {
+  from {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    fill-opacity: 0;
+  }
+
+  to {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+  }
+}
+
+@keyframes cap-light {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 @media (min-width: 768px) {
   .cap-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -141,6 +665,11 @@
 @media (min-width: 1280px) {
   .cap-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .cap-glyph {
+    width: 72px;
+    height: 72px;
   }
 }
 
