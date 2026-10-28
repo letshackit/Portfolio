@@ -11,6 +11,7 @@ import { Drones } from './city/Drones';
 import { Nodes } from './city/Nodes';
 import { clock } from './city/state';
 import { Effects } from './Effects';
+import { LOOK } from './lookPreset';
 import { disposeSoftTexture } from './glow';
 import { useCityVectors, useLayout } from './layout';
 import { dprFor, startTier, stepDown, TIERS, type Tier } from './quality';
@@ -106,7 +107,7 @@ function World({ tier, reduced, onReady }: WorldProps) {
   const L = useLayout();
   const q = TIERS[tier];
   const city = useCityVectors(L.city);
-  const sparkleScale = q.sparkles * L.sparkles;
+  const sparkleScale = q.sparkles * L.sparkles * LOOK.particles.sparkleScale;
   const near = Math.round(60 * sparkleScale);
   const far = Math.round(80 * sparkleScale);
 

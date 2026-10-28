@@ -3,25 +3,27 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, MeshReflectorMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 import { smoothstep, store } from '../store';
+import { LOOK } from './lookPreset';
 
 /** Where the key and fill aim: his chest. */
 const AIM = new THREE.Vector3(0, 1.05, 0);
 
 /**
- * Three-point studio on the operator, with a "lights on" ramp that starts at a 40 % floor.
- * Key: warm (about 3200 K), front-left and high, casting soft shadows onto him (chin, lapel, hair) for form.
- * Fill: cool cyan, low and front-right, lifting the shadow side without flattening it.
- * Rim: cyan from behind-right for the silhouette against the city, with a weaker one at the back-left, so the outline
- * still reads while he turns. The studio HDR (set on his materials) adds the reflections.
+ * The look rig (parameters in lookPreset.ts), with a "lights on" ramp that starts at the preset's floor.
+ * Key: neutral-warm, front-left, held low so the cheek never blows out; it casts the soft shadows (chin, lapel, hair).
+ * Fill: broad, soft, front-right. Hemisphere: a shadowless wash. Rim: a faint cyan from behind-right (structure) and a
+ * fainter amber from behind-left (the agent's warmth), so the outline reads while he turns. A soft overhead pool lights
+ * the floor around him. The studio HDR (set on his materials) adds the reflections.
  */
 export function Lights({ shadowRes }: { shadowRes: number }) {
   const key = useRef<THREE.DirectionalLight>(null);
   const fill = useRef<THREE.DirectionalLight>(null);
+  const hemi = useRef<THREE.HemisphereLight>(null);
   const rim = useRef<THREE.DirectionalLight>(null);
   const rim2 = useRef<THREE.DirectionalLight>(null);
-  const under = useRef<THREE.PointLight>(null);
-  const amb = useRef<THREE.AmbientLight>(null);
+  const pool = useRef<THREE.SpotLight>(null);
   const scene = useThree((s) => s.scene);
+  const L = LOOK.lights;
   const aim = useMemo(() => {
     const o = new THREE.Object3D();
     o.position.copy(AIM);
@@ -29,7 +31,7 @@ export function Lights({ shadowRes }: { shadowRes: number }) {
   }, []);
 
   useLayoutEffect(() => {
-    for (const l of [key.current, fill.current]) {
+    for (const l of [key.current, fill.current, pool.current]) {
       if (l) l.target = aim;
     }
     const k = key.current;
@@ -38,30 +40,31 @@ export function Lights({ shadowRes }: { shadowRes: number }) {
       k.shadow.map?.dispose();
       k.shadow.map = null;
     }
-  }, [aim, shadowRes]);
+    scene.environmentRotation.set(0, LOOK.environment.rotationY, 0);
+  }, [aim, shadowRes, scene]);
 
   useFrame(() => {
-    // 0.4 floor: he is readable the moment he mounts; the intro only brings the lights up to full.
-    const k = 0.4 + 0.6 * smoothstep(0, 1, store.intro);
-    if (key.current) key.current.intensity = KEY * k;
-    if (fill.current) fill.current.intensity = FILL * k;
-    if (rim.current) rim.current.intensity = RIM * k;
-    if (rim2.current) rim2.current.intensity = RIM2 * k;
-    if (under.current) under.current.intensity = 2.2 * k;
-    if (amb.current) amb.current.intensity = 0.1 * k;
+    // The floor: he is readable the moment he mounts; the intro only brings the lights up to full.
+    const k = (L.introFloor + (1 - L.introFloor) * smoothstep(0, 1, store.intro)) * LOOK.exposure;
+    if (key.current) key.current.intensity = L.key.intensity * k;
+    if (fill.current) fill.current.intensity = L.fill.intensity * k;
+    if (hemi.current) hemi.current.intensity = L.hemi.intensity * k;
+    if (rim.current) rim.current.intensity = L.rim.intensity * k;
+    if (rim2.current) rim2.current.intensity = L.rim2.intensity * k;
+    if (pool.current) pool.current.intensity = L.pool.intensity * k;
     // The probe lights the avatar through his own materials; this is what the floor and the city get.
-    scene.environmentIntensity = SCENE_ENV * k;
+    scene.environmentIntensity = LOOK.environment.intensity * k;
   });
 
   return (
     <>
       <primitive object={aim} />
-      <ambientLight ref={amb} color="#9fb4c8" intensity={0.1} />
+      <hemisphereLight ref={hemi} args={[L.hemi.sky, L.hemi.ground, 0]} />
       <directionalLight
         ref={key}
-        color="#ffb877"
-        position={[-2.6, 3.2, 3.4]}
-        intensity={KEY}
+        color={L.key.color}
+        position={L.key.position}
+        intensity={0}
         castShadow
         shadow-radius={5}
         shadow-bias={-0.0003}
@@ -73,19 +76,13 @@ export function Lights({ shadowRes }: { shadowRes: number }) {
         shadow-camera-near={2}
         shadow-camera-far={9}
       />
-      <directionalLight ref={fill} color="#7fe6ff" position={[3.0, 0.8, 2.8]} intensity={FILL} />
-      <directionalLight ref={rim} color="#22d3ee" position={[3.6, 3.0, -3.4]} intensity={RIM} />
-      <directionalLight ref={rim2} color="#38bdf8" position={[-3.4, 2.4, -3]} intensity={RIM2} />
-      <pointLight ref={under} color="#22d3ee" position={[0, 0.2, -1]} intensity={1} distance={5} decay={2} />
+      <directionalLight ref={fill} color={L.fill.color} position={L.fill.position} intensity={0} />
+      <directionalLight ref={rim} color={L.rim.color} position={L.rim.position} intensity={0} />
+      <directionalLight ref={rim2} color={L.rim2.color} position={L.rim2.position} intensity={0} />
+      <spotLight ref={pool} color={L.pool.color} position={L.pool.position} angle={L.pool.angle} penumbra={L.pool.penumbra} decay={2} distance={0} intensity={0} />
     </>
   );
 }
-
-const KEY = 3.1;
-const FILL = 0.7;
-const RIM = 4.2;
-const RIM2 = 1.6;
-const SCENE_ENV = 0.4;
 
 /** A soft radial glow texture with its lower third faded, so a plane never shows a hard line where it meets the floor. */
 function useGlowTexture(stops: ReadonlyArray<readonly [number, string]>): THREE.CanvasTexture {
@@ -116,16 +113,16 @@ function useGlowTexture(stops: ReadonlyArray<readonly [number, string]>): THREE.
   return tex;
 }
 
-/** Cyan halo behind the operator and a warm pool at the left; slides with the cursor for depth. */
+/** A soft halo behind the operator (and an optional warm pool at the left); slides with the cursor for depth. */
 export function Backdrop() {
   const halo = useGlowTexture([
-    [0, 'rgba(34,211,238,0.30)'],
-    [0.4, 'rgba(34,211,238,0.08)'],
-    [1, 'rgba(34,211,238,0)'],
+    [0, 'rgba(255,255,255,1)'],
+    [0.4, 'rgba(255,255,255,0.27)'],
+    [1, 'rgba(255,255,255,0)'],
   ]);
   const warm = useGlowTexture([
-    [0, 'rgba(245,158,11,0.2)'],
-    [0.5, 'rgba(245,158,11,0.05)'],
+    [0, 'rgba(245,158,11,1)'],
+    [0.5, 'rgba(245,158,11,0.25)'],
     [1, 'rgba(245,158,11,0)'],
   ]);
   const ref = useRef<THREE.Group>(null);
@@ -136,11 +133,11 @@ export function Backdrop() {
     <group ref={ref}>
       <mesh position={[0.5, 1.1, -3.6]}>
         <planeGeometry args={[10, 6.4]} />
-        <meshBasicMaterial map={halo} transparent depthWrite={false} blending={THREE.AdditiveBlending} fog={false} toneMapped={false} />
+        <meshBasicMaterial map={halo} color={LOOK.backdrop.haloColor} opacity={LOOK.backdrop.haloAlpha} transparent depthWrite={false} blending={THREE.AdditiveBlending} fog={false} toneMapped={false} />
       </mesh>
-      <mesh position={[-2.6, 1.4, -1.5]}>
+      <mesh position={[-2.6, 1.4, -1.5]} visible={LOOK.backdrop.warmAlpha > 0}>
         <planeGeometry args={[5, 4]} />
-        <meshBasicMaterial map={warm} transparent depthWrite={false} blending={THREE.AdditiveBlending} fog={false} toneMapped={false} />
+        <meshBasicMaterial map={warm} opacity={LOOK.backdrop.warmAlpha} transparent depthWrite={false} blending={THREE.AdditiveBlending} fog={false} toneMapped={false} />
       </mesh>
     </group>
   );
@@ -169,6 +166,7 @@ interface FloorProps {
 
 /** The stage: a dark mirror with the operator's three rings and a contact shadow. */
 export function Floor({ reflect, shadowRes }: FloorProps) {
+  const F = LOOK.floor;
   const rings = useRef<THREE.Group>(null);
   useFrame(() => {
     if (rings.current) rings.current.rotation.z = store.time * 0.12;
@@ -180,37 +178,37 @@ export function Floor({ reflect, shadowRes }: FloorProps) {
         <planeGeometry args={[60, 60]} />
         {reflect > 0 ? (
           <MeshReflectorMaterial
-            blur={[420, 140]}
+            blur={[F.blur[0], F.blur[1]]}
             resolution={reflect}
             mixBlur={1}
-            mixStrength={26}
-            mirror={0.4}
-            roughness={0.92}
+            mixStrength={F.mixStrength}
+            mirror={F.mirror}
+            roughness={F.roughness}
             depthScale={1.1}
             minDepthThreshold={0.35}
             maxDepthThreshold={1.5}
-            color="#0a0c0f"
-            metalness={0.4}
+            color={F.color}
+            metalness={F.metalness}
           />
         ) : (
-          <meshStandardMaterial color="#0a0c0f" roughness={0.6} metalness={0.4} />
+          <meshStandardMaterial color={F.color} roughness={0.6} metalness={F.metalness} />
         )}
       </mesh>
       <group ref={rings} rotation-x={-Math.PI / 2} position={[0, 0.006, 0]}>
         <mesh>
           <ringGeometry args={[0.86, 0.872, 128]} />
-          <meshBasicMaterial color={glow} toneMapped={false} transparent opacity={0.9} />
+          <meshBasicMaterial color={glow} toneMapped={false} transparent opacity={0.9 * F.ringOpacity} />
         </mesh>
         <mesh>
           <ringGeometry args={[1.35, 1.357, 128, 1, 0, Math.PI * 1.5]} />
-          <meshBasicMaterial color={glow} toneMapped={false} transparent opacity={0.55} />
+          <meshBasicMaterial color={glow} toneMapped={false} transparent opacity={0.55 * F.ringOpacity} />
         </mesh>
         <mesh>
           <ringGeometry args={[1.9, 1.905, 128, 1, 0.6, Math.PI * 0.9]} />
-          <meshBasicMaterial color="#f59e0b" toneMapped={false} transparent opacity={0.5} />
+          <meshBasicMaterial color="#f59e0b" toneMapped={false} transparent opacity={0.5 * F.ringOpacity} />
         </mesh>
       </group>
-      <ContactShadows position={[0, 0.012, 0]} opacity={0.9} scale={5} blur={2.2} far={1.6} resolution={shadowRes} color="#000000" />
+      <ContactShadows position={[0, 0.012, 0]} opacity={F.shadow.opacity} scale={F.shadow.scale} blur={F.shadow.blur} far={F.shadow.far} resolution={shadowRes} color="#000000" />
     </group>
   );
 }
