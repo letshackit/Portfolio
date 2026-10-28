@@ -2,7 +2,6 @@ import { content } from '../data/content';
 import { Section } from '../ui/Section';
 import { SectionHeading } from '../ui/SectionHeading';
 import { CareerIndex } from './CareerIndex';
-import { Education } from './Education';
 import { Journey } from './Journey';
 import './History.css';
 
@@ -15,7 +14,6 @@ export function History() {
         <CareerIndex />
       </div>
       <Journey />
-      <Education />
     </Section>
   );
 }
