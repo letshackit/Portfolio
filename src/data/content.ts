@@ -34,8 +34,6 @@ export const content: SiteContent = {
     proofLabel: 'Proof',
     degreesHeading: 'Degrees',
     journalLabel: 'Open the journal PDF',
-    factsLabel: 'Architecture facts',
-    archGroupsLabel: 'TravelDesk services by layer',
     contactEmail: 'Email',
     contactPhone: 'Phone',
     contactLocation: 'Location',
@@ -77,9 +75,9 @@ export const content: SiteContent = {
   nav: [
     { id: 'how-i-work', label: 'How I work', anchor: 'howIWork' },
     { id: 'deployments', label: 'Deployments', anchor: 'deployments' },
-    { id: 'architecture', label: 'Architecture', anchor: 'architecture' },
     { id: 'capabilities', label: 'Capabilities', anchor: 'capabilities' },
     { id: 'history', label: 'History', anchor: 'history' },
+    { id: 'credentials', label: 'Credentials', anchor: 'credentials' },
     { id: 'recognition', label: 'Recognition', anchor: 'recognition' },
     { id: 'contact', label: 'Contact', anchor: 'contact' },
   ],
@@ -96,7 +94,7 @@ export const content: SiteContent = {
       {
         id: 'platforms',
         label: 'PLATFORMS',
-        value: '3 in flight: TravelDesk (UAT) · BSS (in development) · HRMS (scoping)',
+        value: '4 flagships: TravelDesk (UAT) · HRMS (scoping) · Cloud Commerce (prototype) · AI To Com (scoping)',
         tone: 'amber',
       },
       { id: 'team', label: 'TEAM', value: '16+ engineers led', tone: 'cyan' },
@@ -159,7 +157,7 @@ export const content: SiteContent = {
         shortLabel: 'UX',
         summary: 'The product and its screens, designed before code.',
         artifact:
-          '"Obsidian Command" design system and a configurable Configuration Engine, generated with Codex (HRMS). Complete product and UX design for BSS.',
+          '"Obsidian Command" design system and a configurable Configuration Engine, generated with Codex (HRMS).',
         numbers: [],
       },
       {
@@ -206,10 +204,10 @@ export const content: SiteContent = {
         shortLabel: 'Deploy',
         summary: 'Ship it, then hand it to a team.',
         artifact:
-          'TravelDesk MVP built and deployed solo, now led by a six-engineer team (2 backend, 2 frontend, 2 QA). BSS: about 60% of the build delivered personally, from local dev to deployment, before hiring the team.',
+          'TravelDesk MVP built and deployed solo, now led by a six-engineer team (2 backend, 2 frontend, 2 QA).',
         numbers: [
           { value: '6', label: 'engineers led: 2 backend, 2 frontend, 2 QA' },
-          { value: '60%', label: 'of the BSS build delivered personally' },
+          { value: '4', label: 'flagship platforms' },
         ],
       },
     ],
@@ -217,7 +215,7 @@ export const content: SiteContent = {
 
   deployments: {
     heading: 'Deployments',
-    lead: 'Five platforms, scoped and built inside Paytm. Status is the real status.',
+    lead: 'Four flagship platforms, scoped and built inside Paytm. Status is the real status.',
     detailsLabel: 'Details',
     items: [
       {
@@ -233,7 +231,6 @@ export const content: SiteContent = {
           'Integrated with the enterprise HRIS, Quest2Travel and SAP.',
           'Mobile web app and Phase-2 integrations (EBIX forex, Recharge) scoped around infosec review gates.',
         ],
-        link: { label: 'See the architecture', anchor: 'architecture' },
       },
       {
         id: 'hrms',
@@ -251,18 +248,6 @@ export const content: SiteContent = {
         ],
       },
       {
-        id: 'bss',
-        name: 'BSS',
-        description: 'Telco business support system.',
-        status: 'In development',
-        stack: ['Node.js', 'Jira', 'Confluence'],
-        metrics: ['~60% of build delivered personally'],
-        details: [
-          'Designed the complete product and UX, built the working Node.js prototype, set up Jira and Confluence.',
-          'Then hired and onboarded a dedicated engineering team.',
-        ],
-      },
-      {
         id: 'cloud-commerce',
         name: 'Cloud Commerce',
         description: 'SaaS prototype for SAP-to-cloud migration (Paytm Telco).',
@@ -275,33 +260,18 @@ export const content: SiteContent = {
         ],
       },
       {
-        id: 'ai-operations',
-        name: 'AI Operations platform',
-        description: 'Platform for chatbots, digital avatars and IVR journeys.',
+        id: 'ai-to-com',
+        name: 'AI To Com',
+        description: 'Voice-agent platform for voice agents, chatbots and IVR journeys.',
         status: 'Scoping',
-        stack: ['Local SLMs', 'OCR pipelines', 'RBAC'],
+        stack: ['Voice agents', 'Chatbots', 'IVR', 'Local SLMs', 'OCR pipelines', 'RBAC'],
         metrics: [],
         details: [
-          'Scoped chatbots, digital avatars, IVR journeys, bot configuration, conversation orchestration, RBAC, analytics and reporting, and third-party integrations.',
+          'Scoped voice agents, chatbots and IVR journeys, bot configuration, conversation orchestration, RBAC, analytics and reporting, and third-party integrations.',
           'Started evaluating locally hosted small language models and OCR pipelines for lower inference cost, data privacy and less dependence on external LLM APIs.',
         ],
       },
     ],
-  },
-
-  architecture: {
-    heading: 'TravelDesk: 18 services, built solo.',
-    lead: 'Hover or focus a service to light up what it talks to.',
-    facts: [
-      'Front end: Next.js.',
-      'Gateway: Spring Boot API gateway.',
-      'Domain services: 16.',
-      'Tenancy: multi-tenant from day one.',
-      'Integrations: the enterprise HRIS, Quest2Travel and SAP.',
-      'Phase 2: EBIX forex and Recharge.',
-      'Build: MVP built and deployed solo with AI-assisted development.',
-    ],
-    proposedBanner: 'SERVICE NAMES PROPOSED — PENDING CONFIRMATION',
   },
 
   capabilities: {
@@ -343,7 +313,7 @@ export const content: SiteContent = {
           'local SLMs',
         ],
         proof: '18-microservice TravelDesk architecture. 100+ APIs scoped for Cloud Commerce.',
-        anchor: 'architecture',
+        anchor: 'deployments',
       },
       {
         id: 'ai-native-build',

@@ -5,19 +5,18 @@ const ALLOWED_STATUS = ['UAT', 'In development', 'Prototype delivered', 'Scoping
 const EXPECTED_METRICS: Record<string, readonly string[]> = {
   TravelDesk: ['116-page PRD', '18 microservices', '56 stories across 10 epics', '6-engineer team'],
   HRMS: ['~50,000 employees', '461-page, 13-module PRD', '12+ vendors studied', '5 satellite services'],
-  BSS: ['~60% of build delivered personally'],
   'Cloud Commerce': ['8 modules', '3 months', '100+ APIs scoped', '~1 month of discovery and build cut'],
-  'AI Operations platform': [],
+  'AI To Com': [],
 };
 
 describe('content integrity', () => {
-  it('lists five deployments in PRD order', () => {
+  it('lists the four flagship deployments in order, with no BSS', () => {
     expect(content.deployments.items.map((d) => d.name)).toEqual(Object.keys(EXPECTED_METRICS));
   });
 
-  it('uses only the four allowed status values', () => {
+  it('uses only the allowed status values', () => {
     for (const d of content.deployments.items) expect(ALLOWED_STATUS).toContain(d.status);
-    expect(new Set(content.deployments.items.map((d) => d.status)).size).toBe(4);
+    expect(JSON.stringify(content)).not.toMatch(/\bBSS\b|Business Support|AI Operations/);
   });
 
   it('carries every résumé metric on its card', () => {

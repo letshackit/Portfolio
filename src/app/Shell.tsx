@@ -1,6 +1,6 @@
-import { Architecture } from '../architecture/Architecture';
 import { Capabilities } from '../capabilities/Capabilities';
 import { Contact } from '../contact/Contact';
+import { Credentials } from '../credentials/Credentials';
 import { Footer } from '../contact/Footer';
 import { CommandPalette } from '../palette/CommandPalette';
 import { Cursor } from '../ui/Cursor';
@@ -30,9 +30,9 @@ export function Shell() {
             <Hero />
             <HowIWork />
             <Deployments />
-            <Architecture />
             <Capabilities />
             <History />
+            <Credentials />
             <Recognition />
             <Contact />
           </main>

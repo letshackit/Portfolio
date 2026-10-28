@@ -1,7 +1,7 @@
 import { ANCHORS } from '../config';
 import { content } from '../data/content';
 import { Pipeline } from './Pipeline';
-import { SectionIntro } from './SplitTitle';
+import { SectionIntro } from '../ui/SectionIntro';
 import './HowIWork.css';
 
 /**

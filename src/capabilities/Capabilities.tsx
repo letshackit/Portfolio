@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { usePrefs } from '../app/providers/prefsContext';
 import { content } from '../data/content';
-import { SectionIntro } from '../how/SplitTitle';
+import { SectionIntro } from '../ui/SectionIntro';
 import { supportsWebGL } from '../lib/webgl';
 import { Section } from '../ui/Section';
 import { CapConsole } from './CapConsole';

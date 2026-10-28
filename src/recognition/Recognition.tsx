@@ -4,7 +4,7 @@ import { content } from '../data/content';
 import type { Quote } from '../data/content.types';
 import { useOffscreenPause } from '../lib/useOffscreenPause';
 import { Section } from '../ui/Section';
-import { SectionHeading } from '../ui/SectionHeading';
+import { SectionIntro } from '../ui/SectionIntro';
 import { FeaturedQuote, MarqueeQuote } from './QuoteCard';
 import './Recognition.css';
 
@@ -115,7 +115,7 @@ export function Recognition() {
   const rowB = rest.filter((_, i) => i % 2 === 1);
   return (
     <Section anchor="recognition" className="rec-section">
-      <SectionHeading anchor="recognition" heading={recognition.heading} lead={recognition.lead} />
+      <SectionIntro anchor="recognition" heading={recognition.heading} lead={recognition.lead} />
       {featured ? <FeaturedQuote quote={featured} /> : null}
       <div className="marquee-stack">
         <MarqueeRow label={`${recognition.heading} 1`} quotes={rowA} seconds={70} />

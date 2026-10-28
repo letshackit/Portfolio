@@ -108,15 +108,15 @@ export function Deploy({ stage, portrait }: Props) {
     [],
   );
   const team = stage.numbers[0];
-  const bss = stage.numbers[1];
+  const flagships = stage.numbers[1];
   const cardMats = useMemo(
     () =>
       [
         specCardTexture('Engineers led', team?.value ?? '6', '2 backend · 2 frontend · 2 QA', 'cyan'),
         specCardTexture('TravelDesk MVP', 'SOLO', 'built and deployed, now a team', 'cyan'),
-        specCardTexture('BSS build', bss?.value ?? '60%', 'delivered personally', 'amber'),
+        specCardTexture('Flagship platforms', flagships?.value ?? '4', 'scoped and built inside Paytm', 'amber'),
       ].map((map) => new MeshBasicMaterial({ map, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false, fog: true })),
-    [team?.value, bss?.value],
+    [team?.value, flagships?.value],
   );
   const gateMats = useMemo(
     () => GATES.map((g) => new MeshBasicMaterial({ map: tagTexture(g === 'LIVE' ? '→ LIVE' : g, g === 'LIVE' ? 'amber' : 'cyan', 4), transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false, fog: true })),

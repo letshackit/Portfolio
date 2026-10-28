@@ -4,7 +4,6 @@
   --hist-ink: #07080a;
   --hist-glass: rgba(11, 16, 20, 0.78);
   --hist-hi: rgba(255, 255, 255, 0.07);
-  --hist-display: clamp(2.75rem, 1rem + 6.2vw, 6.5rem);
   /* The muted mono ramp, lifted for this section: 8:1 on the card glass and 8.6:1 on the stage (WCAG AA needs 4.5:1). */
   --t-3: #a6aeb8;
   position: relative;
@@ -35,7 +34,7 @@
   margin-bottom: var(--s-6);
 }
 
-.hist-head .section-heading {
+.hist-head .section-intro {
   margin-bottom: 0;
 }
 
@@ -168,7 +167,7 @@
 @media (min-width: 1024px) {
   .hist-head {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-    align-items: end;
+    align-items: start;
     gap: var(--s-8);
     margin-bottom: var(--s-7);
   }
@@ -176,14 +175,6 @@
   .hist-index {
     padding: var(--s-5);
   }
-}
-
-.hist-section .section-heading h2 {
-  max-width: 12ch;
-  font-size: var(--hist-display);
-  line-height: 0.98;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
 }
 
 /* ---- The journey: stage + station cards ---- */

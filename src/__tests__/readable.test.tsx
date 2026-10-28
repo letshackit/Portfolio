@@ -49,9 +49,9 @@ describe('readable console (step 1)', () => {
       ANCHORS.top,
       ANCHORS.howIWork,
       ANCHORS.deployments,
-      ANCHORS.architecture,
       ANCHORS.capabilities,
       ANCHORS.history,
+      ANCHORS.credentials,
       ANCHORS.recognition,
       ANCHORS.contact,
     ]);

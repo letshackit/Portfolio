@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { content } from '../data/content';
-import { useReveal } from '../how/useReveal';
+import { useReveal } from '../lib/useReveal';
 import { anchorHref } from '../lib/anchors';
 import { onAnchorClick } from '../lib/scroll';
 import { Icon } from '../ui/Icon';

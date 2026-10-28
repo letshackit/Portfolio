@@ -7,9 +7,9 @@ export const ANCHORS = {
   top: 'top',
   howIWork: 'how-i-work',
   deployments: 'deployments',
-  architecture: 'architecture',
   capabilities: 'capabilities',
   history: 'history',
+  credentials: 'credentials',
   recognition: 'recognition',
   contact: 'contact',
 } as const;

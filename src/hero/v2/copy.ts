@@ -36,9 +36,8 @@ export const DEPLOY_LINES: readonly StreamLine[] = [
   { tag: 'uat', text: 'organisational UAT', ok: true },
   { tag: 'deploy', text: 'MVP, built solo', ok: true },
   { tag: 'team', text: '6 engineers handed off', ok: true },
-  { tag: 'bss', text: '~60% built personally', ok: true },
-  { tag: 'bss', text: 'team hired, onboarded', ok: true },
   { tag: 'cloud', text: 'prototype delivered', ok: true },
+  { tag: 'ai-to-com', text: 'voice-agent platform, scoping' },
   { tag: 'phase1', text: 'rollout targeted Jan 2027' },
   { tag: 'hrms', text: 'scoping, 50,000 employees' },
 ];

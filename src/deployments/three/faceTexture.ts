@@ -3,9 +3,12 @@
  * the Content-Security-Policy could block). A label is a title, optionally over a smaller tag line.
  */
 import { CanvasTexture, LinearMipmapLinearFilter, SRGBColorSpace } from 'three';
-import { fontsReady } from '../../architecture/three/labelTexture';
 
-export { fontsReady };
+/** Resolves once the page's mono face is loaded, so the first canvas draw never falls back to a system font. */
+export function fontsReady(): Promise<void> {
+  if (typeof document === 'undefined' || !('fonts' in document)) return Promise.resolve();
+  return Promise.all([document.fonts.load('500 40px "Geist Mono"'), document.fonts.ready]).then(() => undefined);
+}
 
 /** Texture pixels per world unit. */
 const PX_PER_UNIT = 320;

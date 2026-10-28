@@ -87,6 +87,12 @@
   text-wrap: balance;
 }
 
+.split-title[data-size="md"] {
+  max-width: 18ch;
+  font-size: clamp(2.25rem, 1rem + 4.4vw, 4.75rem);
+  line-height: 1;
+}
+
 .split-title:focus-visible {
   outline-offset: var(--s-2);
 }

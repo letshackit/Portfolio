@@ -3,16 +3,6 @@
   padding-block: var(--section-pad);
 }
 
-.section-heading {
-  display: grid;
-  gap: var(--s-3);
-  margin-bottom: var(--s-6);
-}
-
-.section-heading h2:focus-visible {
-  outline-offset: var(--s-1);
-}
-
 .section-heading__eyebrow {
   display: flex;
   align-items: center;
@@ -23,16 +13,6 @@
   width: var(--rail-rule);
   height: 1px;
   background: var(--cyan-500);
-}
-
-.section-heading__lead {
-  max-width: var(--measure-heading-lead);
-}
-
-@media (min-width: 1280px) {
-  .section-heading {
-    margin-bottom: var(--s-7);
-  }
 }
 
 .icon {

@@ -1,7 +1,7 @@
 /*
  * Capabilities. Desktop: .cc, a framed WebGL stage (camera flying between four domain clusters round a core) with a DOM
  * rail of domains beside it. Everywhere else: .cap-grid, four lit cards with a miniature of the cluster. Both sit in the
- * same staged world as How I work and Deployments (.stage-world, sectionIntro.css). Colours come from the tokens; the
+ * same staged world as How I work and Deployments (.stage-world, ui/sectionIntro.css). Colours come from the tokens; the
  * 3D scene's own palette (scene.ts) is the same two hues. Only transform and opacity animate.
  */
 

@@ -3,7 +3,7 @@ import { content } from '../data/content';
 import type { Bay as BayModel } from '../data/deployment-bays';
 import { CountUp } from '../how/CountUp';
 import { splitMetric } from '../how/splitMetric';
-import { useReveal } from '../how/useReveal';
+import { useReveal } from '../lib/useReveal';
 import { Chip } from '../ui/Chip';
 import { StatusBadge } from '../ui/StatusBadge';
 import { badgeVariantFor } from '../ui/badgeVariant';

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePrefs } from '../app/providers/prefsContext';
 import { bayCopy, bays } from '../data/deployment-bays';
-import { SectionIntro } from '../how/SplitTitle';
+import { SectionIntro } from '../ui/SectionIntro';
 import { Section } from '../ui/Section';
 import { Bay } from './Bay';
 import { BayRail } from './BayRail';

@@ -4,9 +4,9 @@ export type AnchorKey =
   | 'top'
   | 'howIWork'
   | 'deployments'
-  | 'architecture'
   | 'capabilities'
   | 'history'
+  | 'credentials'
   | 'recognition'
   | 'contact';
 
@@ -90,8 +90,6 @@ export interface Deployment {
   /** Headline metrics; empty when the résumé gives none. */
   readonly metrics: readonly string[];
   readonly details: readonly string[];
-  /** Anchor the card links to, if any (TravelDesk to the architecture section). */
-  readonly link?: { readonly label: string; readonly anchor: AnchorKey };
 }
 
 export interface DeploymentsContent {
@@ -99,13 +97,6 @@ export interface DeploymentsContent {
   readonly lead: string;
   readonly detailsLabel: string;
   readonly items: readonly Deployment[];
-}
-
-export interface ArchitectureContent {
-  readonly heading: string;
-  readonly lead: string;
-  readonly facts: readonly string[];
-  readonly proposedBanner: string;
 }
 
 export interface CapabilityGroup {
@@ -222,8 +213,6 @@ export interface UiLabels {
   readonly proofLabel: string;
   readonly degreesHeading: string;
   readonly journalLabel: string;
-  readonly factsLabel: string;
-  readonly archGroupsLabel: string;
   readonly contactEmail: string;
   readonly contactPhone: string;
   readonly contactLocation: string;
@@ -272,7 +261,6 @@ export interface SiteContent {
   readonly boot: readonly BootLine[];
   readonly howIWork: HowIWorkContent;
   readonly deployments: DeploymentsContent;
-  readonly architecture: ArchitectureContent;
   readonly capabilities: CapabilitiesContent;
   readonly history: HistoryContent;
   readonly recognition: RecognitionContent;

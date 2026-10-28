@@ -7,9 +7,9 @@ const SECTION_IDS: readonly AnchorId[] = [
   ANCHORS.top,
   ANCHORS.howIWork,
   ANCHORS.deployments,
-  ANCHORS.architecture,
   ANCHORS.capabilities,
   ANCHORS.history,
+  ANCHORS.credentials,
   ANCHORS.recognition,
   ANCHORS.contact,
 ];

@@ -8,6 +8,8 @@ import { ThreeBoundary } from '../lib/ThreeBoundary';
 import { useOffscreenPause } from '../lib/useOffscreenPause';
 import { supportsWebGL } from '../lib/webgl';
 import { ExternalLink } from '../ui/ExternalLink';
+import { Section } from '../ui/Section';
+import { SectionIntro } from '../ui/SectionIntro';
 import { specFor, type BadgeSpec } from './slots';
 import { LAST_TIER, type Tier } from './stage/quality';
 import type { CredentialsStageProps } from './stage/CredentialsStage';
@@ -87,10 +89,7 @@ function Card({ credential, spec, store, className, children }: CardProps) {
  */
 export function Credentials() {
   const { education } = content.history;
-  const { ui, nav } = content;
-  // Same "NN / SECTION" eyebrow as every sibling section, carrying the History number, with this block's own name.
-  const navIndex = nav.findIndex((item) => item.anchor === 'history');
-  const eyebrow = `${String(navIndex + 2).padStart(2, '0')} / ${nav[navIndex]?.label ?? ''} · Credentials`;
+  const { ui } = content;
   const { reducedMotion } = usePrefs();
   const rootRef = useRef<HTMLDivElement>(null);
   const fxRef = useRef<HTMLDivElement>(null);
@@ -183,73 +182,69 @@ export function Credentials() {
   const state = !mount ? 'off' : ready ? 'ready' : 'loading';
 
   return (
-    <div id="education" ref={rootRef} className="vault" data-stage={state} {...revealProps('block')}>
-      <div className="vault__fx" ref={fxRef} aria-hidden="true">
-        {mount && Stage ? (
-          <ThreeBoundary onError={onFail}>
-            <Stage
-              key={reducedMotion ? 'still' : 'live'}
-              specs={specs}
-              store={store}
-              paused={paused}
-              reduced={reducedMotion}
-              pin={quality}
-              onReady={onReady}
-              onLost={onFail}
-            />
-          </ThreeBoundary>
-        ) : null}
-      </div>
-
-      <div className="vault__body">
-        <div className="vault__head">
-          <p className="section-heading__eyebrow mono-label">
-            <span className="section-heading__rule" aria-hidden="true" />
-            {eyebrow}
-          </p>
-          <h3 className="vault__heading">{education.heading}</h3>
+    <Section anchor="credentials" className="cred-section">
+      <div ref={rootRef} className="vault" data-stage={state} {...revealProps('block')}>
+        <div className="vault__fx" ref={fxRef} aria-hidden="true">
+          {mount && Stage ? (
+            <ThreeBoundary onError={onFail}>
+              <Stage
+                key={reducedMotion ? 'still' : 'live'}
+                specs={specs}
+                store={store}
+                paused={paused}
+                reduced={reducedMotion}
+                pin={quality}
+                onReady={onReady}
+                onLost={onFail}
+              />
+            </ThreeBoundary>
+          ) : null}
         </div>
 
-        <section className="vault__group" aria-labelledby="vault-degrees">
-          <h4 id="vault-degrees" className="vault__label mono-label">
-            {ui.degreesHeading}
-          </h4>
-          <ul className="vault__degrees">
-            {education.degrees.map((d, i) => (
-              <Card key={d.id} credential={d} spec={spec(d.id)} store={store} className={i === 0 ? 'cred--hero' : 'cred--stone'} />
-            ))}
-          </ul>
-        </section>
+        <div className="vault__body">
+          <SectionIntro anchor="credentials" heading={education.heading} size="md" />
 
-        <section className="vault__group" aria-labelledby="vault-certs">
-          <h4 id="vault-certs" className="vault__label mono-label">
-            {education.certificationsHeading}
-          </h4>
-          <ul className="vault__certs">
-            {education.certifications.map((c) => (
-              <Card key={c.id} credential={c} spec={spec(c.id)} store={store} className="cred--cert" />
-            ))}
-          </ul>
-        </section>
+          <section className="vault__group" aria-labelledby="vault-degrees">
+            <h4 id="vault-degrees" className="vault__label mono-label">
+              {ui.degreesHeading}
+            </h4>
+            <ul className="vault__degrees">
+              {education.degrees.map((d, i) => (
+                <Card key={d.id} credential={d} spec={spec(d.id)} store={store} className={i === 0 ? 'cred--hero' : 'cred--stone'} />
+              ))}
+            </ul>
+          </section>
 
-        <section className="vault__group" aria-labelledby="vault-pub">
-          <h4 id="vault-pub" className="vault__label mono-label">
-            {education.publicationHeading}
-          </h4>
-          <ul className="vault__pubs">
-            <Card
-              credential={{ id: education.publication.id, title: education.publication.title, issuer: education.publication.venue }}
-              spec={spec(education.publication.id)}
-              store={store}
-              className="cred--paper"
-            >
-              <ExternalLink href={education.publication.url} className="cred__link" icon>
-                {ui.journalLabel}
-              </ExternalLink>
-            </Card>
-          </ul>
-        </section>
+          <section className="vault__group" aria-labelledby="vault-certs">
+            <h4 id="vault-certs" className="vault__label mono-label">
+              {education.certificationsHeading}
+            </h4>
+            <ul className="vault__certs">
+              {education.certifications.map((c) => (
+                <Card key={c.id} credential={c} spec={spec(c.id)} store={store} className="cred--cert" />
+              ))}
+            </ul>
+          </section>
+
+          <section className="vault__group" aria-labelledby="vault-pub">
+            <h4 id="vault-pub" className="vault__label mono-label">
+              {education.publicationHeading}
+            </h4>
+            <ul className="vault__pubs">
+              <Card
+                credential={{ id: education.publication.id, title: education.publication.title, issuer: education.publication.venue }}
+                spec={spec(education.publication.id)}
+                store={store}
+                className="cred--paper"
+              >
+                <ExternalLink href={education.publication.url} className="cred__link" icon>
+                  {ui.journalLabel}
+                </ExternalLink>
+              </Card>
+            </ul>
+          </section>
+        </div>
       </div>
-    </div>
+    </Section>
   );
 }
