@@ -1,12 +1,10 @@
-/* Deployment history: a cyan rail that draws itself on scroll; each employer is a glass node that lights amber when the
-   line reaches it. Defaults are fully drawn and fully lit, so no scripting or reduced motion still shows everything. */
+/* Deployment history: a 3D path through time (the stage) beside station cards. Every default here is the fully lit,
+   fully readable state; scripting only adds the focus effect on top, and reduced motion never gets it. */
 .hist-section {
   --hist-ink: #07080a;
-  --hist-glass: rgba(14, 20, 25, 0.55);
+  --hist-glass: rgba(11, 16, 20, 0.78);
   --hist-hi: rgba(255, 255, 255, 0.07);
   --hist-display: clamp(2.75rem, 1rem + 6.2vw, 6.5rem);
-  --hist-rail-x: 11px;
-  --hist-rail-col: 40px;
   position: relative;
   isolation: isolate;
   overflow-x: clip;
@@ -36,51 +34,283 @@
   text-wrap: balance;
 }
 
-/* ---- Rail ---- */
-.tl {
+/* ---- The journey: stage + station cards ---- */
+.tl3 {
+  --tl-stage-h: 156px;
+  --tl-rail-col: 30px;
   position: relative;
 }
 
-.tl__rail {
+.tl3__pin {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 3;
+  height: var(--tl-stage-h);
+}
+
+/* Under ScrollSmoother the stage is pinned by ScrollTrigger (usePinStage); CSS sticky steps aside. */
+.tl3[data-pin="st"] .tl3__pin {
+  position: relative;
+  top: auto;
+}
+
+/* The stage breaks out of the container to the full viewport width. */
+.tl3__stage {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 2px;
+  bottom: 0;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  overflow: hidden;
+  background: var(--hist-ink);
+  border-block: var(--hairline);
+  isolation: isolate;
+}
+
+.tl3__poster,
+.tl3__canvas,
+.tl3__scrim {
+  position: absolute;
+  inset: 0;
+}
+
+.tl3__poster {
+  opacity: 1;
+  transition: opacity var(--d-slow) var(--e-out);
+}
+
+.tl3__poster-svg {
+  display: block;
+  width: 100%;
   height: 100%;
-  overflow: visible;
+}
+
+.tl3__canvas {
+  opacity: 0;
+  transition: opacity var(--d-slow) var(--e-out);
+}
+
+.tl3__canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.tl3[data-stage="ready"] .tl3__canvas {
+  opacity: 1;
+}
+
+.tl3[data-stage="ready"] .tl3__poster {
+  opacity: 0;
+}
+
+/* Keeps the labels readable over the scene, and (desktop) darkens the half the cards sit on. */
+.tl3__scrim {
   pointer-events: none;
-  translate: var(--hist-rail-x) 0;
+  background:
+    radial-gradient(120% 90% at 0% 100%, rgba(7, 8, 10, 0.78), transparent 60%),
+    linear-gradient(to bottom, rgba(7, 8, 10, 0.55), transparent 28%);
 }
 
-.tl__rail line {
-  fill: none;
-  stroke: var(--cyan-500);
-  stroke-width: 2;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 0;
+/* ---- HUD over the stage ---- */
+.tl3__hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--font-mono);
 }
 
-/* A wider, softer copy under the line gives it a lit-fibre look without a filter. */
-.tl__rail-glow {
-  stroke-width: 8;
-  opacity: 0.16;
+.tl3__frame {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(34, 211, 238, 0.14);
 }
 
-.tl__list {
+.tl3__tick {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 0 solid var(--cyan-500);
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.7));
+}
+
+.tl3__tick--tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.tl3__tick--tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+
+.tl3__tick--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+
+.tl3__tick--br {
+  right: -1px;
+  bottom: -1px;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+}
+
+.tl3__axis {
+  position: absolute;
+  top: var(--s-4);
+  left: var(--s-5);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--cyan-400);
+}
+
+.tl3__axis-dot {
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: var(--r-pill);
+  background: var(--amber-500);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
+}
+
+.tl3__axis-range {
+  color: var(--t-2);
+}
+
+.tl3__readout {
+  position: absolute;
+  left: var(--s-5);
+  bottom: var(--s-5);
   display: grid;
-  gap: var(--s-7);
-  padding-left: var(--hist-rail-col);
+  gap: 2px;
 }
 
-.tl__entry {
+.tl3__count {
+  display: none;
+}
+
+.tl3__here {
+  color: var(--amber-400);
+}
+
+.tl3__when {
+  color: var(--t-2);
+}
+
+.tl3__pips {
+  position: absolute;
+  right: var(--s-4);
+  bottom: var(--s-2);
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.tl3__pip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0 var(--s-2);
+  background: none;
+  border: 0;
+  color: var(--t-3);
+  cursor: pointer;
+}
+
+.tl3__pip-dot {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--cyan-500);
+  border-radius: var(--r-pill);
+  background: transparent;
+  transition:
+    background var(--d-base) var(--e-out),
+    border-color var(--d-base) var(--e-out),
+    box-shadow var(--d-base) var(--e-out);
+}
+
+.tl3__pip[data-active] .tl3__pip-dot {
+  background: var(--amber-500);
+  border-color: var(--amber-500);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+}
+
+.tl3__pip-name {
+  display: none;
+}
+
+.tl3__pip[data-active] {
+  color: var(--amber-400);
+}
+
+.tl3__pip:hover {
+  color: var(--t-1);
+}
+
+.tl3__pip:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+  border-radius: var(--r-2);
+}
+
+.tl3__hint {
+  position: absolute;
+  top: var(--s-4);
+  right: var(--s-5);
+  display: none;
+  color: var(--t-3);
+}
+
+/* ---- Station cards on the rail ---- */
+.tl3__list {
+  --tl-fill: 100%;
   position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--s-5);
+  padding: var(--s-5) 0 0 var(--tl-rail-col);
 }
 
-/* ---- Node dot on the rail ---- */
-.tl__dot {
+/* The rail: a dim track, and a lit fill that follows the focus line (everything lit by default). */
+.tl3__list::before,
+.tl3__list::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8px;
+  width: 2px;
+}
+
+.tl3__list::before {
+  bottom: 0;
+  background: var(--line-2);
+}
+
+.tl3__list::after {
+  height: var(--tl-fill);
+  background: linear-gradient(to bottom, var(--cyan-500), var(--amber-500));
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.55);
+}
+
+.tl3__item {
+  position: relative;
+  scroll-margin-top: calc(var(--header-h) + var(--tl-stage-h) + var(--s-4));
+}
+
+.tl3__dot {
   position: absolute;
   top: var(--s-6);
-  left: calc(var(--hist-rail-x) - var(--hist-rail-col) - 6px);
+  left: calc(2px - var(--tl-rail-col));
   width: 14px;
   height: 14px;
   border-radius: var(--r-pill);
@@ -88,13 +318,15 @@
   border: 2px solid var(--cyan-500);
 }
 
-.tl__dot::after {
+.tl3__dot::after {
   content: "";
   position: absolute;
   inset: -2px;
   border-radius: inherit;
   background: var(--amber-500);
-  box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.18), 0 0 24px rgba(245, 158, 11, 0.6);
+  box-shadow:
+    0 0 0 6px rgba(245, 158, 11, 0.18),
+    0 0 24px rgba(245, 158, 11, 0.6);
   opacity: 0;
   transform: scale(0.4);
   transition:
@@ -102,18 +334,18 @@
     transform var(--d-base) var(--e-out);
 }
 
-.tl__entry[data-lit] .tl__dot::after {
+.tl3__item[data-state="active"] .tl3__dot::after,
+.tl3__item[data-state="passed"] .tl3__dot::after {
   opacity: 1;
   transform: scale(1);
 }
 
-/* Armed (the draw is running): unlit nodes sit dim until the line gets there. */
-.tl[data-armed] .tl__entry:not([data-lit]) .tl__card {
-  opacity: 0.55;
+.tl3__item[data-state="passed"] .tl3__dot::after {
+  opacity: 0.7;
+  transform: scale(0.72);
 }
 
-/* ---- Glass card ---- */
-.tl__card {
+.tl3__card {
   position: relative;
   display: grid;
   gap: var(--s-3);
@@ -125,43 +357,58 @@
   box-shadow: inset 0 1px 0 var(--hist-hi);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  transition: opacity var(--d-slow) var(--e-out);
+  transition: transform var(--d-slow) var(--e-out);
 }
 
-/* The amber edge lives on a pseudo-element so lighting a node animates opacity, not paint. */
-.tl__card::after {
+/* The amber edge lives on a pseudo-element so lighting a station animates opacity, not paint. */
+.tl3__card::after {
   content: "";
   position: absolute;
   inset: -1px;
   border: 1px solid var(--line-amber);
   border-radius: inherit;
-  box-shadow: 0 0 60px -20px rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 70px -22px rgba(245, 158, 11, 0.5);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--d-slow) var(--e-out);
 }
 
-.tl__entry[data-lit] .tl__card::after {
+.tl3__item[data-state="active"] .tl3__card::after {
   opacity: 1;
 }
 
-.tl__index {
+.tl3__index {
+  color: var(--cyan-400);
+}
+
+.tl3__item[data-state="active"] .tl3__index {
   color: var(--amber-400);
 }
 
-.tl__company {
-  max-width: 18ch;
-  font-size: clamp(2rem, 1.2rem + 3.4vw, 4.25rem);
+.tl3__company {
+  font-size: clamp(2rem, 1.1rem + 3vw, 3.5rem);
   line-height: 1;
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
 
-.tl__where {
+.tl3__group {
+  display: block;
+  margin-top: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-value);
+  font-weight: var(--w-regular);
+  letter-spacing: 0;
+  line-height: 1.3;
+  color: var(--t-3);
+}
+
+.tl3__where {
   margin-top: calc(var(--s-1) * -1);
 }
 
-.tl__promo {
+.tl3__promo {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-self: start;
@@ -174,7 +421,26 @@
   text-transform: uppercase;
 }
 
-.tl__roles {
+/* The promotion flares when the visitor reaches it, in step with the beam in the scene. */
+.tl3__item[data-state="active"] .tl3__promo {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: var(--amber-500);
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.5);
+  animation: tl3-flare 2.2s var(--e-out) infinite;
+}
+
+@keyframes tl3-flare {
+  0%,
+  100% {
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+  }
+
+  50% {
+    box-shadow: 0 0 34px rgba(245, 158, 11, 0.75);
+  }
+}
+
+.tl3__roles {
   display: grid;
   gap: var(--s-3);
   margin-top: var(--s-2);
@@ -182,33 +448,33 @@
   border-top: var(--hairline);
 }
 
-.tl__role {
+.tl3__role {
   display: grid;
   gap: var(--s-1);
 }
 
-.tl__role-title {
+.tl3__role-title {
   color: var(--t-1);
   font-weight: var(--w-medium);
   line-height: 1.35;
 }
 
-.tl__dates {
+.tl3__dates {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
   color: var(--cyan-400);
 }
 
-.tl__now {
+.tl3__now {
   width: var(--dot);
   height: var(--dot);
   border-radius: var(--r-pill);
   background: var(--amber-500);
-  animation: tl-now 1700ms var(--e-out) infinite;
+  animation: tl3-now 1700ms var(--e-out) infinite;
 }
 
-@keyframes tl-now {
+@keyframes tl3-now {
   0%,
   100% {
     opacity: 1;
@@ -221,8 +487,24 @@
   }
 }
 
-.tl__bullets {
-  margin-top: var(--s-2);
+/* The description: open by default; on desktop it folds open as the visitor arrives (see the armed rules below). */
+.tl3__more {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.tl3__more-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tl3__bullets {
+  padding-top: var(--s-3);
+  border-top: var(--hairline);
+}
+
+.tl3__item[data-state="active"] .tl3__bullets li::before {
+  background: var(--amber-500);
 }
 
 /* ---- Education and certifications as mono chips ---- */
@@ -286,40 +568,162 @@
   font-size: var(--fs-mono-caption);
 }
 
-@media (min-width: 768px) {
-  .hist-section {
-    --hist-rail-x: 15px;
-    --hist-rail-col: 72px;
+/* ---- Tablet: the strip gets a little taller and the active name reads out ---- */
+@media (min-width: 640px) {
+  .tl3 {
+    --tl-stage-h: 200px;
   }
 
-  .tl__card {
-    padding: var(--s-7);
+  .tl3__pip[data-active] .tl3__pip-name {
+    display: inline;
+  }
+}
+
+/* ---- Desktop: a full-height stage, cards on the right, the description folds open at the station ---- */
+@media (min-width: 1024px) {
+  .tl3 {
+    --tl-stage-h: calc(100svh - var(--header-h));
+    --tl-rail-col: 44px;
   }
 
-  .tl__dot {
-    top: var(--s-7);
+  .tl3__list {
+    z-index: 4;
+    margin-top: calc(var(--tl-stage-h) * -1);
+    margin-left: 47%;
+    padding-top: 0;
+    gap: 0;
   }
 
-  .tl__dot {
+  .tl3__item {
+    display: grid;
+    align-items: center;
+    min-height: var(--tl-stage-h);
+    padding-block: var(--s-6);
+  }
+
+  .tl3__dot {
+    top: 50%;
+    translate: 0 -50%;
     width: 18px;
     height: 18px;
-    left: calc(var(--hist-rail-x) - var(--hist-rail-col) - 8px);
+    left: calc(var(--tl-rail-col) * -1);
   }
 
-  .tl__roles {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-    gap: var(--s-5);
+  .tl3__card {
+    padding: var(--s-6);
+  }
+
+  /* The scene lives in the left part of the stage, centred on its own axis; its right edge melts into the dark. */
+  .tl3__poster,
+  .tl3__canvas {
+    right: auto;
+    width: 62%;
+    -webkit-mask-image: linear-gradient(to right, var(--mask-solid) 70%, transparent);
+    mask-image: linear-gradient(to right, var(--mask-solid) 70%, transparent);
+  }
+
+  .tl3__scrim {
+    background:
+      radial-gradient(90% 80% at 0% 100%, rgba(7, 8, 10, 0.6), transparent 62%),
+      linear-gradient(to bottom, rgba(7, 8, 10, 0.5), transparent 22%);
+  }
+
+  .tl3__frame {
+    inset: var(--s-4);
+  }
+
+  .tl3__tick {
+    width: 22px;
+    height: 22px;
+  }
+
+  .tl3__axis {
+    top: var(--s-6);
+    left: var(--s-7);
+  }
+
+  .tl3__hint {
+    display: block;
+    top: auto;
+    right: auto;
+    bottom: var(--s-6);
+    left: var(--s-7);
+  }
+
+  .tl3__readout {
+    left: var(--s-7);
+    bottom: calc(var(--s-6) + 120px);
+    gap: var(--s-1);
+  }
+
+  .tl3__count {
+    display: block;
+    font-size: clamp(3rem, 1.6rem + 3vw, 4.5rem);
+    font-weight: var(--w-semibold);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--t-1);
+    text-shadow: 0 0 40px rgba(245, 158, 11, 0.25);
+  }
+
+  .tl3__count-of {
+    font-size: 0.3em;
+    color: var(--t-3);
+    letter-spacing: 0;
+  }
+
+  .tl3__pips {
+    left: var(--s-7);
+    right: auto;
+    bottom: calc(var(--s-6) + 28px);
+    gap: var(--s-2);
+  }
+
+  .tl3__pip {
+    padding: 0 var(--s-3);
+  }
+
+  .tl3__pip-name,
+  .tl3__pip[data-active] .tl3__pip-name {
+    display: inline;
+  }
+
+  .tl3[data-armed] .tl3__card {
+    transform: scale(0.975);
+  }
+
+  .tl3[data-armed] .tl3__item[data-state="active"] .tl3__card {
+    transform: none;
+  }
+
+  .tl3[data-armed] .tl3__more {
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--d-slow) var(--e-out);
+  }
+
+  .tl3[data-armed] .tl3__more-inner {
+    opacity: 0;
+    transition: opacity var(--d-slow) var(--e-out);
+  }
+
+  .tl3[data-armed] .tl3__item[data-state="active"] .tl3__more {
+    grid-template-rows: 1fr;
+  }
+
+  .tl3[data-armed] .tl3__item[data-state="active"] .tl3__more-inner {
+    opacity: 1;
   }
 }
 
 @media (min-width: 1280px) {
-  .hist-section {
-    --hist-rail-col: 96px;
+  .tl3__list {
+    margin-left: 48%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tl__now {
+  .tl3__now,
+  .tl3__item[data-state="active"] .tl3__promo {
     animation: none;
   }
 }
