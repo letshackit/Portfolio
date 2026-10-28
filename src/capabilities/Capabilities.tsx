@@ -1,44 +1,39 @@
-import type { CSSProperties } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { usePrefs } from '../app/providers/prefsContext';
 import { content } from '../data/content';
 import { SectionIntro } from '../how/SplitTitle';
-import { useReveal } from '../how/useReveal';
-import { anchorHref } from '../lib/anchors';
-import { onAnchorClick } from '../lib/scroll';
-import { Icon } from '../ui/Icon';
+import { supportsWebGL } from '../lib/webgl';
 import { Section } from '../ui/Section';
+import { CapConsole } from './CapConsole';
+import { CapStack } from './CapStack';
+import { pinnedTier } from './cap3d/quality';
 import './Capabilities.css';
 
+interface NavigatorWithConnection {
+  readonly connection?: { readonly saveData?: boolean };
+}
+
+/**
+ * Capabilities: the four domains as an interactive 3D skill core (a flying camera, a central core, four orbiting
+ * clusters) on desktop; four stacked lit cards everywhere the 3D does not belong (phones, tablets, reduced motion,
+ * no WebGL, save-data, a failed chunk). Both variants carry every skill and proof line as plain DOM.
+ */
 export function Capabilities() {
-  const { capabilities, ui } = content;
-  // One observer for the grid; the cards stagger off --i (CSS). Never armed under reduced motion.
-  const [gridRef] = useReveal<HTMLDivElement>({ threshold: 0.12 });
+  const { capabilities } = content;
+  const { reducedMotion, isDesktop } = usePrefs();
+  const [failed, setFailed] = useState(false);
+  const onFail = useCallback(() => setFailed(true), []);
+
+  const canStage = useMemo(() => {
+    if (!isDesktop || reducedMotion) return false;
+    if ((navigator as Navigator & NavigatorWithConnection).connection?.saveData === true) return false;
+    return supportsWebGL(pinnedTier(window.location.search) !== null);
+  }, [isDesktop, reducedMotion]);
+
   return (
     <Section anchor="capabilities" className="stage-world cap">
       <SectionIntro anchor="capabilities" heading={capabilities.heading} lead={capabilities.lead || undefined} />
-      <div className="cap-grid" ref={gridRef}>
-        {capabilities.groups.map((group, index) => (
-          <article className="cap-card" key={group.id} style={{ '--i': index } as CSSProperties}>
-            <p className="cap-card__eyebrow mono-label">
-              {String(index + 1).padStart(2, '0')} / {group.name}
-            </p>
-            <h3 className="cap-card__title">{group.name}</h3>
-            <ul className="cap-card__skills">
-              {group.skills.map((skill) => (
-                <li key={skill} className="cap-chip">
-                  {skill}
-                </li>
-              ))}
-            </ul>
-            <div className="cap-card__proof">
-              <p className="mono-label">{ui.proofLabel}</p>
-              <a className="cap-card__link" href={anchorHref(group.anchor)} onClick={onAnchorClick}>
-                {group.proof}
-                <Icon name="arrow-right" />
-              </a>
-            </div>
-          </article>
-        ))}
-      </div>
+      {canStage && !failed ? <CapConsole onFail={onFail} /> : <CapStack />}
     </Section>
   );
 }
