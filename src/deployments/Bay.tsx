@@ -32,7 +32,7 @@ export function Bay({ bay, index, total }: BayProps) {
       aria-labelledby={titleId}
       tabIndex={-1}
     >
-      <header className="dpl-bay__head" style={{ '--n': 0 } as CSSProperties}>
+      <div className="dpl-bay__head" style={{ '--n': 0 } as CSSProperties}>
         <p className="mono-label dpl-bay__kicker dpl-reveal">
           <span className="dpl-bay__rule" aria-hidden="true" />
           {ui.deploymentPrefix} {no} / {String(total).padStart(2, '0')}
@@ -58,7 +58,7 @@ export function Bay({ bay, index, total }: BayProps) {
             ))}
           </ul>
         </div>
-      </header>
+      </div>
 
       <BayStage bay={bay} index={index} />
 

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { App } from '../App';
 import { ANCHORS } from '../config';
@@ -12,13 +12,13 @@ describe('readable console (step 1)', () => {
     expect(h1s[0]).toHaveTextContent(content.meta.name);
   });
 
-  it('renders the five deployment cards in order', () => {
+  it('renders the four flagship deployment bays in order', () => {
     render(<App />);
-    const titles = content.deployments.items.map((d) => d.name);
-    expect(titles).toEqual(['TravelDesk', 'HRMS', 'BSS', 'Cloud Commerce', 'AI Operations platform']);
+    const titles = ['TravelDesk', 'HRMS', 'Cloud Commerce', 'AI To Com'];
     for (const title of titles) {
-      expect(screen.getByRole('heading', { level: 3, name: title })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: new RegExp(`^${title}`) })).toBeInTheDocument();
     }
+    expect(screen.queryByRole('heading', { level: 3, name: /BSS/ })).toBeNull();
   });
 
   it('renders the five testimonial authors', () => {
@@ -70,21 +70,10 @@ describe('readable console (step 1)', () => {
     expect(container.querySelectorAll('.stepper-list > li')).toHaveLength(7);
   });
 
-  it('starts deployment cards closed and toggles them independently', () => {
+  it('gives each bay its own component index and no proposed banner now that the service names are confirmed', () => {
     render(<App />);
-    const buttons = screen.getAllByRole('button', { name: content.deployments.detailsLabel });
-    expect(buttons).toHaveLength(5);
-    for (const b of buttons) expect(b).toHaveAttribute('aria-expanded', 'false');
-    fireEvent.click(buttons[0]!);
-    fireEvent.click(buttons[1]!);
-    expect(buttons[0]).toHaveAttribute('aria-expanded', 'true');
-    expect(buttons[1]).toHaveAttribute('aria-expanded', 'true');
-    expect(buttons[2]).toHaveAttribute('aria-expanded', 'false');
-  });
-
-  it('shows the PROPOSED banner while the model is proposed', () => {
-    render(<App />);
-    expect(screen.getByRole('note')).toHaveTextContent(content.architecture.proposedBanner);
+    expect(screen.getAllByRole('toolbar')).toHaveLength(4);
+    expect(screen.queryByRole('note')).toBeNull();
   });
 
   it('opens every external link safely', () => {

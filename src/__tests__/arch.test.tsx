@@ -19,14 +19,14 @@ describe('traveldesk architecture data', () => {
     expect(count('integration-phase2')).toBe(2);
   });
 
-  it('has unique ids, edges that resolve, and stays proposed', () => {
+  it('has unique ids, edges that resolve, and is confirmed', () => {
     const ids = new Set(model.nodes.map((n) => n.id));
     expect(ids.size).toBe(model.nodes.length);
     for (const e of model.edges) {
       expect(ids.has(e.from)).toBe(true);
       expect(ids.has(e.to)).toBe(true);
     }
-    expect(model.status).toBe('proposed');
+    expect(model.status).toBe('confirmed');
   });
 
   it('never names the HRIS vendor', () => {

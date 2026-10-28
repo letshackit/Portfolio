@@ -14,7 +14,7 @@ interface BayRailProps {
 /** The selector rail: four bays, the one on screen lit, a click jumps there. Pinned under the header while the bays pass. */
 export function BayRail({ active, onPick, wrapRef }: BayRailProps) {
   const { reducedMotion, isDesktop, pointerFine } = usePrefs();
-  const railRef = useRef<HTMLElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const rail = railRef.current;
@@ -33,7 +33,7 @@ export function BayRail({ active, onPick, wrapRef }: BayRailProps) {
   }, [reducedMotion, isDesktop, pointerFine, wrapRef]);
 
   return (
-    <nav ref={railRef} className="dpl-rail" aria-label={bayCopy.railLabel} style={{ '--i': active, '--count': bays.length } as CSSProperties}>
+    <div ref={railRef} role="group" className="dpl-rail" aria-label={bayCopy.railLabel} style={{ '--i': active, '--count': bays.length } as CSSProperties}>
       <p className="mono-label dpl-rail__label">{bayCopy.railLabel}</p>
       <ol className="dpl-rail__list">
         {bays.map((b, i) => {
@@ -49,6 +49,6 @@ export function BayRail({ active, onPick, wrapRef }: BayRailProps) {
           );
         })}
       </ol>
-    </nav>
+    </div>
   );
 }
