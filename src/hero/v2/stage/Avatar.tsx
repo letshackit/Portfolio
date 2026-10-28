@@ -4,7 +4,8 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { markInteracted, store } from '../store';
-import { AVATAR_ENV, ensureSmoothNormals, tuneMaterials } from './materials';
+import { LOOK } from './lookPreset';
+import { AVATAR_ENV, addHairFringe, ensureSmoothNormals, tuneMaterials } from './materials';
 import { beginDrag, createTurntable, dragBy, endDrag, headWeight, nudge, stepTurntable, type Turntable } from './turntable';
 
 const damp = THREE.MathUtils.damp;
@@ -88,10 +89,16 @@ export function Avatar() {
   const drag = useRef({ id: -1, x: 0, t: 0, last: 0 });
   const hovering = useRef(false);
 
+  // The studio HDR on the avatar's own materials, so its strength is independent of the rest of the scene. The probe
+  // is attached by <Environment> after this component first renders, so it is picked up in the frame loop. The list is
+  // read once the materials are tuned (tuning swaps some for physical ones, and the hair fringe adds a clone).
+  const envMaterials = useRef<THREE.MeshStandardMaterial[]>([]);
+  const envApplied = useRef<THREE.Texture | null>(null);
+
   // Materials, normals, pose: before the first frame is drawn.
   useLayoutEffect(() => {
     ensureSmoothNormals(scene);
-    tuneMaterials(scene, Math.min(8, gl.capabilities.getMaxAnisotropy()));
+    tuneMaterials(scene, Math.min(16, gl.capabilities.getMaxAnisotropy()));
     scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
@@ -99,6 +106,16 @@ export function Avatar() {
       m.castShadow = true;
       m.receiveShadow = true;
     });
+    // After the shadow flags: the fringe sets its own (it does not cast).
+    addHairFringe(scene);
+    const set = new Set<THREE.MeshStandardMaterial>();
+    scene.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      for (const mat of Array.isArray(m.material) ? m.material : [m.material]) set.add(mat as THREE.MeshStandardMaterial);
+    });
+    envMaterials.current = [...set];
+    envApplied.current = null;
     idle.pose();
     // Spin about his hips, not about the file's origin: the idle clip sways the hips a little off the origin.
     scene.position.set(0, 0, 0);
@@ -109,19 +126,6 @@ export function Avatar() {
       scene.position.set(-p.x, 0, -p.z);
     }
   }, [scene, gl, idle, bones.hips]);
-
-  // The studio HDR on the avatar's own materials, so its strength is independent of the rest of the scene. The probe
-  // is attached by <Environment> after this component first renders, so it is picked up in the frame loop.
-  const envMaterials = useMemo(() => {
-    const set = new Set<THREE.MeshStandardMaterial>();
-    scene.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (!m.isMesh) return;
-      for (const mat of Array.isArray(m.material) ? m.material : [m.material]) set.add(mat as THREE.MeshStandardMaterial);
-    });
-    return [...set];
-  }, [scene]);
-  const envApplied = useRef<THREE.Texture | null>(null);
 
   useEffect(() => () => idle.dispose(), [idle]);
 
@@ -253,14 +257,14 @@ export function Avatar() {
     const env = state.scene.environment;
     if (env && env !== envApplied.current) {
       envApplied.current = env;
-      for (const m of envMaterials) {
+      for (const m of envMaterials.current) {
         m.envMap = env;
-        m.envMapRotation.set(0, -0.6, 0);
+        m.envMapRotation.set(0, LOOK.environment.avatarRotationY, 0);
         m.needsUpdate = true;
       }
     }
-    const k = 0.4 + 0.6 * THREE.MathUtils.smoothstep(store.intro, 0, 1);
-    for (const m of envMaterials) m.envMapIntensity = AVATAR_ENV * k;
+    const k = LOOK.lights.introFloor + (1 - LOOK.lights.introFloor) * THREE.MathUtils.smoothstep(store.intro, 0, 1);
+    for (const m of envMaterials.current) m.envMapIntensity = AVATAR_ENV * k * ((m.userData.envScale as number | undefined) ?? 1);
 
     // A demand-rendered stage (reduced motion) keeps drawing only while something is moving.
     if (store.reduced && (t.mode !== 'rest' || drag.current.id !== -1 || h.weight > 0.01)) invalidate();
