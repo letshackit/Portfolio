@@ -286,30 +286,35 @@
   }
 }
 
-/* The open panel grows from zero height; closed ones are inert, so Tab skips their links. */
-.cc-dom__panel {
+/* The open domain's proof line sits in its own glass card under the tabs; closed panels are hidden. */
+.cc__tabs {
   display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--d-slow) var(--e-out);
+  gap: var(--s-2);
 }
 
-.cc-dom[data-active] .cc-dom__panel {
-  grid-template-rows: 1fr;
+.cc-dom__panel {
+  --tone: var(--cyan-500);
+  margin-top: var(--s-2);
+  border: 1px solid color-mix(in srgb, var(--tone) 55%, transparent);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--tone) 9%, color-mix(in srgb, var(--g-0) 78%, transparent));
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+}
+
+.cc-dom__panel[data-tone="amber"] {
+  --tone: var(--amber-500);
+  --tone-text: var(--amber-400);
+}
+
+.cc-dom__panel:not([hidden]) {
+  display: block;
 }
 
 .cc-dom__inner {
   display: grid;
   gap: var(--s-2);
-  min-height: 0;
-  overflow: hidden;
-  padding: 0 var(--s-4);
-  opacity: 0;
-  transition: opacity var(--d-slow) var(--e-out);
-}
-
-.cc-dom[data-active] .cc-dom__inner {
-  padding-bottom: var(--s-4);
-  opacity: 1;
+  padding: var(--s-4);
 }
 
 .cc-dom__link {

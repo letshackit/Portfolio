@@ -26,8 +26,13 @@ const SETTLE_FALLBACK_MS = 650;
 /** Minimum wait before focusing, so a closing dialog's focus restore never wins. */
 const FOCUS_DELAY_MS = 30;
 
+/** Re-aim at most this many times when a jump ends further than the tolerance from the header. */
+const MAX_CORRECTIONS = 3;
+const LAND_TOLERANCE_PX = 12;
+
 let smoother: SmootherHandle | null = null;
 let refreshHook: (() => void) | null = null;
+let pageRefresh: (() => void) | null = null;
 let lockCount = 0;
 let focusingProgrammatically = false;
 
@@ -55,6 +60,11 @@ export function attachSmoother(instance: SmootherHandle | null, onRefresh?: () =
     root.style.overflow = 'hidden';
     root.style.scrollbarGutter = 'stable';
   }
+}
+
+/** Called by motion.ts for the page's lifetime, in native mode too: pins change the page height there as well. */
+export function setRefreshHook(hook: (() => void) | null): void {
+  pageRefresh = hook;
 }
 
 /** Height of the fixed header, so smoother jumps land the heading clear of it (native mode uses scroll-padding-top). */
@@ -124,12 +134,17 @@ export async function scrollToAnchor(id: AnchorId, options: ScrollOptions = {}):
   if (!section) return;
   const instant = options.instant === true || prefersReducedMotion();
 
-  if (smoother) {
-    smoother.scrollTo(section, !instant, `top ${Math.round(headerOffset())}px`);
-  } else if (typeof section.scrollIntoView === 'function') {
-    // scroll-padding-top on html (base.css) keeps the heading clear of the fixed header.
-    section.scrollIntoView({ behavior: instant ? 'auto' : 'smooth', block: 'start' });
-  }
+  const jump = (smooth: boolean) => {
+    // Pins (hero beat, How journey) and lazy mounts change the page height after first measure: measure again first.
+    pageRefresh?.();
+    if (smoother) {
+      smoother.scrollTo(section, smooth, `top ${Math.round(headerOffset())}px`);
+    } else if (typeof section.scrollIntoView === 'function') {
+      // scroll-padding-top on html (base.css) keeps the heading clear of the fixed header.
+      section.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    }
+  };
+  jump(!instant);
   try {
     window.history.replaceState(null, '', `#${id}`);
   } catch {
@@ -137,6 +152,12 @@ export async function scrollToAnchor(id: AnchorId, options: ScrollOptions = {}):
   }
 
   await waitForSettle(instant);
+  // A long smooth jump can end short when the page grew on the way (sections mounting under the visitor). Correct it, instantly.
+  for (let attempt = 0; attempt < MAX_CORRECTIONS; attempt += 1) {
+    if (Math.abs(section.getBoundingClientRect().top - headerOffset()) <= LAND_TOLERANCE_PX) break;
+    jump(false);
+    await waitForSettle(true);
+  }
   if (options.focus) {
     const target = focusTarget(id);
     if (target) {

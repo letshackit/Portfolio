@@ -143,6 +143,13 @@
   box-shadow: 0 var(--s-4) var(--s-6) var(--shadow-float);
 }
 
+.mobile-menu__scrim {
+  position: fixed;
+  inset: var(--header-h) 0 auto 0;
+  height: 100svh;
+  background: color-mix(in srgb, var(--g-0) 60%, transparent);
+}
+
 .mobile-menu__row {
   display: flex;
   align-items: center;

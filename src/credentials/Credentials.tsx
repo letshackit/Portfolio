@@ -73,7 +73,7 @@ function Card({ credential, spec, store, className, children }: CardProps) {
         </span>
       </div>
       <div className="cred__text">
-        <h5 className="cred__title">{title}</h5>
+        <h4 className="cred__title">{title}</h4>
         <p className="cred__issuer">{issuer}</p>
         {dates ? <p className="cred__dates">{dates}</p> : null}
         {children}
@@ -205,9 +205,9 @@ export function Credentials() {
           <SectionIntro anchor="credentials" heading={education.heading} size="md" />
 
           <section className="vault__group" aria-labelledby="vault-degrees">
-            <h4 id="vault-degrees" className="vault__label mono-label">
+            <h3 id="vault-degrees" className="vault__label mono-label">
               {ui.degreesHeading}
-            </h4>
+            </h3>
             <ul className="vault__degrees">
               {education.degrees.map((d, i) => (
                 <Card key={d.id} credential={d} spec={spec(d.id)} store={store} className={i === 0 ? 'cred--hero' : 'cred--stone'} />
@@ -216,9 +216,9 @@ export function Credentials() {
           </section>
 
           <section className="vault__group" aria-labelledby="vault-certs">
-            <h4 id="vault-certs" className="vault__label mono-label">
+            <h3 id="vault-certs" className="vault__label mono-label">
               {education.certificationsHeading}
-            </h4>
+            </h3>
             <ul className="vault__certs">
               {education.certifications.map((c) => (
                 <Card key={c.id} credential={c} spec={spec(c.id)} store={store} className="cred--cert" />
@@ -227,9 +227,9 @@ export function Credentials() {
           </section>
 
           <section className="vault__group" aria-labelledby="vault-pub">
-            <h4 id="vault-pub" className="vault__label mono-label">
+            <h3 id="vault-pub" className="vault__label mono-label">
               {education.publicationHeading}
-            </h4>
+            </h3>
             <ul className="vault__pubs">
               <Card
                 credential={{ id: education.publication.id, title: education.publication.title, issuer: education.publication.venue }}

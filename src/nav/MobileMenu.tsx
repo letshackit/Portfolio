@@ -59,10 +59,14 @@ export function MobileMenu({ activeSection, onClose, onOpenPalette }: MobileMenu
   const onLink = (event: MouseEvent<HTMLAnchorElement>, id: AnchorId) => {
     event.preventDefault();
     onClose(true);
-    void scrollToAnchor(id, { focus: true });
+    // Scroll only once the menu has closed and released its scroll lock: unlocking mid smooth-scroll cuts the jump short.
+    window.requestAnimationFrame(() => void scrollToAnchor(id, { focus: true }));
   };
 
   return (
+    <>
+      {/* Dimmed backdrop: a press on it falls outside the panel, so the pointerdown handler above dismisses the menu. */}
+      <div className="mobile-menu__scrim" aria-hidden="true" />
     <div
       id="mobile-menu"
       ref={panelRef}
@@ -102,5 +106,6 @@ export function MobileMenu({ activeSection, onClose, onOpenPalette }: MobileMenu
         </li>
       </ul>
     </div>
+    </>
   );
 }

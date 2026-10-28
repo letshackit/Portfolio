@@ -98,7 +98,7 @@ export function Header() {
             aria-controls="mobile-menu"
             onClick={() => setMenuOpen((open) => !open)}
           >
-            {content.palette.menu}
+            {menuOpen ? content.palette.menuCloseShort : content.palette.menu}
           </button>
         </div>
       </div>

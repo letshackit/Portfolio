@@ -790,3 +790,7 @@
   .hv2__dot--amber, .hv2__badge-live, .hv2__caret, .hv2__cue-line::after { animation: none !important; }
   .hv2__canvas { transition: none; }
 }
+
+.hv2__cell[data-idle] {
+  visibility: hidden;
+}

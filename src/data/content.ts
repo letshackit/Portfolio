@@ -64,6 +64,7 @@ export const content: SiteContent = {
     openPalette: 'Open command palette',
     menu: 'MENU',
     menuClose: 'Close menu',
+    menuCloseShort: 'CLOSE',
     menuPalette: 'COMMAND PALETTE',
     copyButton: 'Copy email',
     bootLabel: 'Site starting',
@@ -121,7 +122,7 @@ export const content: SiteContent = {
   ],
 
   howIWork: {
-    heading: 'I build what I spec.',
+    heading: 'From spec to shipped.',
     lead: '',
     tools: ['Claude Code', 'Cursor', 'Codex'],
     toolsLine: 'Claude Code · Cursor · Codex',

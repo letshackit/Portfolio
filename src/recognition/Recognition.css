@@ -251,10 +251,10 @@
   }
 }
 
-/* Still but fully lit: one set per row, scrollable, no duplicates. */
+/* Still but fully lit: one set per row, wrapped so every note is visible with no hidden scroll, no duplicates. */
 @media (prefers-reduced-motion: reduce) {
   .marquee {
-    overflow-x: auto;
+    overflow: visible;
     mask-image: none;
     -webkit-mask-image: none;
     padding-inline: var(--gutter);
@@ -262,6 +262,15 @@
 
   .marquee__track {
     width: auto;
+  }
+
+  .marquee__half,
+  .marquee__set {
+    flex-wrap: wrap;
+  }
+
+  .marquee__set > li {
+    padding-bottom: var(--s-4);
   }
 
   .marquee [data-dup] {

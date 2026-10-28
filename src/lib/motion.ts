@@ -10,7 +10,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { BREAKPOINTS } from '../config';
 import { bindHeroBeat } from '../hero/v2/beat';
-import { attachSmoother } from './scroll';
+import { attachSmoother, setRefreshHook } from './scroll';
 import { REVEAL_SELECTOR, type MotionHandle, type MotionOptions, type RevealKind } from './reveal';
 import { isPastLine } from './visibility';
 
@@ -154,6 +154,7 @@ export function startMotion(options: MotionOptions): MotionHandle {
   });
 
   let live = true;
+  setRefreshHook(() => ScrollTrigger.refresh());
   const onFontsReady = () => {
     if (live) ScrollTrigger.refresh();
   };
@@ -166,6 +167,7 @@ export function startMotion(options: MotionOptions): MotionHandle {
   return {
     dispose() {
       live = false;
+      setRefreshHook(null);
       stopWatching();
       ScrollTrigger.removeEventListener('refresh', onRefresh);
       window.removeEventListener('load', onFontsReady);

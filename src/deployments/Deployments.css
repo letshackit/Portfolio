@@ -91,6 +91,12 @@
   display: flex;
   gap: 2px;
   min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.dpl-rail__list::-webkit-scrollbar {
+  display: none;
 }
 
 .dpl-rail__item {
@@ -122,15 +128,26 @@
 }
 
 .dpl-rail__name {
-  display: none;
-  font-size: var(--fs-name);
+  display: inline;
+  font-size: 0.75rem;
+  white-space: nowrap;
   font-weight: var(--w-medium);
   letter-spacing: var(--ls-h3);
 }
 
 .dpl-rail__item[aria-current="true"] .dpl-rail__name {
-  display: inline;
   font-size: 0.8125rem;
+}
+
+/* Phones: the names are the preview; the numbers give way so all four fit or scroll as a row. */
+@media (max-width: 767px) {
+  .dpl-rail__num {
+    display: none;
+  }
+
+  .dpl-rail__item {
+    padding: 0 var(--s-3);
+  }
 }
 
 @media (min-width: 768px) {
@@ -152,7 +169,7 @@
   }
 
   .dpl-rail__name {
-    display: inline;
+    font-size: var(--fs-name);
   }
 }
 

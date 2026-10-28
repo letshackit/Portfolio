@@ -244,6 +244,7 @@ export interface PaletteLabels {
   readonly openPalette: string;
   readonly menu: string;
   readonly menuClose: string;
+  readonly menuCloseShort: string;
   readonly menuPalette: string;
   readonly copyButton: string;
   readonly bootLabel: string;

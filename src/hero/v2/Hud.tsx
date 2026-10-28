@@ -149,7 +149,7 @@ interface StatusBarProps {
 
 /**
  * Bottom status bar. A's identity cells merged with B's live counters: while the scene runs the numbers are read from
- * it, otherwise they show the finished city (18 of 18) and the scene-only counters read as dashes. Every cell keeps
+ * it, otherwise they show the finished city (18 of 18) and the scene-only counters stay hidden. Every cell keeps
  * its width either way, so nothing shifts when the scene arrives.
  */
 export function StatusBar({ live, scene, settled, paused }: StatusBarProps) {
@@ -169,6 +169,9 @@ export function StatusBar({ live, scene, settled, paused }: StatusBarProps) {
   }, [live, paused]);
 
   const built = settled ? SERVICE_COUNT : counts.assembled;
+  // Cumulative scene counters stay invisible (width kept) until the scene has produced a value, so they never read as broken.
+  const idleDocks = !scene || counts.docks === 0;
+  const idlePackets = !scene || counts.packets === 0;
   const team = hero.strip.find((s) => s.id === 'team');
 
   return (
@@ -191,13 +194,13 @@ export function StatusBar({ live, scene, settled, paused }: StatusBarProps) {
         <em>AGENTS</em>
         <b>{pad(AGENT_COUNT, 2)}</b>
       </span>
-      <span className="hv2__cell hv2__cell--mid">
+      <span className="hv2__cell hv2__cell--mid" data-idle={idleDocks || undefined} aria-hidden={idleDocks || undefined}>
         <em>DOCKS</em>
-        <b>{scene ? pad(counts.docks, 3) : '---'}</b>
+        <b>{pad(counts.docks, 3)}</b>
       </span>
-      <span className="hv2__cell hv2__cell--mid">
+      <span className="hv2__cell hv2__cell--mid" data-idle={idlePackets || undefined} aria-hidden={idlePackets || undefined}>
         <em>PACKETS</em>
-        <b>{scene ? pad(counts.packets, 4) : '----'}</b>
+        <b>{pad(counts.packets, 4)}</b>
       </span>
       {team ? (
         <span className="hv2__cell hv2__cell--wide">

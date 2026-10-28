@@ -187,7 +187,8 @@ export function CapConsole({ onFail }: CapConsoleProps) {
         </span>
       </div>
 
-      <div className="cc__rail" role="tablist" aria-label={capCopy.railLabel} aria-orientation="vertical" onKeyDown={onKeyDown}>
+      <div className="cc__rail">
+        <div role="tablist" aria-label={capCopy.railLabel} aria-orientation="vertical" className="cc__tabs" onKeyDown={onKeyDown}>
         {groups.map((group, i) => {
           const look = lookFor(group);
           const on = i === active;
@@ -219,25 +220,33 @@ export function CapConsole({ onFail }: CapConsoleProps) {
                 </span>
                 {on && running ? <span key={`${active}-${running}`} className="cc-dom__timer" style={{ '--auto': `${AUTO_MS}ms` } as CSSProperties} /> : null}
               </button>
-              <div
-                role="tabpanel"
-                id={`cap-panel-${group.id}`}
-                aria-labelledby={`cap-tab-${group.id}`}
-                className="cc-dom__panel"
-                {...(on ? {} : { inert: '' })}
-              >
-                <div className="cc-dom__inner">
-                  <ul className="visually-hidden">
-                    {group.skills.map((skill) => (
-                      <li key={skill}>{skill}</li>
-                    ))}
-                  </ul>
-                  <p className="mono-label">{ui.proofLabel}</p>
-                  <a className="cc-dom__link" href={anchorHref(group.anchor)} onClick={onAnchorClick}>
-                    {group.proof}
-                    <Icon name="arrow-right" />
-                  </a>
-                </div>
+            </div>
+          );
+        })}
+        </div>
+        {groups.map((group) => {
+          const on = group.id === current.id;
+          return (
+            <div
+              key={group.id}
+              role="tabpanel"
+              id={`cap-panel-${group.id}`}
+              aria-labelledby={`cap-tab-${group.id}`}
+              className="cc-dom__panel"
+              data-tone={lookFor(group).tone}
+              hidden={!on}
+            >
+              <div className="cc-dom__inner">
+                <ul className="visually-hidden">
+                  {group.skills.map((skill) => (
+                    <li key={skill}>{skill}</li>
+                  ))}
+                </ul>
+                <p className="mono-label">{ui.proofLabel}</p>
+                <a className="cc-dom__link" href={anchorHref(group.anchor)} onClick={onAnchorClick}>
+                  {group.proof}
+                  <Icon name="arrow-right" />
+                </a>
               </div>
             </div>
           );
