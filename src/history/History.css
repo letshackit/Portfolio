@@ -204,6 +204,11 @@
   color: var(--t-2);
 }
 
+.tl3__len {
+  display: none;
+  color: var(--cyan-400);
+}
+
 .tl3__pips {
   position: absolute;
   right: var(--s-4);
@@ -652,8 +657,12 @@
 
   .tl3__readout {
     left: var(--s-7);
-    bottom: calc(var(--s-6) + 120px);
+    bottom: calc(var(--s-6) + 112px);
     gap: var(--s-1);
+  }
+
+  .tl3__len {
+    display: block;
   }
 
   .tl3__count {

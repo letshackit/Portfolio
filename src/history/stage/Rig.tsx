@@ -73,9 +73,9 @@ export function Rig({ model, mode, reduced }: RigProps) {
       v.look.y -= 0.1;
     } else {
       const mid = pathPoint(monthsBack(model, (model.min + model.max) / 2), v.tmp);
-      const k = size.width / size.height > 1.5 ? 0.66 : 1;
+      const k = size.width / size.height > 1.5 ? 0.78 : 1.32;
       v.pos.set(mid.x - 19 * k, mid.y + 10.5 * k, mid.z + 22 * k);
-      v.look.set(mid.x + 0.5, mid.y - 0.3, mid.z + 8.5);
+      v.look.set(mid.x + 0.5, mid.y - 0.3, mid.z + 5);
     }
     camera.position.copy(v.pos);
     camera.lookAt(v.look);

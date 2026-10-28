@@ -44,6 +44,11 @@ export function StageHud({ model, active, onJump, live }: StageHudProps) {
         </p>
         <p className="tl3__here mono-label">{station?.short}</p>
         <p className="tl3__when mono-caption">{station?.dates}</p>
+        {station ? (
+          <p className="tl3__len mono-caption">
+            {Math.round(station.end - station.start)} mo · {station.roles.length} {station.roles.length === 1 ? 'role' : 'roles'}
+          </p>
+        ) : null}
       </div>
       <div className="tl3__pips" role="group" aria-label="Jump to a role">
         {model.stations.map((s, i) => (

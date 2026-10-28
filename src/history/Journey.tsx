@@ -160,7 +160,7 @@ export function Journey() {
       <div className="tl3__pin" ref={pin}>
         <div className="tl3__stage" ref={stageBox}>
           <div className="tl3__poster" aria-hidden="true">
-            <Poster />
+            <Poster active={active} />
           </div>
           <div className="tl3__canvas" aria-hidden="true">
             {mount && Stage ? (

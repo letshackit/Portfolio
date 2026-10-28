@@ -148,7 +148,7 @@ export function Station({ station, index, model, gate, reduced, glass, halo, fon
       const d = state.camera.position.distanceTo(camPos.copy(position));
       const near = smoothstep(6, 8, d);
       const far = smoothstep(18, 12.5, d);
-      labelMat.current.opacity = reduced ? 1 : near * far * (0.2 + 0.8 * a);
+      labelMat.current.opacity = reduced ? 1 : near * far * (0.06 + 0.94 * a);
     }
   });
 

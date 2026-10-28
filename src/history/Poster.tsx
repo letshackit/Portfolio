@@ -1,15 +1,15 @@
 /**
  * The still behind the 3D stage: the same idea drawn in SVG (a path receding to a vanishing point, four hex stations,
- * the nearest one amber). It is what shows before the canvas arrives, with reduced data, and without WebGL, so the
+ * the one you are at amber). It is what shows before the canvas arrives, with reduced data, and without WebGL, so the
  * stage box is never empty and nothing moves when the canvas fades in over it.
  */
-export function Poster() {
+export function Poster({ active = 0 }: { readonly active?: number }) {
   const stations = [
-    { x: 250, y: 470, s: 1, amber: true },
-    { x: 330, y: 330, s: 0.62, amber: false },
-    { x: 400, y: 245, s: 0.4, amber: false },
-    { x: 452, y: 192, s: 0.25, amber: false },
-  ];
+    { x: 250, y: 470, s: 1 },
+    { x: 330, y: 330, s: 0.62 },
+    { x: 400, y: 245, s: 0.4 },
+    { x: 452, y: 192, s: 0.25 },
+  ].map((st, i) => ({ ...st, amber: i === active }));
   const hex = (cx: number, cy: number, r: number) =>
     Array.from({ length: 6 }, (_, i) => {
       const a = Math.PI / 6 + (i * Math.PI) / 3;
