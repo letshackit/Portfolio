@@ -1,43 +1,65 @@
 import type { HistoryEntry } from '../data/content.types';
-import { revealProps } from '../lib/reveal';
 import { Icon } from '../ui/Icon';
+import type { Station } from './timelineModel';
+
+export type StationState = 'active' | 'passed' | 'ahead';
 
 /** The role dates that mean "still here" get the amber live dot; the text itself is untouched. */
 const isCurrent = (dates: string) => /present/i.test(dates);
 
-/** One employer as a glass node on the rail: company in display type, one row per role, promotion tag, highlights. */
-export function TimelineEntry({ entry, index }: { readonly entry: HistoryEntry; readonly index: number }) {
+interface TimelineEntryProps {
+  readonly entry: HistoryEntry;
+  readonly station: Station;
+  readonly index: number;
+  readonly total: number;
+  readonly state: StationState;
+}
+
+/**
+ * One employer as a glass station card. Everything the copy says is in the markup at all times; on desktop the
+ * description folds open when the visitor arrives at the station (CSS, keyed on data-state), and every state is a
+ * complete, readable card.
+ */
+export function TimelineEntry({ entry, station, index, total, state }: TimelineEntryProps) {
+  const group = entry.company.slice(station.short.length).trim();
   return (
-    <li className="tl__entry" data-tl-node data-lit="">
-      <span className="tl__dot" data-tl-dot aria-hidden="true" />
-      <article className="tl__card" {...revealProps('block')}>
-        <p className="tl__index mono-label" aria-hidden="true">
-          {String(index + 1).padStart(2, '0')}
+    <li className="tl3__item" data-tl-item data-state={state} data-promoted={entry.marker ? '' : undefined}>
+      <span className="tl3__dot" aria-hidden="true" />
+      <article className="tl3__card">
+        <p className="tl3__index mono-label" aria-hidden="true">
+          {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
         </p>
-        <h3 className="tl__company">{entry.company}</h3>
-        <p className="tl__where mono-label">{entry.location}</p>
+        <h3 className="tl3__company">
+          {station.short}
+          {group ? <span className="tl3__group"> {group}</span> : null}
+        </h3>
+        <p className="tl3__where mono-label">{entry.location}</p>
         {entry.marker ? (
-          <p className="tl__promo mono-label">
+          <p className="tl3__promo mono-label">
             <Icon name="arrow-up" />
             {entry.marker}
           </p>
         ) : null}
-        <ul className="tl__roles">
+        <ul className="tl3__roles">
           {entry.roles.map((role) => (
-            <li className="tl__role" key={role.id}>
-              <p className="tl__role-title">{role.title}</p>
-              <p className="tl__dates mono-caption">
-                {isCurrent(role.dates) ? <span className="tl__now" aria-hidden="true" /> : null}
+            <li className="tl3__role" key={role.id}>
+              <p className="tl3__dates mono-caption">
+                {isCurrent(role.dates) ? <span className="tl3__now" aria-hidden="true" /> : null}
                 {role.dates}
               </p>
+              <p className="tl3__role-title">{role.title}</p>
             </li>
           ))}
         </ul>
-        <ul className="bullets tl__bullets">
-          {entry.highlights.map((h) => (
-            <li key={h}>{h}</li>
-          ))}
-        </ul>
+        <div className="tl3__more">
+          <div className="tl3__more-inner">
+            <ul className="bullets tl3__bullets">
+              {entry.highlights.map((h) => (
+                <li key={h}>{h}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </article>
     </li>
   );

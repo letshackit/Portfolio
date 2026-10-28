@@ -399,7 +399,7 @@ export const content: SiteContent = {
         ],
         marker: 'Promoted in 9 months',
         highlights: [
-          'Owns strategy, scoping and delivery for Cloud Commerce, BSS, TravelDesk, HRMS and the AI Operations platform.',
+          'Owns strategy, scoping and delivery for Cloud Commerce, TravelDesk, HRMS and AI To Com.',
           'Leads execution for 16+ engineers across Kanban streams.',
           'Leads technical scoping: API contracts, data models, service boundaries, NFRs.',
         ],
