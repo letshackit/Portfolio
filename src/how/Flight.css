@@ -1,0 +1,691 @@
+/*
+ * The flight: a framed, pinned stage. DOM layers, back to front: poster (SVG), canvas (3D, lazy), veil (legibility
+ * gradient), corner ticks, HUD (counter, hint, legend, glass panel, stage rail). Landscape lays the panel on the left
+ * and the rail along the bottom; the vertical layout (portrait or narrow) puts the rail on top and the panel at the
+ * bottom, so the conduit runs down the open middle of the screen.
+ */
+.how {
+  padding-bottom: 0;
+}
+
+.flight {
+  --panel-w: min(27rem, 36vw);
+  position: relative;
+  box-sizing: border-box;
+  height: 100vh;
+  height: 100svh;
+  min-height: 600px;
+  padding: calc(var(--header-h) + var(--s-3)) var(--gutter) var(--s-4);
+}
+
+.flight__frame {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--line-2);
+  border-radius: 20px;
+  background: var(--bg);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--t-1) 3%, transparent),
+    0 50px 140px -60px color-mix(in srgb, var(--cyan-500) 38%, transparent);
+}
+
+/* ---------- Layers ---------- */
+.flight__poster,
+.flight__canvas,
+.flight__veil,
+.flight__ticks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.flight__poster {
+  transition: opacity 800ms var(--e-out);
+}
+
+.flight[data-stage="ready"] .flight__poster {
+  opacity: 0;
+}
+
+.flight__poster-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.fp-rail {
+  stroke: var(--cyan-500);
+  stroke-width: 1.5;
+  fill: none;
+  opacity: 0.55;
+}
+
+.fp-ring {
+  fill: none;
+  stroke: var(--cyan-600);
+  stroke-width: 1.2;
+}
+
+.fp-packet {
+  fill: var(--amber-400);
+}
+
+.fp-packet-halo {
+  fill: none;
+  stroke: var(--amber-500);
+  opacity: 0.5;
+}
+
+.flight__canvas {
+  opacity: 0;
+  transition: opacity 900ms var(--e-out);
+}
+
+.flight[data-stage="ready"] .flight__canvas {
+  opacity: 1;
+}
+
+.flight__canvas canvas {
+  display: block;
+}
+
+.flight__veil {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--bg) 88%, transparent) 0%, color-mix(in srgb, var(--bg) 58%, transparent) 26%, transparent 50%),
+    linear-gradient(0deg, color-mix(in srgb, var(--bg) 70%, transparent) 0%, transparent 22%);
+}
+
+.flight__ticks {
+  inset: var(--s-3);
+  background:
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top left / var(--tick) 1px no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top left / 1px var(--tick) no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top right / var(--tick) 1px no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) top right / 1px var(--tick) no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) bottom left / var(--tick) 1px no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) bottom left / 1px var(--tick) no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) bottom right / var(--tick) 1px no-repeat,
+    linear-gradient(var(--cyan-500), var(--cyan-500)) bottom right / 1px var(--tick) no-repeat;
+  opacity: 0.55;
+}
+
+/* ---------- HUD ---------- */
+.flight__hud {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, var(--panel-w)) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  pointer-events: none;
+}
+
+.flight__top {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.flight__counter {
+  white-space: nowrap;
+  color: var(--t-2);
+}
+
+.flight__counter-n {
+  color: var(--amber-400);
+}
+
+.flight__counter-name {
+  color: var(--t-1);
+}
+
+/* The cumulative build meter: the one thing on screen that only ever goes up. Cut into seven cells, one per stage. */
+.flight__mid {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.flight__meter {
+  display: grid;
+  grid-template-columns: auto minmax(7rem, 22rem) 4ch;
+  align-items: center;
+  gap: var(--s-3);
+  white-space: nowrap;
+}
+
+.flight__meter-label {
+  color: var(--t-2);
+  text-transform: uppercase;
+}
+
+.flight__meter-track {
+  position: relative;
+  height: 6px;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--t-1) 9%, transparent);
+}
+
+.flight__meter-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(to right, var(--amber-500), var(--amber-400));
+  box-shadow: 0 0 var(--s-3) color-mix(in srgb, var(--amber-500) 70%, transparent);
+  will-change: transform;
+}
+
+.flight__meter-cuts {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to right, transparent 0, transparent calc(100% / 7 - 2px), var(--bg) calc(100% / 7 - 2px), var(--bg) calc(100% / 7));
+}
+
+.flight__meter-value {
+  color: var(--amber-400);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.flight__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-3);
+  border: 1px solid var(--line-amber);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--g-0) 70%, transparent);
+  color: var(--amber-400);
+  text-transform: uppercase;
+  transition: opacity var(--d-slow) var(--e-out);
+}
+
+.flight__hint[data-gone] {
+  opacity: 0;
+}
+
+.flight__hint-arrow {
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  animation: flight-hint 1500ms var(--e-in-out) infinite;
+}
+
+@keyframes flight-hint {
+  0%,
+  100% {
+    transform: translate3d(0, -2px, 0) rotate(45deg);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translate3d(0, 3px, 0) rotate(45deg);
+    opacity: 1;
+  }
+}
+
+.flight__legend {
+  display: flex;
+  gap: var(--s-4);
+  color: var(--t-3);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.flight__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.flight__key {
+  display: inline-block;
+}
+
+.flight__key--packet {
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: var(--r-pill);
+  background: var(--amber-500);
+  box-shadow: 0 0 var(--s-2) var(--amber-500);
+}
+
+.flight__key--conduit {
+  width: var(--s-5);
+  height: 2px;
+  background: var(--cyan-500);
+  box-shadow: 0 0 var(--s-2) var(--cyan-500);
+}
+
+/* ---------- The glass panel: one per stage, stacked; only the active one is visible ---------- */
+.flight__panels {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: center;
+  display: grid;
+  pointer-events: none;
+}
+
+.flight__panel {
+  grid-area: 1 / 1;
+  align-self: start;
+  pointer-events: auto;
+  visibility: hidden;
+  opacity: 0;
+  transform: translate3d(-14px, 0, 0);
+  padding: var(--s-5);
+  border-radius: 16px;
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--t-1) 8%, transparent) 0%,
+    color-mix(in srgb, var(--g-0) 64%, transparent) 46%,
+    color-mix(in srgb, var(--g-0) 78%, transparent) 100%
+  );
+  transition:
+    opacity var(--d-slow) var(--e-out),
+    transform 500ms var(--e-out),
+    visibility 0s linear var(--d-slow);
+}
+
+.flight__panel[data-active] {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--d-slow) var(--e-out) 60ms,
+    transform 500ms var(--e-out) 60ms,
+    visibility 0s;
+}
+
+.flight .stage-panel {
+  gap: var(--s-3);
+}
+
+.flight .stage-panel__ghost {
+  display: none;
+}
+
+.flight .stage-panel h3 {
+  max-width: none;
+  font-size: clamp(1.625rem, 1.15rem + 1.2vw, 2.25rem);
+}
+
+.flight .stage-panel__summary {
+  max-width: none;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.flight .stage-panel__artifact {
+  padding: var(--s-3) var(--s-4);
+  gap: var(--s-2);
+}
+
+.flight .stage-panel__text {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.flight .stage-panel__numbers {
+  gap: var(--s-2) var(--s-5);
+  padding-top: var(--s-2);
+}
+
+.flight .stage-panel__number .mono-metric {
+  font-size: clamp(1.5rem, 1.2rem + 0.8vw, 2rem);
+}
+
+.flight .stage-panel__number {
+  max-width: 18ch;
+}
+
+.flight .stage-panel__verb {
+  font-size: 0.75rem;
+}
+
+.flight .stage-panel__foot {
+  padding-top: var(--s-1);
+  justify-content: flex-end;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Amber scan along the active panel's top edge: work happening. */
+.flight__panel[data-active] .stage-panel::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--s-5) * -1);
+  right: calc(var(--s-5) * -1);
+  top: calc(var(--s-5) * -1);
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--amber-500), transparent);
+  transform-origin: left center;
+  animation: stage-scan 3400ms var(--e-in-out) infinite;
+}
+
+@keyframes stage-scan {
+  0% {
+    transform: scaleX(0.05) translate3d(-100%, 0, 0);
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: scaleX(0.4) translate3d(260%, 0, 0);
+    opacity: 0;
+  }
+}
+
+/* ---------- The stage rail: seven tabs on a cyan line; the amber packet rides the line between node centres ---------- */
+.flight__rail {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  padding-bottom: var(--s-1);
+  border: var(--hairline);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--g-0) 68%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+.flight__line {
+  position: absolute;
+  left: calc(100% / 14);
+  right: calc(100% / 14);
+  top: 20px;
+  height: 1px;
+  background: var(--line-2);
+  pointer-events: none;
+}
+
+.flight__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--cyan-500);
+  box-shadow: 0 0 var(--s-3) var(--cyan-500);
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
+.flight__packet {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  margin-top: -6px;
+  border-radius: var(--r-pill);
+  background: var(--amber-400);
+  box-shadow:
+    0 0 var(--s-3) var(--amber-500),
+    0 0 var(--s-6) var(--amber-500);
+  will-change: transform;
+}
+
+.flight__packet::before {
+  content: "";
+  position: absolute;
+  right: 50%;
+  top: 50%;
+  width: 96px;
+  height: 2px;
+  margin-top: -1px;
+  background: linear-gradient(to left, var(--amber-500), transparent);
+}
+
+.flight__packet::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid var(--amber-400);
+  animation: packet-ring 1700ms var(--e-out) infinite;
+}
+
+@keyframes packet-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+.flight__tab {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--s-1);
+  min-height: var(--tap);
+  padding: 0 var(--s-1);
+  text-align: center;
+}
+
+.flight__tab:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+  border-radius: var(--r-2);
+}
+
+.flight__node {
+  position: relative;
+  z-index: 1;
+  width: var(--s-4);
+  height: var(--s-4);
+  margin-block: var(--s-3) var(--s-1);
+  border: 1px solid var(--cyan-600);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  transition:
+    background-color var(--d-slow) var(--e-out),
+    box-shadow var(--d-slow) var(--e-out);
+}
+
+.flight__tab[data-lit] .flight__node,
+.flight__tab[data-done] .flight__node {
+  background: var(--cyan-500);
+  border-color: var(--cyan-500);
+}
+
+.flight__tab[aria-selected="true"] .flight__node {
+  box-shadow: 0 0 0 var(--s-1) var(--fill-cyan), 0 0 var(--s-4) var(--cyan-500);
+}
+
+.flight__num,
+.flight__name {
+  transition: color var(--d-base) var(--e-out);
+}
+
+.flight__tab[aria-selected="true"] .flight__num {
+  color: var(--amber-400);
+}
+
+.flight__tab[aria-selected="true"] .flight__name {
+  color: var(--t-1);
+}
+
+.flight__name {
+  white-space: normal;
+}
+
+/* ---------- Vertical layout: portrait screens and narrow windows ---------- */
+.flight[data-layout="vertical"] .flight__hud {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  gap: var(--s-2);
+  padding: var(--s-4) var(--s-4) var(--s-4);
+}
+
+.flight[data-layout="vertical"] .flight__top {
+  display: contents;
+}
+
+.flight[data-layout="vertical"] .flight__counter {
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.flight[data-layout="vertical"] .flight__legend {
+  display: none;
+}
+
+.flight[data-layout="vertical"] .flight__mid {
+  display: contents;
+}
+
+.flight[data-layout="vertical"] .flight__meter {
+  grid-row: 2;
+  grid-column: 1;
+  grid-template-columns: auto minmax(0, 1fr) 4.5ch;
+}
+
+.flight[data-layout="vertical"] .flight__hint {
+  grid-row: 4;
+  grid-column: 1;
+  align-self: end;
+  justify-self: center;
+}
+
+.flight[data-layout="vertical"] .flight__rail {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.flight[data-layout="vertical"] .flight__panels {
+  grid-column: 1;
+  grid-row: 5;
+  align-self: end;
+}
+
+.flight[data-layout="vertical"] .flight__panel {
+  align-self: end;
+}
+
+.flight[data-layout="vertical"] .flight__veil {
+  background: linear-gradient(0deg, color-mix(in srgb, var(--bg) 92%, transparent) 0%, color-mix(in srgb, var(--bg) 60%, transparent) 30%, transparent 52%);
+}
+
+.flight[data-layout="vertical"] .flight__panel {
+  background: linear-gradient(155deg, color-mix(in srgb, var(--t-1) 7%, transparent) 0%, color-mix(in srgb, var(--g-0) 88%, transparent) 40%, color-mix(in srgb, var(--g-0) 94%, transparent) 100%);
+  padding: var(--s-4);
+  transform: translate3d(0, 12px, 0);
+}
+
+.flight[data-layout="vertical"] .flight__panel[data-active] {
+  transform: none;
+}
+
+.flight[data-layout="vertical"] .stage-panel {
+  gap: var(--s-2);
+}
+
+.flight[data-layout="vertical"] .stage-panel h3 {
+  font-size: 1.375rem;
+}
+
+.flight[data-layout="vertical"] .stage-panel__summary {
+  font-size: 0.8125rem;
+}
+
+.flight[data-layout="vertical"] .stage-panel__artifact {
+  padding: var(--s-2) var(--s-3);
+  gap: var(--s-1);
+}
+
+.flight[data-layout="vertical"] .stage-panel__text {
+  font-size: 0.78125rem;
+  line-height: 1.42;
+}
+
+.flight[data-layout="vertical"] .stage-panel__built {
+  display: none;
+}
+
+.flight[data-layout="vertical"] .stage-panel__foot-ghost + .stage-panel__foot-ghost {
+  display: none;
+}
+
+.flight[data-layout="vertical"] .stage-panel__numbers {
+  gap: var(--s-1) var(--s-4);
+  padding-top: var(--s-1);
+}
+
+.flight[data-layout="vertical"] .stage-panel__number {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  max-width: none;
+}
+
+.flight[data-layout="vertical"] .stage-panel__number .mono-metric {
+  font-size: 1.125rem;
+}
+
+.flight[data-layout="vertical"] .stage-panel__number .mono-caption {
+  font-size: 0.6875rem;
+  line-height: 1.25;
+}
+
+.flight[data-layout="vertical"] .flight__name,
+.flight[data-layout="vertical"] .flight__legend li:last-child {
+  display: none;
+}
+
+.flight[data-layout="vertical"] .flight__panel[data-active] .stage-panel::before {
+  left: calc(var(--s-4) * -1);
+  right: calc(var(--s-4) * -1);
+  top: calc(var(--s-4) * -1);
+}
+
+@media (min-width: 768px) and (max-width: 1100px) and (orientation: landscape) {
+  .flight {
+    --panel-w: min(23rem, 38vw);
+  }
+
+  .flight__name {
+    font-size: 0.6875rem;
+  }
+}
+
+@media (max-height: 780px) {
+  .flight__panel {
+    padding: var(--s-4);
+  }
+
+  .flight .stage-panel {
+    gap: var(--s-2);
+  }
+
+  .flight .stage-panel__text {
+    font-size: 0.8125rem;
+  }
+
+  .flight .stage-panel h3 {
+    font-size: 1.5rem;
+  }
+}

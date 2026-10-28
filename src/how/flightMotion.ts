@@ -1,37 +1,36 @@
 /**
- * The pinned horizontal journey (How I work, desktop). Loaded on demand, never under reduced motion.
- * ScrollTrigger pins the root for about 300 vh and reports progress; a frame-rate independent lerp turns that into
- * the track position, the card emphasis and the amber packet on the rail. Only transforms and opacity are written.
+ * The scroll engine for the flight (How I work). Loaded on demand with the motion chunk, never under reduced motion.
+ * ScrollTrigger pins the flight for several viewports and reports raw progress; a frame-rate independent lerp turns
+ * that into the damped clock the 3D scene and the rail both follow (`flight` in flight/timeline.ts). Only transforms
+ * are written to the DOM. Scroll is the clock: nothing here advances on its own.
  */
 import { gsap } from 'gsap';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { BREAKPOINTS } from '../config';
+import { activeStation, builtFraction, clamp01, ENTER_P, flight, progressForStation, progressToS, resetFlight, STATIONS } from './flight/timeline';
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+ScrollTrigger.config({ ignoreMobileResize: true });
 
-/** Pin length in viewport heights (the brief: about 300 vh). */
-const PIN_VH = 3;
 /** Lerp rate per second: higher is snappier. */
-const RATE = 9;
-const SETTLE = 0.0004;
-/** Neighbouring cards sit at this scale and opacity (the brief: 0.85 and 0.5). */
-const INACTIVE_SCALE = 0.85;
-const INACTIVE_OPACITY = 0.5;
+const RATE = 7.5;
+const SETTLE = 0.00035;
 const SMOOTHER_WAIT_MS = 10000;
-const GOTO_LOCK_MS = 1600;
+const GOTO_LOCK_MS = 1800;
 
-export interface JourneyElements {
+export interface FlightElements {
   readonly root: HTMLElement;
-  readonly track: HTMLElement;
-  readonly cards: readonly HTMLElement[];
-  readonly tabs: readonly HTMLElement[];
   readonly line: HTMLElement;
   readonly fill: HTMLElement;
   readonly packet: HTMLElement;
+  /** Cumulative "product built" meter: a bar scaled on X and its percentage text. */
+  readonly meterFill: HTMLElement;
+  readonly meterValue: HTMLElement;
+  readonly tabs: readonly HTMLElement[];
 }
 
-export interface JourneyHandle {
+export interface FlightHandle {
   goTo(index: number): void;
   dispose(): void;
 }
@@ -57,55 +56,59 @@ async function waitForSmoother(isCancelled: () => boolean): Promise<void> {
   }
 }
 
-const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+/** Pin length in viewport heights. A phone gets a shorter run: a thumb scrolls farther per swipe. */
+function pinViewports(): number {
+  return matches('(max-width: 767px)') ? 6 : 7.2;
+}
 
-export async function startJourney(
-  els: JourneyElements,
+export async function startFlight(
+  els: FlightElements,
   onActive: (index: number) => void,
   isCancelled: () => boolean,
-): Promise<JourneyHandle | null> {
+): Promise<FlightHandle | null> {
   await waitForSmoother(isCancelled);
   if (isCancelled()) return null;
 
-  const { root, track, cards, tabs, line, fill, packet } = els;
-  const n = cards.length;
-  const last = Math.max(1, n - 1);
-
-  let step = 0;
+  const { root, line, fill, packet, meterFill, meterValue, tabs } = els;
+  const last = STATIONS - 1;
   let lineWidth = 0;
   let current = 0;
   let target = 0;
-  let lastIndex = 0;
+  let lastIndex = -1;
+  let lastPct = -1;
   let lockIndex: number | null = null;
   let lockTimer = 0;
   let ticking = false;
   const lit: boolean[] = tabs.map(() => false);
 
   const measure = () => {
-    step = n > 1 ? (cards[1]?.offsetLeft ?? 0) - (cards[0]?.offsetLeft ?? 0) : 0;
     lineWidth = line.offsetWidth;
   };
 
   const apply = (p: number) => {
-    const f = p * last;
-    track.style.transform = `translate3d(${(-f * step).toFixed(2)}px,0,0)`;
-    for (let i = 0; i < n; i += 1) {
-      const k = Math.min(1, Math.abs(i - f));
-      const card = cards[i];
-      if (!card) continue;
-      card.style.transform = `scale(${(1 - (1 - INACTIVE_SCALE) * k).toFixed(4)})`;
-      card.style.opacity = (1 - (1 - INACTIVE_OPACITY) * k).toFixed(4);
-      const isLit = f >= i - 0.02;
+    flight.target = target;
+    flight.current = p;
+    const s = progressToS(p);
+    flight.s = s;
+    const f = clamp01(s / last);
+    fill.style.transform = `scaleX(${f.toFixed(4)})`;
+    packet.style.transform = `translate3d(${(f * lineWidth).toFixed(2)}px,-50%,0)`;
+    const built = builtFraction(s);
+    meterFill.style.transform = `scaleX(${built.toFixed(4)})`;
+    const pct = Math.round(built * 100);
+    if (pct !== lastPct) {
+      lastPct = pct;
+      meterValue.textContent = `${pct}%`;
+    }
+    for (let i = 0; i < tabs.length; i += 1) {
+      const isLit = s >= i - 0.02;
       if (lit[i] !== isLit) {
         lit[i] = isLit;
         if (isLit) tabs[i]?.setAttribute('data-lit', '');
         else tabs[i]?.removeAttribute('data-lit');
       }
     }
-    fill.style.transform = `scaleX(${clamp01(p).toFixed(4)})`;
-    packet.style.transform = `translate3d(${(clamp01(p) * lineWidth).toFixed(2)}px,-50%,0)`;
-
-    const index = Math.round(f);
+    const index = activeStation(s);
     if (index !== lastIndex) {
       lastIndex = index;
       if (lockIndex === null || lockIndex === index) {
@@ -132,6 +135,13 @@ export async function startJourney(
   };
 
   let trigger: ScrollTrigger | null = null;
+  let pinProgress = 0;
+  let enter = 0;
+  const retarget = () => {
+    // Before the pin the frame is still sliding in: progress runs from -ENTER_P up to 0 so station 1 starts building.
+    target = pinProgress - (1 - enter) * ENTER_P;
+    wake();
+  };
   const onRefresh = () => {
     measure();
     apply(current);
@@ -141,25 +151,33 @@ export async function startJourney(
     trigger = ScrollTrigger.create({
       trigger: root,
       start: 'top top',
-      end: () => `+=${Math.round(window.innerHeight * PIN_VH)}`,
+      end: () => `+=${Math.round(window.innerHeight * pinViewports())}`,
       pin: true,
       anticipatePin: 1,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
-        target = self.progress;
-        wake();
+        pinProgress = self.progress;
+        retarget();
+      },
+    });
+    ScrollTrigger.create({
+      trigger: root,
+      start: 'top bottom',
+      end: 'top top',
+      onUpdate: (self) => {
+        enter = self.progress;
+        retarget();
       },
     });
   }, root);
 
   measure();
   root.setAttribute('data-engine', '');
-  // Hand the geometry to the engine: inline values replace the CSS fallback positions.
-  fill.style.left = '0';
-  packet.style.left = '0';
-  target = trigger ? (trigger as ScrollTrigger).progress : 0;
+  pinProgress = trigger ? (trigger as ScrollTrigger).progress : 0;
+  enter = pinProgress > 0 ? 1 : clamp01((window.innerHeight - root.getBoundingClientRect().top) / window.innerHeight);
+  target = pinProgress - (1 - enter) * ENTER_P;
   current = target;
-  lastIndex = Math.round(current * last);
+  lastIndex = activeStation(progressToS(current));
   apply(current);
   ScrollTrigger.addEventListener('refresh', onRefresh);
   ScrollTrigger.refresh();
@@ -168,7 +186,7 @@ export async function startJourney(
     goTo(index) {
       const st = trigger as ScrollTrigger | null;
       if (!st) return;
-      const y = st.start + (clamp01(index / last) * (st.end - st.start));
+      const y = st.start + progressForStation(Math.min(last, Math.max(0, index))) * (st.end - st.start);
       lockIndex = index;
       window.clearTimeout(lockTimer);
       lockTimer = window.setTimeout(() => {
@@ -184,16 +202,12 @@ export async function startJourney(
       gsap.ticker.remove(tick);
       ctx.revert();
       root.removeAttribute('data-engine');
-      track.style.transform = '';
       fill.style.transform = '';
-      fill.style.left = '';
       packet.style.transform = '';
-      packet.style.left = '';
-      for (const card of cards) {
-        card.style.transform = '';
-        card.style.opacity = '';
-      }
+      meterFill.style.transform = '';
+      meterValue.textContent = '0%';
       for (const tab of tabs) tab.removeAttribute('data-lit');
+      resetFlight();
     },
   };
 }
