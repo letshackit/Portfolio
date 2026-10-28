@@ -116,6 +116,7 @@ export const NodeView = memo(function NodeView({ node, register, handlers }: { n
         fontSize: node.labelSize,
         color: tone.title,
         subColor: tone.sub,
+        plate: node.plate,
       });
       mats.label_mat.map = made;
       mats.label_mat.needsUpdate = true;
@@ -125,7 +126,7 @@ export const NodeView = memo(function NodeView({ node, register, handlers }: { n
       made?.dispose();
       if (mats.label_mat) mats.label_mat.map = null;
     };
-  }, [mats, node.label, node.sub, node.labelBox, node.labelSize, tone]);
+  }, [mats, node.label, node.sub, node.labelBox, node.labelSize, node.plate, tone]);
 
   useLayoutEffect(() => {
     if (group.current && body.current) {

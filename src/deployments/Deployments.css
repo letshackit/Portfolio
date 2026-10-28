@@ -10,10 +10,58 @@
 }
 
 /* ---------------------------------------------------------------- selector rail */
+/* The rail is a full-width band (header edge to pill) so content scrolling up never shows in the gap above the pill. */
 .dpl-rail {
   position: sticky;
-  top: calc(var(--header-h) + 12px);
+  top: var(--header-h);
   z-index: 6;
+  padding: 12px 0 10px;
+}
+
+.dpl-rail__sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.dpl-rail::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  z-index: -1;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  opacity: 0;
+  transition: opacity 250ms var(--e-out);
+}
+
+/* A short fade under the band instead of a hard edge. */
+.dpl-rail::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  height: 18px;
+  z-index: -1;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 92%, transparent), transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 250ms var(--e-out);
+}
+
+.dpl-rail[data-stuck]::before,
+.dpl-rail[data-stuck]::after {
+  opacity: 1;
+}
+
+.dpl-rail__pill {
   display: flex;
   align-items: center;
   gap: var(--s-4);
@@ -31,6 +79,7 @@
 /* Where ScrollTrigger pins the rail (ScrollSmoother pages), sticky cannot engage. */
 .dpl-rail[data-pinned] {
   position: relative;
+  top: 0 !important; /* the sticky offset must not shift the pinned rail a second time */
 }
 
 .dpl-rail__label {
@@ -85,7 +134,7 @@
 }
 
 @media (min-width: 768px) {
-  .dpl-rail {
+  .dpl-rail__pill {
     padding: 5px 6px 5px var(--s-4);
   }
 
@@ -355,6 +404,15 @@
   display: grid;
   justify-items: end;
   gap: 2px;
+}
+
+.dpl-hud--tr {
+  opacity: 0;
+  transition: opacity 500ms var(--e-out);
+}
+
+.dpl-stage[data-state="ready"] .dpl-hud--tr {
+  opacity: 1;
 }
 
 .dpl-hud__progress b {

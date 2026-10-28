@@ -15,6 +15,7 @@ interface BayRailProps {
 export function BayRail({ active, onPick, wrapRef }: BayRailProps) {
   const { reducedMotion, isDesktop, pointerFine } = usePrefs();
   const railRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const rail = railRef.current;
@@ -32,23 +33,44 @@ export function BayRail({ active, onPick, wrapRef }: BayRailProps) {
     };
   }, [reducedMotion, isDesktop, pointerFine, wrapRef]);
 
+  // The band behind the pill only shows once the rail is stuck under the header; at rest it would be a dark bar on the page.
+  useEffect(() => {
+    const rail = railRef.current;
+    const sentinel = sentinelRef.current;
+    if (!rail || !sentinel || typeof IntersectionObserver === 'undefined') return;
+    const header = document.querySelector('header')?.getBoundingClientRect().height ?? 56;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry) rail.toggleAttribute('data-stuck', !entry.isIntersecting && entry.boundingClientRect.top < header);
+      },
+      { rootMargin: `-${Math.round(header)}px 0px 0px 0px` },
+    );
+    io.observe(sentinel);
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <div ref={railRef} role="group" className="dpl-rail" aria-label={bayCopy.railLabel} style={{ '--i': active, '--count': bays.length } as CSSProperties}>
-      <p className="mono-label dpl-rail__label">{bayCopy.railLabel}</p>
-      <ol className="dpl-rail__list">
-        {bays.map((b, i) => {
-          const live = badgeVariantFor(b.status) === 'live';
-          return (
-            <li key={b.id}>
-              <button type="button" className="dpl-rail__item" aria-current={active === i ? 'true' : undefined} onClick={() => onPick(i)}>
-                <span className="dpl-rail__num mono-label">{String(i + 1).padStart(2, '0')}</span>
-                <span className="dpl-rail__name">{b.name}</span>
-                <LiveDot tone={live ? 'amber' : 'cyan'} hollow={b.status === 'Scoping'} live={live && active === i} />
-              </button>
-            </li>
-          );
-        })}
-      </ol>
+    <>
+    <span ref={sentinelRef} className="dpl-rail__sentinel" aria-hidden="true" />
+    <div ref={railRef} className="dpl-rail" style={{ '--i': active, '--count': bays.length } as CSSProperties}>
+      <div role="group" className="dpl-rail__pill" aria-label={bayCopy.railLabel}>
+        <p className="mono-label dpl-rail__label">{bayCopy.railLabel}</p>
+        <ol className="dpl-rail__list">
+          {bays.map((b, i) => {
+            const live = badgeVariantFor(b.status) === 'live';
+            return (
+              <li key={b.id}>
+                <button type="button" className="dpl-rail__item" aria-current={active === i ? 'true' : undefined} onClick={() => onPick(i)}>
+                  <span className="dpl-rail__num mono-label">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="dpl-rail__name">{b.name}</span>
+                  <LiveDot tone={live ? 'amber' : 'cyan'} hollow={b.status === 'Scoping'} live={live && active === i} />
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </div>
+    </>
   );
 }

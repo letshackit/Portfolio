@@ -21,6 +21,8 @@ export interface FaceSpec {
   readonly color: string;
   readonly subColor: string;
   readonly align?: 'center' | 'left';
+  /** A dark backing plate behind the text, for labels that sit over a mesh and its wires. */
+  readonly plate?: boolean;
 }
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
@@ -46,7 +48,7 @@ export function makeFaceTexture(spec: FaceSpec): CanvasTexture {
   const ctx = canvas.getContext('2d');
   if (ctx) {
     const px = spec.fontSize * PX_PER_UNIT;
-    const subPx = px * 0.66;
+    const subPx = px * 0.86;
     const left = spec.align === 'left';
     ctx.textAlign = left ? 'left' : 'center';
     ctx.textBaseline = 'middle';
@@ -58,11 +60,33 @@ export function makeFaceTexture(spec: FaceSpec): CanvasTexture {
     const subGap = spec.sub ? subPx * 1.25 : 0;
     const block = (lines.length - 1) * lead + subGap;
     const top = canvas.height / 2 - block / 2;
+    if (spec.plate) {
+      const titleW = Math.max(...lines.map((l) => ctx.measureText(l).width), 0);
+      // The tag line is set smaller and wider-spaced: approximate its run from the glyph advance (mono: ~0.6em + spacing).
+      const subW = spec.sub ? spec.sub.length * subPx * 0.68 : 0;
+      const textW = Math.max(titleW, subW);
+      const padX = px * 0.55;
+      const padY = px * 0.42;
+      const w = Math.min(canvas.width - 4, textW + padX * 2);
+      const h = Math.min(canvas.height - 4, block + px * 0.7 + padY * 2);
+      const r = Math.min(h / 2, px * 0.5);
+      const x0 = canvas.width / 2 - w / 2;
+      const y0 = canvas.height / 2 - h / 2;
+      ctx.beginPath();
+      ctx.roundRect(x0, y0, w, h, r);
+      ctx.fillStyle = 'rgba(7, 8, 10, 0.86)';
+      ctx.fill();
+      ctx.lineWidth = Math.max(2, px * 0.05);
+      ctx.strokeStyle = spec.subColor;
+      ctx.globalAlpha = 0.55;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
     ctx.fillStyle = spec.color;
     lines.forEach((l, i) => ctx.fillText(l, x, top + i * lead));
     if (spec.sub) {
-      ctx.font = `500 ${subPx}px "Geist Mono", ui-monospace, Menlo, monospace`;
-      (ctx as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = `${subPx * 0.12}px`;
+      ctx.font = `600 ${subPx}px "Geist Mono", ui-monospace, Menlo, monospace`;
+      (ctx as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = `${subPx * 0.08}px`;
       ctx.fillStyle = spec.subColor;
       ctx.fillText(spec.sub, x, top + (lines.length - 1) * lead + subGap);
     }

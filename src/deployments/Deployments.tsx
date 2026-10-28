@@ -54,7 +54,7 @@ export function Deployments() {
       if (!target) return;
       const header = document.querySelector('header')?.getBoundingClientRect().height ?? 56;
       const rail = wrap?.querySelector<HTMLElement>('.dpl-rail')?.offsetHeight ?? 0;
-      window.scrollTo({ top: documentTop(target) - header - rail - 24, behavior: reducedMotion ? 'auto' : 'smooth' });
+      window.scrollTo({ top: documentTop(target) - header - rail - 16, behavior: reducedMotion ? 'auto' : 'smooth' });
       setActive(index);
       window.setTimeout(() => target.focus({ preventScroll: true }), reducedMotion ? 0 : 700);
     },

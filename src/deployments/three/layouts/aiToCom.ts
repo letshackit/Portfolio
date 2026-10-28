@@ -78,6 +78,7 @@ export function aiToComLayout(arch: BayArchitecture, { portrait }: LayoutOptions
       labelSize: isOrch ? 0.2 : isChan ? 0.19 : n.kind === 'pipeline' ? 0.18 : 0.16,
       labelAt: isOrch ? [0, 0, 0.72] : undefined,
       labelBox: isOrch ? [2.4, 0.9] : undefined,
+      plate: isOrch || undefined,
       group: n.group,
       order: order[n.id] ?? 0.5,
     });

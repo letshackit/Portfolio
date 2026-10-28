@@ -45,8 +45,9 @@ export function cloudCommerceLayout(arch: BayArchitecture, { portrait }: LayoutO
     size: [1.9, 2.0, 1.9],
     tone: 'core',
     labelSize: 0.2,
-    labelAt: [0, portrait ? -1.45 : -1.45, 0.2],
-    labelBox: [2.6, 0.8],
+    labelAt: [0, -1.5, 0.2],
+    labelBox: [3.2, 0.9],
+    plate: true,
     group: 'mesh',
     order: 0,
   });

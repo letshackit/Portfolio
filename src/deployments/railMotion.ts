@@ -10,7 +10,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
 const SMOOTHER_WAIT_MS = 10000;
-const GAP_PX = 12;
 
 function headerHeight(): number {
   return document.querySelector('header')?.getBoundingClientRect().height ?? 56;
@@ -24,11 +23,11 @@ export async function pinRail(rail: HTMLElement, wrap: HTMLElement, isCancelled:
   }
   if (isCancelled() || !ScrollSmoother.get()) return null;
   rail.setAttribute('data-pinned', '');
-  const top = () => headerHeight() + GAP_PX;
+  const top = () => headerHeight();
   const trigger = ScrollTrigger.create({
     trigger: wrap,
     start: () => `top top+=${top()}`,
-    end: () => `bottom top+=${top() + rail.offsetHeight + 24}`,
+    end: () => `bottom top+=${top() + rail.offsetHeight + 12}`,
     pin: rail,
     pinSpacing: false,
     invalidateOnRefresh: true,

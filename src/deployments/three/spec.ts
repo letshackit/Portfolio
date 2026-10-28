@@ -27,6 +27,8 @@ export interface SceneNode {
   /** Where the label plane sits, relative to the node centre, and how big it is. */
   readonly labelAt: Vec3;
   readonly labelBox: readonly [number, number];
+  /** Draw the label on a dark backing plate (centre nodes whose label sits over the mesh and its wires). */
+  readonly plate?: boolean;
   readonly group: string;
   /** 0..1 position in assembly order. */
   readonly order: number;
@@ -113,7 +115,7 @@ export function scatterFor(index: number, pos: Vec3): { scatter: Vec3; spin: Vec
 }
 
 type NodeInput = Omit<SceneNode, 'scatter' | 'spin' | 'order' | 'pick' | 'ghost' | 'labelAt' | 'labelBox' | 'tone' | 'sub'> &
-  Partial<Pick<SceneNode, 'ghost' | 'labelAt' | 'labelBox' | 'tone' | 'sub' | 'pick'>> & { readonly order?: number };
+  Partial<Pick<SceneNode, 'ghost' | 'labelAt' | 'labelBox' | 'tone' | 'sub' | 'pick' | 'plate'>> & { readonly order?: number };
 
 /** Fills in what every node needs but few layouts care about (scatter, label placement, pick). */
 export function makeNode(input: NodeInput, index: number): SceneNode {
