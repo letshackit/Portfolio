@@ -194,7 +194,7 @@ function Orbit({ kit, still }: MotifProps) {
 function Page({ kit }: MotifProps) {
   const widths = [0.78, 0.9, 0.62, 0.9, 0.84, 0.5];
   // A lit sheet under the lines: the paper is the one object with nothing but dark wall behind it, and read as a grey slab.
-  const sheet = useMemo(() => new MeshBasicMaterial({ color: hdr('#22d3ee', 0.55), transparent: true, opacity: 0.5, toneMapped: false, depthWrite: false }), []);
+  const sheet = useMemo(() => new MeshBasicMaterial({ color: hdr('#22d3ee', 0.7), transparent: true, opacity: 0.7, toneMapped: false, depthWrite: false }), []);
   useLayoutEffect(() => () => sheet.dispose(), [sheet]);
   return (
     <group position={[0, 0.1, 0]}>
