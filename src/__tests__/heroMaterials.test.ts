@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { LOOK } from '../hero/v2/stage/lookPreset';
-import { AVATAR_ENV, addHairFringe, roleOf, tuneMaterials } from '../hero/v2/stage/materials';
+import { AVATAR_ENV, EYE_UV, addHairFringe, roleOf, tuneMaterials } from '../hero/v2/stage/materials';
 
 function tex(): THREE.Texture {
   return new THREE.Texture();
@@ -80,5 +80,46 @@ describe('avatar material audit', () => {
     expect(live(hair).depthWrite).toBe(true);
     expect(live(hair).alphaToCoverage).toBe(true);
     expect(live(hair).roughness).toBe(0.65);
+  });
+
+  it('shades skin as a dielectric with a warm sheen, softer specular and a coat that the shader masks to the eyes', () => {
+    const m = live(skin) as THREE.MeshPhysicalMaterial;
+    expect(m.ior).toBe(LOOK.materials.skin.ior);
+    expect(m.sheen).toBe(LOOK.materials.skin.sheen);
+    expect(m.clearcoat).toBe(LOOK.materials.skin.clearcoat);
+    expect(m.clearcoatRoughness).toBeLessThan(0.1);
+    // Mean exported roughness is about 0.62: the multiplier lands the lit skin near 0.5.
+    expect(m.roughness * 0.62).toBeGreaterThan(0.45);
+    expect(m.roughness * 0.62).toBeLessThan(0.58);
+  });
+
+  it('injects the subsurface wrap, the eye mask and the grazing scatter into the skin shader only', () => {
+    const m = live(skin);
+    const shader = {
+      uniforms: {} as Record<string, { value: unknown }>,
+      vertexShader: '',
+      fragmentShader: [
+        '#include <common>',
+        '#include <lights_physical_pars_fragment>',
+        'mapN.xy *= normalScale;',
+        '#include <lights_physical_fragment>',
+        '#include <opaque_fragment>',
+      ].join('\n'),
+    };
+    m.onBeforeCompile(shader as unknown as THREE.WebGLProgramParametersWithUniforms, null as never);
+    expect(shader.fragmentShader).toContain('wrapNL');
+    expect(shader.fragmentShader).toContain('float eyeMask( vec2 uv )');
+    expect(shader.fragmentShader).toContain('grazing');
+    expect(shader.fragmentShader).not.toContain('EYEDEBUG');
+    expect(shader.uniforms.detailNormalMap).toBeDefined();
+    expect(live(suit).onBeforeCompile.toString()).not.toContain('wrapNL');
+  });
+
+  it('places both eye ellipses inside the atlas', () => {
+    expect(EYE_UV).toHaveLength(2);
+    for (const e of EYE_UV) {
+      expect(e.c[0] - e.r[0]).toBeGreaterThan(0);
+      expect(e.c[1] + e.r[1]).toBeLessThan(1);
+    }
   });
 });

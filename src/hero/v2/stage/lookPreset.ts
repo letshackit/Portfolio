@@ -38,7 +38,27 @@ export interface LookPreset {
   };
   /** Material tuning on the avatar, by role. Roughness is a multiplier on the exported roughness map where one is kept. */
   readonly materials: {
-    readonly skin: { readonly roughness: number; readonly normalScale: number; readonly clearcoat: number; readonly clearcoatRoughness: number; readonly detail: number };
+    readonly skin: {
+      /** Multiplier on the exported roughness map (mean about 0.62), so the lit skin averages near 0.5. */
+      readonly roughness: number;
+      readonly normalScale: number;
+      /** Strength of the wet cornea coat; it only applies where the eye mask is set. */
+      readonly clearcoat: number;
+      readonly clearcoatRoughness: number;
+      readonly detail: number;
+      /** Dielectric index of refraction: skin's specular is a little softer than the 1.5 default. */
+      readonly ior: number;
+      /** Fine velvet at grazing angles (peach fuzz, oils), tinted warm. */
+      readonly sheen: number;
+      readonly sheenRoughness: number;
+      readonly sheenColor: string;
+      /** Subsurface approximation: how far diffuse light wraps past the terminator, and the red-biased colour that bleeds there. */
+      readonly sssWrap: number;
+      readonly sssColor: string;
+      readonly sssStrength: number;
+      /** Warm, view-dependent scatter at the silhouette (ears, nose, cheek edge), as a share of the albedo. */
+      readonly rimBleed: number;
+    };
     readonly suit: { readonly roughness: number; readonly sheen: number; readonly sheenRoughness: number; readonly sheenColor: string; readonly envBoost: number };
     readonly shoes: { readonly roughness: number };
   };
@@ -83,7 +103,21 @@ export const LOOK: LookPreset = {
     introFloor: 0.4,
   },
   materials: {
-    skin: { roughness: 1, normalScale: 0.8, clearcoat: 0, clearcoatRoughness: 0.4, detail: 0.32 },
+    skin: {
+      roughness: 0.82,
+      normalScale: 1,
+      clearcoat: 1,
+      clearcoatRoughness: 0.04,
+      detail: 0.32,
+      ior: 1.4,
+      sheen: 0.3,
+      sheenRoughness: 0.6,
+      sheenColor: '#ffb89c',
+      sssWrap: 0.45,
+      sssColor: '#e8553a',
+      sssStrength: 0.85,
+      rimBleed: 0.16,
+    },
     suit: { roughness: 0.6, sheen: 0.45, sheenRoughness: 0.55, sheenColor: '#7f9ae0', envBoost: 1 },
     shoes: { roughness: 0.6 },
   },
