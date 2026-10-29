@@ -126,8 +126,8 @@ function World({ specs, store, tier, reduced, onReady, onDpr }: { specs: readonl
         <Lightformer form="rect" intensity={3} color="#f59e0b" position={[4, -5, 3]} scale={[8, 2, 1]} rotation-x={-Math.PI / 2} />
         <Lightformer form="rect" intensity={1.6} color="#22d3ee" position={[0, -6, 2]} scale={[12, 2, 1]} rotation-x={-Math.PI / 2} />
       </Environment>
-      <directionalLight position={[-300, 400, 900]} intensity={1.1} color="#bff6ff" />
-      <directionalLight position={[500, -200, 700]} intensity={0.9} color="#f59e0b" />
+      <directionalLight position={[-300, 400, 900]} intensity={0.35} color="#bff6ff" />
+      <directionalLight position={[500, -200, 700]} intensity={0.2} color="#f59e0b" />
       <Motes q={q} kit={kit} still={reduced} />
       {specs.map((spec, i) => (
         <Badge key={spec.id} spec={spec} index={i} store={store} kit={kit} still={reduced} />

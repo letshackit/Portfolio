@@ -125,3 +125,10 @@ export function nearestEdges(points: readonly [number, number, number][], k: num
   });
   return edges;
 }
+
+/** A w x h plate with its top-right and bottom-left corners cut at `c`: the silhouette of every holographic slab. */
+export function chamferPoints(w: number, h: number, c: number): Vector2[] {
+  const x = w / 2;
+  const y = h / 2;
+  return [new Vector2(-x, y), new Vector2(x - c, y), new Vector2(x, y - c), new Vector2(x, -y), new Vector2(-x + c, -y), new Vector2(-x, -y + c)];
+}

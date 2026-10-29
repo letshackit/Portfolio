@@ -71,6 +71,7 @@ function Card({ credential, spec, store, className, tag, pinned, onPin, children
           <span className="cred__poster">
             <span className="cred__poster-top">{spec.top}</span>
             <span className="cred__poster-main">{spec.word}</span>
+            {spec.sub ? <span className="cred__poster-sub">{spec.sub}</span> : null}
           </span>
         </div>
         <button
@@ -96,7 +97,7 @@ function Card({ credential, spec, store, className, tag, pinned, onPin, children
 
 /**
  * Education and certifications as a gallery. The words are DOM (readable with no script and no WebGL); the objects (a
- * monument for each degree, a medallion for each certification, a codex for the paper) are lit models in one lazy canvas
+ * holographic glass slab per credential, the institution's wordmark lit on its face) are drawn in one lazy canvas
  * behind them, each placed in its card's slot. The 390 px layout is its own grid with the same objects in it. Reduced
  * motion draws the same objects, still.
  */
