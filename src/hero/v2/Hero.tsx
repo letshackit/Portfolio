@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { usePrefs } from '../../app/providers/prefsContext';
 import { ANCHORS, TIMING } from '../../config';
 import { hasBooted } from '../../lib/session';
 import { useOffscreenPause } from '../../lib/useOffscreenPause';
 import { afterFirstPaint } from '../../lib/visibility';
 import { supportsWebGL } from '../../lib/webgl';
-import { Badge, Caption, Cue, Frame, Headline, RotateHint, StatusBar } from './Hud';
+import { Badge, Caption, Cue, Frame, Headline, TiltHint, StatusBar } from './Hud';
 import { rampIntro } from './intro';
 import { store } from './store';
 import { AgentConsole, DeployPane } from './Terminals';
@@ -40,7 +40,7 @@ function pinnedQuality(search: string): Tier | null {
 
 /**
  * The hero: one 100vh stage and one scroll beat. Everything a visitor can read is DOM that renders at once; the 3D
- * stage (avatar, service city, drones, satellites) is a lazy chunk that fades in over a static poster in the same
+ * stage (portrait, service city, drones, satellites) is a lazy chunk that fades in over a static poster in the same
  * box, so nothing moves when it arrives. Without WebGL, with save-data, or if the chunk fails, the poster and HUD stay.
  *
  * `?quality=high|mid|low` is a QA switch: it pins the tier, never adapts, and accepts a software GL renderer, so
@@ -106,27 +106,14 @@ export function Hero() {
     };
   }, [saveData, quality]);
 
-  // The first drag or arrow-key turn fades the "drag to rotate" hint for good.
-  const [turned, setTurned] = useState<boolean>(() => store.interacted);
-  useEffect(() => {
-    store.onInteract = () => setTurned(true);
-    return () => {
-      store.onInteract = null;
-    };
-  }, []);
+  // The first pointer movement fades the "move to tilt" hint for good.
+  const [tilted, setTilted] = useState(false);
 
-  // Left / Right turn the avatar while the stage region itself has focus (links inside it keep their own keys).
-  const onStageKey = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.target !== e.currentTarget || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
-    e.preventDefault();
-    store.keyTurn += e.key === 'ArrowRight' ? 1 : -1;
-    store.wake?.();
-  }, []);
-
-  // Cursor drives the camera parallax and the head tracking.
+  // Cursor drives the camera parallax and the portrait's tilt.
   useEffect(() => {
     if (reducedMotion) return;
     const move = (e: PointerEvent) => {
+      setTilted(true);
       store.px = (e.clientX / window.innerWidth) * 2 - 1;
       store.py = -((e.clientY / window.innerHeight) * 2 - 1);
     };
@@ -172,13 +159,7 @@ export function Hero() {
       data-live={live ? '' : undefined}
       data-entered={entered ? '' : undefined}
     >
-      <div
-        className="hv2__stage"
-        ref={stageRef}
-        {...(mount && ready
-          ? { tabIndex: 0, role: 'group', 'aria-label': 'Interactive 3D avatar. Use the left and right arrow keys to rotate.', onKeyDown: onStageKey }
-          : {})}
-      >
+      <div className="hv2__stage" ref={stageRef}>
         <div className="hv2__poster" aria-hidden="true" />
         <div className="hv2__canvas" aria-hidden="true">
           {mount && Stage ? (
@@ -204,7 +185,7 @@ export function Hero() {
           <DeployPane {...terminal} />
           <Caption />
           <Cue />
-          <RotateHint show={live || (mount && ready)} done={turned} />
+          <TiltHint show={live || (mount && ready)} done={tilted} />
           <StatusBar live={mount && ready} scene={live} settled={settled} paused={paused} />
         </div>
       </div>

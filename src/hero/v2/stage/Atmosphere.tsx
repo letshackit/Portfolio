@@ -52,7 +52,7 @@ export function Lights({ shadowRes }: { shadowRes: number }) {
     if (rim.current) rim.current.intensity = L.rim.intensity * k;
     if (rim2.current) rim2.current.intensity = L.rim2.intensity * k;
     if (pool.current) pool.current.intensity = L.pool.intensity * k;
-    // The probe lights the avatar through his own materials; this is what the floor and the city get.
+    // This is what the floor and the city get from the studio probe.
     scene.environmentIntensity = LOOK.environment.intensity * k;
   });
 

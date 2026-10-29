@@ -9,6 +9,8 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-padding-top: var(--header-h);
+  /* Native focus scrolling: keep a focused control clear of the bottom edge (ScrollSmoother is handled in lib/motion.ts). */
+  scroll-padding-bottom: 24px;
   background: var(--bg);
 }
 

@@ -132,9 +132,47 @@ function watchLayout(isLive: () => boolean): () => void {
   };
 }
 
+/** Margin kept between a focused control and the viewport's bottom edge, px. */
+const FOCUS_BOTTOM_GAP = 24;
+/** ScrollSmoother's own focus scroll takes about SMOOTH seconds to land; check after it has. */
+const FOCUS_SETTLE_MS = Math.round(SMOOTH * 1000) + 350;
+
+/**
+ * ScrollSmoother's focus scroll puts the control's top edge at the viewport's centre, which leaves tall controls (a
+ * credential card) hanging off the bottom and short ones that start near an edge half under the fixed header. Once its
+ * scroll has settled, nudge so the whole control is between the header and the bottom edge (it is taller than that
+ * gap, its top wins).
+ */
+function keepFocusInView(smoother: ScrollSmoother, allow: () => boolean): () => void {
+  let timer = 0;
+  const check = (el: Element) => {
+    const rect = el.getBoundingClientRect();
+    const top = (document.querySelector('header')?.getBoundingClientRect().bottom ?? 0) + 8;
+    const bottom = window.innerHeight - FOCUS_BOTTOM_GAP;
+    let delta = 0;
+    if (rect.top < top) delta = rect.top - top;
+    else if (rect.bottom > bottom) delta = Math.min(rect.bottom - bottom, rect.top - top);
+    if (Math.abs(delta) > 1) smoother.scrollTo(smoother.scrollTop() + delta, true);
+  };
+  const onFocusIn = (e: FocusEvent) => {
+    const el = e.target;
+    window.clearTimeout(timer);
+    if (!(el instanceof HTMLElement) || !allow()) return;
+    timer = window.setTimeout(() => {
+      if (document.activeElement === el) check(el);
+    }, FOCUS_SETTLE_MS);
+  };
+  document.addEventListener('focusin', onFocusIn);
+  return () => {
+    window.clearTimeout(timer);
+    document.removeEventListener('focusin', onFocusIn);
+  };
+}
+
 export function startMotion(options: MotionOptions): MotionHandle {
   let smoother: ScrollSmoother | null = null;
   let unbindHero: () => void = () => undefined;
+  let unbindFocus: () => void = () => undefined;
   const ctx = gsap.context(() => {
     if (smootherEligible()) {
       smoother = ScrollSmoother.create({
@@ -147,6 +185,7 @@ export function startMotion(options: MotionOptions): MotionHandle {
         onFocusIn: () => options.allowFocusScroll(),
       });
       attachSmoother(smoother, () => ScrollTrigger.refresh());
+      unbindFocus = keepFocusInView(smoother, options.allowFocusScroll);
     }
     bindReveals(slowSeconds());
     // After the smoother: the hero pins its stage through it.
@@ -172,6 +211,7 @@ export function startMotion(options: MotionOptions): MotionHandle {
       ScrollTrigger.removeEventListener('refresh', onRefresh);
       window.removeEventListener('load', onFontsReady);
       unbindHero();
+      unbindFocus();
       ctx.revert();
       if (smoother) {
         smoother.kill();

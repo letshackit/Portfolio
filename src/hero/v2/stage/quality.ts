@@ -13,7 +13,7 @@ export interface Quality {
   /** Reflective floor render-target size; 0 = a plain glossy floor, no mirror pass. */
   readonly reflect: number;
   readonly shadowRes: number;
-  /** Size of the key light's shadow map (self-shadowing on the avatar). */
+  /** Size of the key light's shadow map (shadow on the floor). */
   readonly keyRes: number;
   readonly drones: number;
   /** Packets riding each satellite beam (0..4). */
