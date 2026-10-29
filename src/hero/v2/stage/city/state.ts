@@ -32,7 +32,7 @@ export const COLORS = {
 
 /**
  * How bright the city is allowed to get. The hero is about the person in front of it, so the skyline sits well below
- * the portrait's rim light: edges and cores are scaled by this, amber docking flashes by the second value.
+ * the avatar's rim light: edges and cores are scaled by this, amber docking flashes by the second value.
  */
 export const GLOW = { city: 0.55, amber: 0.8 };
 

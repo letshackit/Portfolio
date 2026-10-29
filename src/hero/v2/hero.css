@@ -69,16 +69,21 @@
 
 .hv2__canvas canvas {
   display: block;
-  /* Vertical drags still scroll the page on touch; horizontal ones tilt the portrait. */
+  /* Horizontal drags turn the avatar; vertical ones still scroll the page on touch. */
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* "Move to tilt": a small mono line under the portrait; it fades in once he is on the stage, and out on the first move. */
+.hv2__stage:focus-visible {
+  outline: 2px solid var(--cyan-500);
+  outline-offset: -4px;
+}
+
+/* "Drag to rotate": a small mono line under the operator's feet; it fades in once he is standing there. */
 .hv2__hint {
   position: absolute;
-  left: 54%;
+  left: 60%;
   bottom: calc(var(--inset) + var(--bar-h) + 16px);
   transform: translateX(-50%);
   font-size: 0.6875rem;
@@ -99,9 +104,6 @@
   font-weight: var(--w-regular);
   color: var(--amber-400);
   font-size: 0.875rem;
-}
-@media (pointer: coarse) {
-  .hv2__hint { display: none; }
 }
 @media (max-width: 900px) {
   /* Left of his legs and above the console, where the floor is empty. */
@@ -250,8 +252,8 @@
   text-transform: uppercase;
   color: var(--t-1);
   filter: drop-shadow(0 0 28px rgba(34, 211, 238, 0.22));
-  /* The scroll beat fades .hv2__copy out with visibility:hidden; the page's only h1 must stay in the accessibility tree
-     once the hero has scrolled away (it is invisible then, because its parent is at opacity 0). */
+  /* The scroll beat fades .hv2__copy out with visibility:hidden; the page's only h1 must stay in the
+     accessibility tree once the hero has scrolled away (it is invisible then, via its parent at opacity 0). */
   visibility: visible;
 }
 
@@ -446,7 +448,7 @@
   right: calc(var(--inset) + 20px);
   /* Below the badge (its bottom edge is about 232px down on any screen), else a quarter of the way down. */
   top: max(26%, 232px);
-  width: clamp(284px, 22vw, 330px);
+  width: clamp(270px, 21vw, 312px);
   font-size: 0.75rem;
 }
 
@@ -712,7 +714,7 @@
   .hv2__pane .hv2__term-body { height: calc(7 * 1.55em + 24px); }
 }
 
-/* ---------- Narrow screens: headline above, portrait in the lower 60 %, compact console, no badge or pane ---------- */
+/* ---------- Narrow screens: headline above, avatar in the lower 60 %, compact console, no badge or pane ---------- */
 @media (max-width: 1100px) {
   .hv2__pane { display: none; }
   .hv2__copy { width: min(46vw, 520px); }

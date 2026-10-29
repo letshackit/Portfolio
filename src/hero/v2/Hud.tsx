@@ -114,12 +114,12 @@ export function Cue() {
   );
 }
 
-/** Mono hint under the portrait; fades for good after the first pointer move. */
-export function TiltHint({ show, done }: { show: boolean; done: boolean }) {
+/** Mono hint under the avatar's feet; fades for good after the first drag or arrow-key turn. */
+export function RotateHint({ show, done }: { show: boolean; done: boolean }) {
   return (
     <div className="hv2__hint" aria-hidden="true">
       <span className="hv2__hint-text" data-show={show && !done ? '' : undefined}>
-        MOVE TO TILT <b>◇</b>
+        DRAG TO ROTATE <b>⟲</b>
       </span>
     </div>
   );

@@ -7,7 +7,7 @@ export const LINE_INTERVAL_MS = 100;
 export const LINE_RESOLVE_MS = 80;
 /** Fade-out length once the boot ends, by timeout or by skip. */
 export const FADE_MS = 200;
-/** How long before the fade the hero's 3D canvas may start mounting, so the portrait is there when the boot lifts. */
+/** How long before the fade the hero's 3D canvas may start mounting, so the avatar is there when the boot lifts. */
 export const STAGE_LEAD_MS = 300;
 
 export const TAG_TEXT: Record<BootTag | 'pending', string> = {

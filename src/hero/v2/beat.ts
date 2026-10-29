@@ -1,6 +1,6 @@
 /**
  * The hero's scroll beat (motion chunk). One ScrollTrigger over the section's scroll length drives the 3D camera and the
- * DOM together through `store.progress`: the camera orbits from 3/4 to frontal and pushes past the portrait into the
+ * DOM together through `store.progress`: the camera orbits from 3/4 to frontal and pushes past the avatar into the
  * city, the headline fades up and out, the HUD panes slide off their edges, the city lines up, a caption strip comes
  * in, the console shrinks to a chip, and the stage resolves to the page background. Not bound under reduced motion
  * (useMotion never loads this chunk then).

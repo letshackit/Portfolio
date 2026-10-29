@@ -39,7 +39,7 @@ function enterHero(): void {
   document.getElementById(ANCHORS.top)?.setAttribute('data-entered', '');
 }
 
-/** A little before the boot lifts: the hero may start mounting its 3D stage, so the portrait is there when it fades. */
+/** A little before the boot lifts: the hero may start mounting its 3D stage, so the avatar is there when it fades. */
 function warmHero(): void {
   document.getElementById(ANCHORS.top)?.setAttribute('data-warm', '');
 }
