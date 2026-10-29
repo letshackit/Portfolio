@@ -20,7 +20,7 @@ describe('hero quality tiers', () => {
 
   it('never turns anti-aliasing off, and keeps a sharp pixel ratio on the top two tiers', () => {
     for (const tier of TIERS) expect(tier.msaa).toBeGreaterThanOrEqual(2);
-    expect(TIERS[0].msaa).toBe(4);
+    expect(TIERS[0].msaa).toBe(8);
     expect(TIERS[0].dpr).toBe(2);
     expect(TIERS[1].dpr).toBeGreaterThanOrEqual(1.5);
   });

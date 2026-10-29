@@ -55,7 +55,7 @@ const MOBILE_CITY_AT = onStage(0.55, 1.5);
 
 const mobile: Layout = {
   mobile: true,
-  dist: [8.1, 4.4],
+  dist: [9.0, 4.4],
   azimuth: [0.5, 0.03],
   elevation: [0.06, 0.14],
   fov: [30, 44],

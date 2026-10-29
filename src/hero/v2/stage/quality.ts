@@ -24,7 +24,7 @@ export interface Quality {
 }
 
 export const TIERS: readonly Quality[] = [
-  { dpr: 2, msaa: 4, reflect: 768, shadowRes: 512, keyRes: 2048, drones: 6, packets: 4, sparkles: 1, noise: true },
+  { dpr: 2, msaa: 8, reflect: 768, shadowRes: 512, keyRes: 2048, drones: 6, packets: 4, sparkles: 1, noise: true },
   { dpr: 1.5, msaa: 4, reflect: 384, shadowRes: 256, keyRes: 1024, drones: 4, packets: 2, sparkles: 0.5, noise: true },
   { dpr: 1, msaa: 2, reflect: 0, shadowRes: 256, keyRes: 512, drones: 2, packets: 0, sparkles: 0, noise: false },
 ];

@@ -7,6 +7,9 @@ import { useLayout, v3 } from './layout';
 const lerp = THREE.MathUtils.lerp;
 const damp = THREE.MathUtils.damp;
 
+/** The first part of the scroll beat holds the opening frame: a nudge, a trackpad flick or a restored scroll never crops him. */
+const HOLD = 0.24;
+
 /**
  * One camera for the whole hero: 3/4 on the operator, then, as the page scrolls, it orbits to frontal and pushes past
  * him into the city. The off-centre framing slides the camera and its target together along the screen axes rather
@@ -29,15 +32,19 @@ export function CameraRig() {
     // Cursor parallax. Reduced motion keeps the camera still.
     st.px = damp(st.px, store.reduced ? 0 : store.px, 2.5, dt);
     st.py = damp(st.py, store.reduced ? 0 : store.py, 2.5, dt);
-    const p = smoothstep(0, 1, st.p);
+    const run = Math.max(0, (st.p - HOLD) / (1 - HOLD));
+    const p = smoothstep(0, 1, run);
     // Push in on the way: the dolly leads the orbit slightly, so he is passed rather than orbited.
-    const q = smoothstep(0.1, 1, st.p);
+    const q = smoothstep(0.1, 1, run);
 
     const az = lerp(L.azimuth[0], L.azimuth[1], p) + st.px * 0.075;
     const el = lerp(L.elevation[0], L.elevation[1], p) + st.py * 0.03;
     const intro = 1 - smoothstep(0, 1, store.intro);
     const dist = lerp(L.dist[0], L.dist[1], q) + intro * 1.6;
     target.lerpVectors(t0, t1, q);
+    // The look height lags the sideways travel: the camera slides along to the city with his head still in frame, and
+    // only then drops to the city's level, by which time he is leaving the frame rather than being cropped by it.
+    target.y = lerp(t0.y, t1.y, q * q * q);
 
     cam.fov = lerp(L.fov[0], L.fov[1], p);
     cam.position.set(

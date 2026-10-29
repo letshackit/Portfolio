@@ -105,19 +105,76 @@ export function makeDetailNormal(size = 128): THREE.DataTexture {
 /** Skin pores: a second, tiled normal layer on top of the (soft, 1024) atlas normal. Strength is deliberately small. */
 const DETAIL_TILE = 26;
 
-function addSkinDetail(m: THREE.MeshPhysicalMaterial, detail: THREE.Texture): void {
+/**
+ * The export bakes the whole face, eyes included, into the body atlas as a photographic projection: there is no eyeball
+ * mesh to give a wet coat to. The eyes are found in texture space instead: centre (u, v in glTF orientation) and half
+ * extents of the visible eyeball (lids to lids) in the 1024 atlas, where the face is rotated a quarter turn.
+ */
+export const EYE_UV: readonly { readonly c: readonly [number, number]; readonly r: readonly [number, number] }[] = [
+  { c: [0.277, 0.596], r: [0.011, 0.031] },
+  { c: [0.266, 0.754], r: [0.011, 0.031] },
+];
+/** Feather of the mask, in units of the ellipse radius. */
+const EYE_FEATHER = 0.45;
+
+/** GLSL: 1 inside either eyeball, falling to 0 over the feather. */
+function eyeMaskGlsl(): string {
+  const f = (n: number) => n.toFixed(4);
+  const term = (e: (typeof EYE_UV)[number]) =>
+    `m = max( m, 1.0 - smoothstep( 1.0 - ${f(EYE_FEATHER)}, 1.0 + ${f(EYE_FEATHER)}, length( ( uv - vec2( ${f(e.c[0])}, ${f(e.c[1])} ) ) / vec2( ${f(e.r[0])}, ${f(e.r[1])} ) ) ) );`;
+  return `float eyeMask( vec2 uv ) {\n\tfloat m = 0.0;\n\t${EYE_UV.map(term).join('\n\t')}\n\treturn m;\n}`;
+}
+
+/** Hex colour as a linear-RGB GLSL vec3 literal. */
+function vec3Of(hex: string): string {
+  const c = new THREE.Color(hex);
+  return `vec3( ${c.r.toFixed(4)}, ${c.g.toFixed(4)}, ${c.b.toFixed(4)} )`;
+}
+
+/**
+ * Skin shading on top of the physical material:
+ * - pore detail: a second tiled normal layer;
+ * - subsurface approximation: diffuse light wraps past the terminator and the wrapped part is tinted red, as light
+ *   scattering through skin does, so shadow edges turn warm instead of grey; plus a faint warm scatter at grazing
+ *   angles where thin tissue (ear, nostril, cheek edge) glows;
+ * - wet eyes: the cornea coat is switched on only where the eye mask is set.
+ */
+function addSkinShading(m: THREE.MeshPhysicalMaterial, detail: THREE.Texture): void {
+  const S = LOOK.materials.skin;
   m.onBeforeCompile = (shader) => {
     shader.uniforms.detailNormalMap = { value: detail };
+    const wrapped = THREE.ShaderChunk.lights_physical_pars_fragment.replace(
+      'reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );',
+      `float wrapNL = saturate( ( dot( geometryNormal, directLight.direction ) + ${S.sssWrap.toFixed(3)} ) / ( 1.0 + ${S.sssWrap.toFixed(3)} ) );
+	vec3 scatter = max( directLight.color * wrapNL - irradiance, vec3( 0.0 ) ) * ${vec3Of(S.sssColor)} * ${S.sssStrength.toFixed(3)};
+	reflectedLight.directDiffuse += ( irradiance + scatter ) * BRDF_Lambert( material.diffuseColor );`,
+    );
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform sampler2D detailNormalMap;')
+      .replace('#include <common>', '#include <common>\nuniform sampler2D detailNormalMap;\n' + eyeMaskGlsl())
+      .replace('#include <lights_physical_pars_fragment>', wrapped)
       .replace(
         'mapN.xy *= normalScale;',
         `mapN.xy *= normalScale;
 	vec3 detailN = texture2D( detailNormalMap, vNormalMapUv * ${DETAIL_TILE.toFixed(1)} ).xyz * 2.0 - 1.0;
-	mapN = normalize( vec3( mapN.xy + detailN.xy * ${LOOK.materials.skin.detail.toFixed(2)}, mapN.z ) );`,
+	mapN = normalize( vec3( mapN.xy + detailN.xy * ${S.detail.toFixed(2)}, mapN.z ) );`,
+      )
+      .replace(
+        '#include <lights_physical_fragment>',
+        `#include <lights_physical_fragment>
+	#ifdef USE_CLEARCOAT
+		material.clearcoat = saturate( ${S.clearcoat.toFixed(3)} * eyeMask( vMapUv ) );
+	#endif`,
+      )
+      .replace(
+        '#include <opaque_fragment>',
+        `{
+		float grazing = pow( 1.0 - saturate( dot( normalize( normal ), normalize( vViewPosition ) ) ), 3.0 );
+		outgoingLight += diffuseColor.rgb * ${vec3Of(S.sssColor)} * grazing * ${S.rimBleed.toFixed(3)} * saturate( dot( totalDiffuse, vec3( 0.333 ) ) * 2.0 );
+	}
+	#include <opaque_fragment>`,
       );
   };
-  m.customProgramCacheKey = () => 'avatar-skin-detail';
+  m.customProgramCacheKey = () => 'avatar-skin-v3';
 }
 
 /**
@@ -125,7 +182,8 @@ function addSkinDetail(m: THREE.MeshPhysicalMaterial, detail: THREE.Texture): vo
  * material is replaced). The export ships every material at metalness 1 and roughness 1 (the real values live in a
  * packed map); the numbers here are what makes skin read as skin, hair as hair and cloth as cloth under the studio lights.
  *
- * - skin: dielectric, roughness 0.7 times the map, a faint clearcoat for a healthy sheen, atlas normal at 1.0 plus pore detail.
+ * - skin: dielectric, roughness 0.82 times the map (lit mean about 0.5), IOR 1.4, a warm velvet sheen, a subsurface
+ *   approximation and a masked wet-eye coat (see addSkinShading), atlas normal at 1.0 plus pore detail.
  * - hair: the opaque core is alpha-tested (with alpha-to-coverage, so the edge is smoothed by the MSAA); `addHairFringe`
  *   draws the soft edge on top.
  * - suit 0.6 with a sheen that lifts the silhouette, shoes 0.6, both without the packed map (its darkest texels are
@@ -156,13 +214,16 @@ export function tuneMaterials(root: THREE.Object3D, maxAnisotropy = 8): Material
           const p = upgrade(std);
           p.roughness = LOOK.materials.skin.roughness;
           p.side = THREE.FrontSide;
+          p.ior = LOOK.materials.skin.ior;
+          p.sheen = LOOK.materials.skin.sheen;
+          p.sheenRoughness = LOOK.materials.skin.sheenRoughness;
+          p.sheenColor.set(LOOK.materials.skin.sheenColor);
+          // Switched on everywhere here, masked down to the eyes in the shader (a zero would drop the coat code path).
           p.clearcoat = LOOK.materials.skin.clearcoat;
           p.clearcoatRoughness = LOOK.materials.skin.clearcoatRoughness;
-          if (p.normalMap) {
-            p.normalScale.setScalar(LOOK.materials.skin.normalScale);
-            detail ??= makeDetailNormal();
-            addSkinDetail(p, detail);
-          }
+          if (p.normalMap) p.normalScale.setScalar(LOOK.materials.skin.normalScale);
+          detail ??= makeDetailNormal();
+          addSkinShading(p, detail);
           m = p;
           break;
         }
