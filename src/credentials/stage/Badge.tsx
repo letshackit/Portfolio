@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { AdditiveBlending, Color, MathUtils, MeshBasicMaterial, type Group, type Sprite } from 'three';
-import { FILL, type BadgeSpec, type BodyKey } from '../slots';
+import { AdditiveBlending, MathUtils, SpriteMaterial, type Group, type Sprite } from 'three';
+import { EXTENT, FILL, type BadgeSpec } from '../slots';
 import type { VaultStore } from '../vaultStore';
-import { createGlyphTexture } from './glyph';
-import { frontZ, hdr, type Kit } from './kit';
-import { MotifBody } from './Motifs';
+import { createAnim } from './anim';
+import { Codex } from './Codex';
+import { hdr, type Kit } from './kit';
+import { Medallion } from './Medallion';
+import { Monument } from './Monument';
+import { Stone } from './Stone';
 
 interface BadgeProps {
   readonly spec: BadgeSpec;
@@ -16,21 +19,15 @@ interface BadgeProps {
   readonly still: boolean;
 }
 
-/** Where the mark sits on each body, and how big. The shield narrows toward its point, so its mark is smaller and higher. */
-const GLYPH: Readonly<Record<BodyKey, { y: number; w: number }>> = {
-  hex: { y: -0.5, w: 1.4 },
-  octa: { y: -0.5, w: 1.4 },
-  shield: { y: -0.36, w: 1.05 },
-  disc: { y: -0.5, w: 1.35 },
-  square: { y: -0.46, w: 1.4 },
-  stone: { y: -0.62, w: 1.25 },
-  hero: { y: -0.76, w: 1.3 },
-  paper: { y: 0, w: 0 },
-};
-
 const TAU = Math.PI * 2;
-/** Poses for reduced motion: each badge turned a little differently so the row does not look stamped. */
-const STILL_YAW = [-0.3, -0.3, -0.16, -0.44, -0.52, -0.2, -0.32, -0.28];
+/** The objects are tipped toward the camera by this much, so the plinths read as seen from a little above. */
+const TILT = 0.2;
+/** Poses for reduced motion: each object turned a little differently so the shelf does not look stamped. */
+const STILL_YAW = [-0.3, -0.34, -0.38, 0.34, -0.32, 0.36, -0.28, -0.32];
+/** How far the turntable swings from side to side (radians): the medallions swing wide, the monuments barely. */
+const SWING = { hero: 0.3, stone: 0.34, cert: 0.8, paper: 0.4 } as const;
+/** Scroll turns the objects through this many radians from the vault entering to leaving. */
+const SCROLL_TURN = 0.7;
 
 function easeOutBack(t: number): number {
   const c1 = 1.5;
@@ -38,98 +35,37 @@ function easeOutBack(t: number): number {
   return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
 }
 
-/** The thin rings and ticks that frame a badge like a reticle. Sits behind the glass, so the glass refracts them. */
-function Reticle({ kit, still, big }: { kit: Kit; still: boolean; big: boolean }) {
-  const dashed = useRef<Group>(null);
-  useFrame((_, dt) => {
-    if (still || !dashed.current) return;
-    dashed.current.rotation.z -= Math.min(dt, 0.05) * 0.12;
-  });
-  const r = big ? 1.22 : 1.16;
-  return (
-    <group position={[0, 0, -0.55]}>
-      <lineLoop geometry={kit.circle} material={kit.ring} scale={r} />
-      <group ref={dashed}>
-        <lineLoop
-          geometry={kit.circle}
-          material={kit.dash}
-          scale={r * 1.09}
-          onUpdate={(l) => l.computeLineDistances()}
-        />
-      </group>
-    </group>
-  );
-}
-
-/** The cornerstone's orbit: two tilted rings and a satellite crossing the glass. */
-function Orbits({ kit, still }: { kit: Kit; still: boolean }) {
-  const sat = useRef<Group>(null);
-  const sat2 = useRef<Group>(null);
-  useFrame(({ clock }) => {
-    const t = still ? 1.6 : clock.elapsedTime;
-    if (sat.current) sat.current.rotation.z = t * 0.5;
-    if (sat2.current) sat2.current.rotation.z = -t * 0.35 + 1;
-  });
-  return (
-    <group>
-      <group rotation={[1.2, 0.15, 0.35]}>
-        <mesh material={kit.cyanBasic}>
-          <torusGeometry args={[1.18, 0.0065, 8, 200]} />
-        </mesh>
-        <group ref={sat}>
-          <mesh position={[1.18, 0, 0]} material={kit.cyanBasic}>
-            <sphereGeometry args={[0.04, 12, 10]} />
-          </mesh>
-        </group>
-      </group>
-      <group rotation={[1.0, -0.5, -0.5]}>
-        <mesh material={kit.ring}>
-          <torusGeometry args={[1.34, 0.004, 8, 200]} />
-        </mesh>
-        <group ref={sat2}>
-          <mesh position={[1.34, 0, 0]} material={kit.cyanBasic}>
-            <sphereGeometry args={[0.025, 10, 8]} />
-          </mesh>
-        </group>
-      </group>
-    </group>
-  );
-}
-
 /**
- * One credential as a floating glass object, placed in its DOM slot. Sways and bobs on its own, leans toward the
- * cursor, and on hover (or tap) turns a full circle and swells. The entrance plays once the vault is on screen.
+ * One credential as a lit object placed in its DOM slot. Owns what every object shares: the entrance (once the vault is
+ * on screen), hover or spotlight (a full turn and a swell), the lean toward the cursor, the slow turn with scroll, and the
+ * halo behind it. The object itself (monument, stone, medallion, codex) reads the result and poses its own parts.
  */
 export function Badge({ spec, index, store, kit, still }: BadgeProps) {
   const root = useRef<Group>(null);
-  const sway = useRef<Group>(null);
   const halo = useRef<Sprite>(null);
   const warm = useRef<Sprite>(null);
+  const anim = useRef(createAnim());
   const s = useRef({ t: 0, hover: 0, spin: 0, spinTarget: 0, was: false, tx: 0, ty: 0 });
-  const { kind, body } = spec;
-  const front = frontZ(body) + 0.012;
-  const glyph = useMemo(() => (spec.main ? createGlyphTexture(spec.top, spec.main) : null), [spec.top, spec.main]);
-  const glyphMat = useMemo(
-    () =>
-      glyph
-        ? new MeshBasicMaterial({ map: glyph, transparent: true, depthWrite: false, toneMapped: false, color: new Color(2.1, 2.1, 2.1) })
-        : null,
-    [glyph],
+  const { kind } = spec;
+  const haloMat = useMemo(
+    () => new SpriteMaterial({ map: kit.soft, color: hdr(spec.metal === 'gold' && kind !== 'hero' ? '#f59e0b' : '#22d3ee', 1), transparent: true, opacity: 0.13, blending: AdditiveBlending, depthWrite: false }),
+    [kit.soft, spec.metal, kind],
   );
-  const haloColor = useMemo(() => hdr('#22d3ee', 1), []);
-  const warmColor = useMemo(() => hdr('#f59e0b', 1), []);
+  const warmMat = useMemo(
+    () => new SpriteMaterial({ map: kit.soft, color: hdr(kind === 'hero' ? '#f59e0b' : '#22d3ee', 1), transparent: true, opacity: 0.1, blending: AdditiveBlending, depthWrite: false }),
+    [kit.soft, kind],
+  );
   useEffect(
     () => () => {
-      glyph?.dispose();
-      glyphMat?.dispose();
+      haloMat.dispose();
+      warmMat.dispose();
     },
-    [glyph, glyphMat],
+    [haloMat, warmMat],
   );
 
   useFrame(({ clock }, rawDt) => {
     const g = root.current;
-    const w = sway.current;
-    if (!g || !w) return;
+    if (!g) return;
     const r = store.rects.get(spec.id);
     if (!r) {
       g.visible = false;
@@ -139,65 +75,51 @@ export function Badge({ spec, index, store, kit, still }: BadgeProps) {
     const st = s.current;
     if (still) st.t = 10;
     else if (store.inView) st.t += dt;
-    const local = MathUtils.clamp((st.t - index * 0.09) / 1.15, 0, 1);
+    const local = MathUtils.clamp((st.t - index * 0.09) / 1.2, 0, 1);
     g.visible = local > 0;
     if (!g.visible) return;
     const e = 1 - (1 - local) ** 3;
 
     const time = still ? 0 : clock.elapsedTime;
     const phase = index * 1.9;
-    const hovered = !still && store.hover === spec.id;
-    if (hovered && !st.was) st.spinTarget += TAU;
-    st.was = hovered;
-    st.hover = MathUtils.damp(st.hover, hovered ? 1 : 0, 6, dt);
+    const active = !still && (store.hover === spec.id || store.pinned === spec.id);
+    if (active && !st.was) st.spinTarget += TAU;
+    st.was = active;
+    st.hover = MathUtils.damp(st.hover, active ? 1 : 0, 6, dt);
     st.spin = MathUtils.damp(st.spin, st.spinTarget, 2.4, dt);
 
-    const base = (Math.min(r.w, r.h) * FILL[kind]) / 2;
-    const swell = 1 + 0.13 * st.hover;
-    g.position.set(r.cx, -r.cy - (1 - e) * 34 + Math.sin(time * 0.9 + phase) * base * 0.035, 0);
-    g.scale.setScalar(base * swell * (0.55 + 0.45 * easeOutBack(local)));
+    const ext = EXTENT[kind];
+    const unit = Math.min(r.w / ext.w, r.h / ext.h) * FILL[kind];
+    g.position.set(r.cx, -r.cy - (1 - e) * 34, 0);
+    g.scale.setScalar(unit * (1 + 0.07 * st.hover) * (0.55 + 0.45 * easeOutBack(local)));
 
     // Lean toward the cursor: more yaw than pitch, damped.
     const p = store.pointer;
-    const wantX = still ? 0 : MathUtils.clamp((p.x - r.cx) / 520, -1, 1) * 0.5;
-    const wantY = still ? 0 : MathUtils.clamp((p.y - r.cy) / 520, -1, 1) * 0.3;
+    const wantX = still ? 0 : MathUtils.clamp((p.x - r.cx) / 520, -1, 1) * 0.45;
+    const wantY = still ? 0 : MathUtils.clamp((p.y - r.cy) / 520, -1, 1) * 0.22;
     st.tx = MathUtils.damp(st.tx, wantX, 4, dt);
     st.ty = MathUtils.damp(st.ty, wantY, 4, dt);
-    const amp = kind === 'hero' ? 0.27 : kind === 'stone' ? 0.32 : 0.4;
-    const swing = still ? STILL_YAW[index % STILL_YAW.length] : Math.sin(time * 0.45 + phase) * amp;
-    w.rotation.y = swing + st.tx + st.spin + (1 - e) * 1.5;
-    w.rotation.x = (still ? 0.1 : Math.sin(time * 0.33 + phase) * 0.07) + st.ty;
+    const swing = still ? STILL_YAW[index % STILL_YAW.length] : Math.sin(time * 0.45 + phase) * SWING[kind];
+    const a = anim.current;
+    a.hover = st.hover;
+    a.time = still ? 0 : st.t;
+    a.yaw = swing + st.tx + st.spin + (1 - e) * 1.5 + (still ? 0 : (store.progress - 0.5) * SCROLL_TURN);
+    a.pitch = still ? 0 : Math.sin(time * 0.33 + phase) * 0.05 + st.ty;
 
     if (halo.current) halo.current.material.opacity = 0.13 + 0.17 * st.hover;
     if (warm.current) warm.current.material.opacity = (kind === 'paper' ? 0.2 : kind === 'cert' ? 0.07 : 0.16) + 0.14 * st.hover;
   });
 
-  const gl = GLYPH[body];
+  const big = kind === 'hero' ? 7 : kind === 'cert' ? 4.6 : 5.4;
   return (
     <group ref={root} visible={false}>
-      <sprite ref={halo} scale={[4.6, 4.6, 1]} position={[0, 0, -0.9]}>
-        <spriteMaterial map={kit.soft} color={haloColor} transparent opacity={0.13} blending={AdditiveBlending} depthWrite={false} />
-      </sprite>
-      <sprite ref={warm} scale={[3.2, 3.2, 1]} position={[0.9, -0.7, -0.8]}>
-        <spriteMaterial map={kit.soft} color={warmColor} transparent opacity={0.1} blending={AdditiveBlending} depthWrite={false} />
-      </sprite>
-      {kind === 'paper' ? null : <Reticle kit={kit} still={still} big={kind === 'hero'} />}
-      {kind === 'hero' ? <Orbits kit={kit} still={still} /> : null}
-      <group ref={sway}>
-        <mesh geometry={kit.body[body]} material={kit.glass[body]} />
-        <mesh geometry={kit.body[body]} material={kit.rim[body]} />
-        <lineSegments geometry={kit.edges[body]} material={kit.edge} />
-        <MotifBody motif={spec.motif} kit={kit} still={still} />
-        {glyphMat ? (
-          <>
-            <mesh position={[0, gl.y, front]} material={glyphMat}>
-              <planeGeometry args={[gl.w, gl.w / 2]} />
-            </mesh>
-            <mesh position={[0, gl.y, -front]} rotation={[0, Math.PI, 0]} material={glyphMat}>
-              <planeGeometry args={[gl.w, gl.w / 2]} />
-            </mesh>
-          </>
-        ) : null}
+      <sprite ref={halo} scale={[big, big, 1]} position={[0, 0, -1.4]} material={haloMat} />
+      <sprite ref={warm} scale={[big * 0.7, big * 0.7, 1]} position={[0.9, -0.9, -1.2]} material={warmMat} />
+      <group rotation={[TILT, 0, 0]}>
+        {kind === 'hero' ? <Monument spec={spec} kit={kit} anim={anim} still={still} /> : null}
+        {kind === 'stone' ? <Stone spec={spec} kit={kit} anim={anim} still={still} /> : null}
+        {kind === 'cert' ? <Medallion spec={spec} kit={kit} anim={anim} still={still} /> : null}
+        {kind === 'paper' ? <Codex spec={spec} kit={kit} anim={anim} still={still} /> : null}
       </group>
     </group>
   );

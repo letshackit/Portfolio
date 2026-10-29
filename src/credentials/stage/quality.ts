@@ -12,18 +12,20 @@ export interface Quality {
   readonly noise: boolean;
   /** Multiplier on the particle count. */
   readonly particles: number;
+  /** Side of the square texture painted on each medallion's face, in px. */
+  readonly tex: number;
 }
 
 export const TIERS: readonly Quality[] = [
-  { dpr: 2, msaa: 4, transmission: true, noise: true, particles: 1 },
-  { dpr: 1.5, msaa: 2, transmission: true, noise: true, particles: 0.5 },
-  { dpr: 1, msaa: 0, transmission: false, noise: false, particles: 0.25 },
+  { dpr: 2, msaa: 4, transmission: true, noise: true, particles: 1, tex: 1024 },
+  { dpr: 1.5, msaa: 2, transmission: true, noise: true, particles: 0.5, tex: 768 },
+  { dpr: 1, msaa: 0, transmission: false, noise: false, particles: 0.25, tex: 512 },
 ];
 
 export const LAST_TIER: Tier = 2;
 
-/** The vault is tall (it holds every credential), so the pixel count, not the ratio alone, is what has to be bounded. */
-export const PIXEL_BUDGET = 4_200_000;
+/** The vault is tall (it holds every object), so the pixel count, not the ratio alone, is what has to be bounded. */
+export const PIXEL_BUDGET = 7_000_000;
 
 export function startTier(narrow: boolean, coarse: boolean): Tier {
   return narrow || coarse ? 1 : 0;

@@ -37,7 +37,7 @@ const PARALLAX = 16;
  * One camera for the whole vault. The z = 0 plane maps 1 world unit to 1 CSS px (x right, y down as -y), so a badge is
  * placed by its slot's pixel rectangle and the layout stays the DOM's job.
  */
-function Rig({ store, reduced, tier }: { store: VaultStore; reduced: boolean; tier: Tier }) {
+function Rig({ store, reduced, tier, onDpr }: { store: VaultStore; reduced: boolean; tier: Tier; onDpr: (dpr: number) => void }) {
   const { camera, size, setDpr, invalidate } = useThree();
   const frame = useRef(0);
   const base = useRef({ x: 0, y: 0, z: 1 });
@@ -55,10 +55,14 @@ function Rig({ store, reduced, tier }: { store: VaultStore; reduced: boolean; ti
     invalidate();
   }, [camera, size, store, invalidate]);
   useEffect(() => {
-    setDpr(dprFor(tier, window.devicePixelRatio, size.width, size.height));
-  }, [tier, size, setDpr]);
+    const dpr = dprFor(tier, window.devicePixelRatio, size.width, size.height);
+    setDpr(dpr);
+    // The Canvas owns a `dpr` prop and re-applies it on every render, so the chosen ratio has to live in its state.
+    onDpr(dpr);
+  }, [tier, size, setDpr, onDpr]);
   useFrame((_, rawDt) => {
     if (frame.current % MEASURE_EVERY === 0) store.measure();
+    else store.updateProgress();
     frame.current += 1;
     if (reduced) return;
     const cam = camera as PerspectiveCamera;
@@ -102,23 +106,23 @@ function StillFrames() {
   return null;
 }
 
-function World({ specs, store, tier, reduced, onReady }: { specs: readonly BadgeSpec[]; store: VaultStore; tier: Tier; reduced: boolean; onReady: () => void }) {
+function World({ specs, store, tier, reduced, onReady, onDpr }: { specs: readonly BadgeSpec[]; store: VaultStore; tier: Tier; reduced: boolean; onReady: () => void; onDpr: (dpr: number) => void }) {
   const q = TIERS[tier];
   const kit = useMemo(() => createKit(q), [q]);
   useEffect(() => () => kit.dispose(), [kit]);
   return (
     <>
       <color attach="background" args={['#07080a']} />
-      <Rig store={store} reduced={reduced} tier={tier} />
+      <Rig store={store} reduced={reduced} tier={tier} onDpr={onDpr} />
       <GridWall store={store} still={reduced} />
       <Environment resolution={256} frames={1}>
-        {/* Studio strips the glass can pick up: cyan from the left, a warm key from the right, a soft box above and in front. */}
+        {/* Studio strips the glass and metal pick up: cyan from the left, a warm key from the right, a soft box above and in front. */}
         <Lightformer form="rect" intensity={5} color="#22d3ee" position={[-7, 1, 2]} scale={[6, 12, 1]} rotation-y={Math.PI / 2} />
         <Lightformer form="rect" intensity={6} color="#f59e0b" position={[7, 2, 3]} scale={[4, 10, 1]} rotation-y={-Math.PI / 2} />
         <Lightformer form="rect" intensity={6} color="#ffffff" position={[0, 7, 1]} scale={[14, 3, 1]} rotation-x={Math.PI / 2} />
         <Lightformer form="rect" intensity={3} color="#bff6ff" position={[-3.5, 2.5, 8]} scale={[4, 2, 1]} rotation-y={Math.PI} />
-        <Lightformer form="rect" intensity={7} color="#ffffff" position={[-3.6, 0, 5]} scale={[0.5, 9, 1]} rotation-y={Math.PI * 0.8} />
-        <Lightformer form="rect" intensity={7} color="#ffffff" position={[3.6, 0, 5]} scale={[0.5, 9, 1]} rotation-y={-Math.PI * 0.8} />
+        <Lightformer form="rect" intensity={3.5} color="#ffffff" position={[-3.6, 0, 5]} scale={[0.5, 9, 1]} rotation-y={Math.PI * 0.8} />
+        <Lightformer form="rect" intensity={3.5} color="#ffffff" position={[3.6, 0, 5]} scale={[0.5, 9, 1]} rotation-y={-Math.PI * 0.8} />
         <Lightformer form="rect" intensity={3} color="#f59e0b" position={[4, -5, 3]} scale={[8, 2, 1]} rotation-x={-Math.PI / 2} />
         <Lightformer form="rect" intensity={1.6} color="#22d3ee" position={[0, -6, 2]} scale={[12, 2, 1]} rotation-x={-Math.PI / 2} />
       </Environment>
@@ -144,6 +148,7 @@ const coarsePointer = () => window.matchMedia('(pointer: coarse)').matches;
 export default function CredentialsStage({ specs, store, paused, reduced, pin, onReady, onLost }: CredentialsStageProps) {
   const [tier, setTier] = useState<Tier>(() => pin ?? startTier(narrowViewport(), coarsePointer()));
   const [monitor, setMonitor] = useState(false);
+  const [dpr, setDprState] = useState(1);
 
   const ready = useCallback(() => {
     onReady();
@@ -155,7 +160,7 @@ export default function CredentialsStage({ specs, store, paused, reduced, pin, o
   return (
     <Canvas
       frameloop={reduced ? 'demand' : paused ? 'never' : 'always'}
-      dpr={1}
+      dpr={dpr}
       camera={{ fov: FOV, near: 100, far: 9000, position: [0, 0, 2000] }}
       gl={{ antialias: false, powerPreference: 'high-performance', alpha: false, stencil: false }}
       onCreated={({ gl }) => {
@@ -167,7 +172,7 @@ export default function CredentialsStage({ specs, store, paused, reduced, pin, o
       }}
       aria-hidden="true"
     >
-      <World specs={specs} store={store} tier={tier} reduced={reduced} onReady={ready} />
+      <World specs={specs} store={store} tier={tier} reduced={reduced} onReady={ready} onDpr={setDprState} />
       {reduced ? <StillFrames /> : null}
       {monitor ? <PerformanceMonitor flipflops={2} onDecline={down} onFallback={bottom} /> : null}
     </Canvas>
