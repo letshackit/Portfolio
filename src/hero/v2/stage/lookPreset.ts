@@ -15,12 +15,8 @@ export interface LookPreset {
   readonly environment: {
     /** Strength of the studio HDR on the rest of the scene (floor, city). */
     readonly intensity: number;
-    /** Strength of the studio HDR on the avatar's own materials. */
-    readonly avatar: number;
     /** Euler Y, radians, of the scene's environment (turns the HDR for the floor and the city). */
     readonly rotationY: number;
-    /** Euler Y, radians, of the environment as the avatar's materials see it. */
-    readonly avatarRotationY: number;
   };
   readonly lights: {
     readonly key: { readonly color: string; readonly intensity: number; readonly position: V3 };
@@ -35,12 +31,6 @@ export interface LookPreset {
     readonly pool: { readonly color: string; readonly intensity: number; readonly position: V3; readonly angle: number; readonly penumbra: number };
     /** Share of the intensities already on at intro 0 (he is readable the moment he mounts). */
     readonly introFloor: number;
-  };
-  /** Material tuning on the avatar, by role. Roughness is a multiplier on the exported roughness map where one is kept. */
-  readonly materials: {
-    readonly skin: { readonly roughness: number; readonly normalScale: number; readonly clearcoat: number; readonly clearcoatRoughness: number; readonly detail: number };
-    readonly suit: { readonly roughness: number; readonly sheen: number; readonly sheenRoughness: number; readonly sheenColor: string; readonly envBoost: number };
-    readonly shoes: { readonly roughness: number };
   };
   readonly post: {
     readonly bloom: { readonly intensity: number; readonly threshold: number; readonly smoothing: number; readonly radius: number };
@@ -72,7 +62,7 @@ export interface LookPreset {
 
 export const LOOK: LookPreset = {
   exposure: 1,
-  environment: { intensity: 0.7, avatar: 0.8, rotationY: 0.6, avatarRotationY: -0.6 },
+  environment: { intensity: 0.7, rotationY: 0.6 },
   lights: {
     key: { color: '#ffe8d2', intensity: 1.1, position: [-2.3, 1.9, 3.9] },
     fill: { color: '#f4f7ff', intensity: 0.8, position: [3.2, 1.6, 3.4] },
@@ -81,11 +71,6 @@ export const LOOK: LookPreset = {
     rim2: { color: '#f59e0b', intensity: 0.4, position: [-3.4, 1.6, -3.0] },
     pool: { color: '#ffffff', intensity: 34, position: [0, 4.6, 1.0], angle: 0.5, penumbra: 1 },
     introFloor: 0.4,
-  },
-  materials: {
-    skin: { roughness: 1, normalScale: 0.8, clearcoat: 0, clearcoatRoughness: 0.4, detail: 0.32 },
-    suit: { roughness: 0.6, sheen: 0.45, sheenRoughness: 0.55, sheenColor: '#7f9ae0', envBoost: 1 },
-    shoes: { roughness: 0.6 },
   },
   post: {
     bloom: { intensity: 0.12, threshold: 0.92, smoothing: 0.05, radius: 0.6 },

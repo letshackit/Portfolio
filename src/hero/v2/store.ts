@@ -12,14 +12,6 @@ export const store = {
   px: 0,
   py: 0,
   reduced: false,
-  /** Arrow-key turns queued by the page for the avatar (signed count, consumed by the frame loop). */
-  keyTurn: 0,
-  /** The visitor has turned the avatar by drag or key at least once. */
-  interacted: false,
-  /** Called once, on the first turn; the page fades the hint. */
-  onInteract: null as (() => void) | null,
-  /** Wakes a demand-rendered stage (reduced motion); set by the avatar while mounted. */
-  wake: null as (() => void) | null,
   /** Scene clock in seconds; only advances while frames render. */
   time: 0,
   /** Live counters read by the status bar. */
@@ -32,13 +24,6 @@ export function resetCounters(): void {
   store.assembled = 0;
   store.docks = 0;
   store.packets = 0;
-}
-
-/** Marks the first drag or key turn, once. */
-export function markInteracted(): void {
-  if (store.interacted) return;
-  store.interacted = true;
-  store.onInteract?.();
 }
 
 export const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));

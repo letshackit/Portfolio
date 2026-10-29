@@ -1,9 +1,8 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentProps } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Environment, PerformanceMonitor, Sparkles as DreiSparkles, useGLTF } from '@react-three/drei';
+import { Environment, PerformanceMonitor, Sparkles as DreiSparkles, useTexture } from '@react-three/drei';
 import type { Points, ShaderMaterial } from 'three';
 import { resetCounters, store } from '../store';
-import { Avatar, AVATAR_URL } from './Avatar';
 import { Backdrop, Floor, GlowPool, Lights } from './Atmosphere';
 import { CameraRig } from './CameraRig';
 import { Blocks } from './city/Blocks';
@@ -11,6 +10,7 @@ import { Drones } from './city/Drones';
 import { Nodes } from './city/Nodes';
 import { clock } from './city/state';
 import { Effects } from './Effects';
+import { DEPTH_URL, HoloPortrait, PORTRAIT_URL } from './HoloPortrait';
 import { LOOK } from './lookPreset';
 import { disposeSoftTexture } from './glow';
 import { useCityVectors, useLayout } from './layout';
@@ -44,7 +44,7 @@ export interface HeroStageProps {
   readonly reduced: boolean;
   /** Hold this tier and never adapt (QA and screenshots on software GL); null adapts. */
   readonly pin: Tier | null;
-  /** The avatar is standing on the stage and two frames have rendered. */
+  /** The portrait is on the stage and two frames have rendered. */
   readonly onReady: () => void;
   /** The GL context was lost: the page falls back to the poster. */
   readonly onLost: () => void;
@@ -122,7 +122,7 @@ function World({ tier, reduced, onReady }: WorldProps) {
       <Floor reflect={q.reflect} shadowRes={q.shadowRes} />
       <Suspense fallback={null}>
         <Environment files={ENV_URL} />
-        <Avatar />
+        <HoloPortrait />
         {/* The service city, shrunk onto the stage behind and to the right of the operator. */}
         <group position={city.position} scale={city.scale} rotation-y={city.rotationY}>
           <GlowPool />
@@ -166,9 +166,9 @@ export default function HeroStage({ paused, reduced, pin, onReady, onLost }: Her
 
   useEffect(
     () => () => {
-      // Dispose on unmount: the shared texture, the cached glTF, the counters. The renderer is disposed by the Canvas.
+      // Dispose on unmount: the shared texture, the cached portrait textures, the counters. The renderer is disposed by the Canvas.
       disposeSoftTexture();
-      useGLTF.clear(AVATAR_URL);
+      useTexture.clear([PORTRAIT_URL, DEPTH_URL]);
       resetCounters();
     },
     [],

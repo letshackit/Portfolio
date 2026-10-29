@@ -24,6 +24,8 @@ export interface Layout {
   shiftX: readonly [number, number];
   shiftY: readonly [number, number];
   city: CityPlacement;
+  /** The portrait card: x offset of its centre line, height of its foot above the floor, and its height (width follows the photo). */
+  card: { x: number; y: number; height: number };
   /** Satellite positions are authored in the stage frame for desktop; mobile pulls them in with this factor. */
   nodeSpread: number;
   /** Floor ring radii scale, so the avatar's rings stay inside the frame on a phone. */
@@ -46,6 +48,7 @@ const desktop: Layout = {
   shiftX: [0.1, 0],
   shiftY: [0, 0],
   city: { position: [CITY_AT[0], 0.012, CITY_AT[2]], scale: 0.22, rotationY: 0.3 },
+  card: { x: -0.3, y: 0.22, height: 1.72 },
   nodeSpread: 1,
   sparkles: 1,
 };
@@ -66,6 +69,7 @@ const mobile: Layout = {
   shiftX: [0, 0],
   shiftY: [0.09, 0],
   city: { position: [MOBILE_CITY_AT[0], 0.012, MOBILE_CITY_AT[2]], scale: 0.2, rotationY: 0.3 },
+  card: { x: 0.33, y: 0.2, height: 1.5 },
   nodeSpread: 0.75,
   sparkles: 0.5,
 };

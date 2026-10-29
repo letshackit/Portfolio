@@ -16,8 +16,9 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="preload" href="/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
-  <!-- The hero stage's avatar and light probe: fetched in parallel with the entry script so he is on screen within ~1.5 s (read by GLTFLoader / RGBELoader with fetch, so as=fetch + crossorigin). -->
-  <link rel="preload" href="/hero/character.glb" as="fetch" type="model/gltf-binary" crossorigin="anonymous" />
+  <!-- The hero stage's portrait (photo + depth map, loaded as images) and light probe (RGBELoader, fetch): fetched in parallel with the entry script so he is on screen within ~1.5 s. -->
+  <link rel="preload" href="/hero/holo-color.webp" as="image" type="image/webp" />
+  <link rel="preload" href="/hero/holo-depth.webp" as="image" type="image/webp" />
   <link rel="preload" href="/hero/char_environment.hdr" as="fetch" crossorigin="anonymous" />
 
   <meta property="og:type" content="website" />
