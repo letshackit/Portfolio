@@ -1,6 +1,6 @@
 /**
- * The seam between the credentials' DOM and its 3D layer. The DOM owns layout (each badge has an empty slot in the
- * grid); the stage reads the slots' rectangles, relative to the vault, and places a badge in each one. So the 390 px
+ * The seam between the credentials' DOM and its 3D layer. The DOM owns layout (each object has an empty slot in the
+ * grid); the stage reads the slots' rectangles, relative to the vault, and places an object in each one. So the 390 px
  * layout is a different grid, not a shrunk canvas. Framework-free.
  */
 export interface SlotRect {
@@ -16,15 +16,21 @@ export interface VaultStore {
   container: HTMLElement | null;
   readonly els: Map<string, HTMLElement>;
   readonly rects: Map<string, SlotRect>;
-  /** Badge under the cursor (or most recently tapped), or null. */
+  /** Object under the cursor (or with focus), or null. */
   hover: string | null;
+  /** Object held in the spotlight by a click, tap or key press, or null. */
+  pinned: string | null;
   /** Cursor in CSS px from the vault's top-left; far outside until it moves. */
   pointer: { x: number; y: number };
   /** True while enough of the vault is on screen for the entrance to play. */
   inView: boolean;
+  /** 0 as the vault enters at the bottom of the viewport, 1 as it leaves at the top: the objects turn a little with it. */
+  progress: number;
   register(id: string, el: HTMLElement | null): void;
   /** Re-reads the container and every slot. Cheap enough to run every few frames. */
   measure(): void;
+  /** Re-reads only the scroll progress: one rectangle, cheap enough for every frame. */
+  updateProgress(): void;
 }
 
 export function createVaultStore(): VaultStore {
@@ -35,8 +41,10 @@ export function createVaultStore(): VaultStore {
     els,
     rects,
     hover: null,
+    pinned: null,
     pointer: { x: -1e4, y: -1e4 },
     inView: false,
+    progress: 0.5,
     register(id, el) {
       if (el) els.set(id, el);
       else {
@@ -44,10 +52,19 @@ export function createVaultStore(): VaultStore {
         rects.delete(id);
       }
     },
+    updateProgress() {
+      const c = store.container;
+      if (!c) return;
+      const base = c.getBoundingClientRect();
+      const vh = typeof window === 'undefined' ? 900 : window.innerHeight;
+      const span = base.height + vh;
+      store.progress = span > 0 ? Math.min(1, Math.max(0, (vh - base.top) / span)) : 0.5;
+    },
     measure() {
       const c = store.container;
       if (!c) return;
       const base = c.getBoundingClientRect();
+      store.updateProgress();
       for (const [id, el] of els) {
         const r = el.getBoundingClientRect();
         if (r.width === 0 || r.height === 0) {

@@ -1,4 +1,4 @@
-import { BufferGeometry, ExtrudeGeometry, Float32BufferAttribute, Shape, Vector2 } from 'three';
+import { BufferGeometry, ExtrudeGeometry, Float32BufferAttribute, LatheGeometry, Shape, Vector2 } from 'three';
 
 /** A closed polygon with every corner rounded by a quadratic curve. `round` is the share of each edge consumed (0..0.5). */
 export function roundedPolygon(points: readonly Vector2[], round: number): Shape {
@@ -37,9 +37,32 @@ export function shieldPoints(): Vector2[] {
   return [new Vector2(0, 1), new Vector2(0.84, 0.8), new Vector2(0.84, -0.18), new Vector2(0, -1), new Vector2(-0.84, -0.18), new Vector2(-0.84, 0.8)];
 }
 
-/** The cornerstone: a tall slab with a peaked top, like a gate stone or a shield. Half-height 1. */
+/** The cornerstone: a tall stele with a slanted top, like a cut crystal or a trophy plate. Half-height 1. */
 export function monolithPoints(): Vector2[] {
-  return [new Vector2(-0.74, 0.5), new Vector2(-0.74, -1), new Vector2(0.74, -1), new Vector2(0.74, 0.5), new Vector2(0, 1)];
+  return [new Vector2(-0.66, 1), new Vector2(-0.66, -1), new Vector2(0.66, -1), new Vector2(0.66, 0.6)];
+}
+
+/**
+ * A medallion as a profile turned about its axis: a flat face, a raised lip, a rounded rim with a shallow groove, mirrored
+ * on the back. Radius 1, thickness 0.24, axis along z (faces to +z and -z).
+ */
+export function coinGeometry(): LatheGeometry {
+  const half = [
+    [0, 0.12],
+    [0.84, 0.12],
+    [0.85, 0.14],
+    [0.9, 0.145],
+    [0.95, 0.13],
+    [0.985, 0.095],
+    [1, 0.05],
+    [1, -0.05],
+  ] as const;
+  // Lathe wants the profile running up the axis (back centre to front centre) for its normals to face out.
+  const pts = [...half, ...[...half].reverse().map(([r, y]) => [r, -y] as const)].reverse().map(([r, y]) => new Vector2(r, y));
+  const g = new LatheGeometry(pts, 96);
+  g.rotateX(Math.PI / 2);
+  g.computeVertexNormals();
+  return g;
 }
 
 /** A shape pushed out to a bevelled, centred slab: the front face at +depth / 2, the back at -depth / 2. */

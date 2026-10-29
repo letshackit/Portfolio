@@ -47,32 +47,44 @@ interface CardProps {
   readonly spec: BadgeSpec;
   readonly store: VaultStore;
   readonly className: string;
+  readonly tag?: string;
+  readonly pinned: boolean;
+  readonly onPin: (id: string) => void;
   readonly children?: ReactNode;
 }
 
-/** One credential: an empty slot the 3D layer fills (with a CSS badge under it until it does), and its words. */
-function Card({ credential, spec, store, className, children }: CardProps) {
+/** One credential: an empty slot the 3D layer fills (with a CSS stand-in under it until it does), and its words. */
+function Card({ credential, spec, store, className, tag, pinned, onPin, children }: CardProps) {
   const { id, title, issuer, dates } = credential;
+  const { ui } = content;
   const slot = useCallback((el: HTMLDivElement | null) => store.register(id, el), [store, id]);
+  const enter = () => {
+    store.hover = id;
+  };
+  const leave = () => {
+    if (store.hover === id) store.hover = null;
+  };
   return (
-    <li
-      className={`cred ${className}`}
-      data-kind={spec.kind}
-      data-body={spec.body}
-      onPointerEnter={() => {
-        store.hover = id;
-      }}
-      onPointerLeave={() => {
-        if (store.hover === id) store.hover = null;
-      }}
-    >
-      <div className="cred__slot" ref={slot} aria-hidden="true">
-        <span className="cred__poster">
-          <span className="cred__poster-top">{spec.top}</span>
-          <span className="cred__poster-main">{spec.main}</span>
-        </span>
+    <li className={`cred ${className}`} data-kind={spec.kind} data-metal={spec.metal} data-pinned={pinned || undefined} onPointerEnter={enter} onPointerLeave={leave}>
+      <div className="cred__stage">
+        <div className="cred__slot" ref={slot} aria-hidden="true">
+          <span className="cred__poster">
+            <span className="cred__poster-top">{spec.top}</span>
+            <span className="cred__poster-main">{spec.word}</span>
+          </span>
+        </div>
+        <button
+          type="button"
+          className="cred__spot"
+          aria-pressed={pinned}
+          aria-label={`${ui.spotlightLabel}: ${title}`}
+          onClick={() => onPin(id)}
+          onFocus={enter}
+          onBlur={leave}
+        />
       </div>
       <div className="cred__text">
+        {tag ? <p className="cred__tag mono-label">{tag}</p> : null}
         <h4 className="cred__title">{title}</h4>
         <p className="cred__issuer">{issuer}</p>
         {dates ? <p className="cred__dates">{dates}</p> : null}
@@ -83,9 +95,10 @@ function Card({ credential, spec, store, className, children }: CardProps) {
 }
 
 /**
- * Education and certifications as a credentials vault. The words are DOM (readable with no script and no WebGL); the
- * badges are glass objects in one lazy canvas behind them, each placed in its card's slot. The 390 px layout is its own
- * grid with the same badges in it. Reduced motion draws the same badges, still.
+ * Education and certifications as a gallery. The words are DOM (readable with no script and no WebGL); the objects (a
+ * monument for each degree, a medallion for each certification, a codex for the paper) are lit models in one lazy canvas
+ * behind them, each placed in its card's slot. The 390 px layout is its own grid with the same objects in it. Reduced
+ * motion draws the same objects, still.
  */
 export function Credentials() {
   const { education } = content.history;
@@ -103,9 +116,15 @@ export function Credentials() {
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
 
+  const [pinned, setPinned] = useState<string | null>(null);
+  const pin = useCallback((id: string) => setPinned((current) => (current === id ? null : id)), []);
+  useEffect(() => {
+    store.pinned = pinned;
+  }, [store, pinned]);
+
   const specs = useMemo(() => {
-    const all = [...education.degrees, ...education.certifications].map((c) => specFor(c.id, c.issuer));
-    all.push(specFor(education.publication.id, ''));
+    const all = [...education.degrees, ...education.certifications].map((c) => specFor(c.id, c.issuer, c.title));
+    all.push(specFor(education.publication.id, education.publication.venue, education.publication.title));
     return all;
   }, [education]);
   const spec = useCallback((id: string) => specs.find((s) => s.id === id) ?? specFor(id, ''), [specs]);
@@ -183,6 +202,7 @@ export function Credentials() {
 
   return (
     <Section anchor="credentials" className="cred-section">
+      <SectionIntro anchor="credentials" heading={education.heading} size="md" />
       <div ref={rootRef} className="vault" data-stage={state} {...revealProps('block')}>
         <div className="vault__fx" ref={fxRef} aria-hidden="true">
           {mount && Stage ? (
@@ -202,45 +222,57 @@ export function Credentials() {
         </div>
 
         <div className="vault__body">
-          <SectionIntro anchor="credentials" heading={education.heading} size="md" />
+          <div className="vault__monuments">
+            <section className="vault__group vault__group--degrees" aria-labelledby="vault-degrees">
+              <h3 id="vault-degrees" className="visually-hidden">
+                {ui.degreesHeading}
+              </h3>
+              <ul className="vault__degrees">
+                {education.degrees.map((d, i) => (
+                  <Card
+                    key={d.id}
+                    credential={d}
+                    spec={spec(d.id)}
+                    store={store}
+                    className={i === 0 ? 'cred--hero' : 'cred--stone'}
+                    tag={i === 0 ? ui.flagshipTag : ui.degreeTag}
+                    pinned={pinned === d.id}
+                    onPin={pin}
+                  />
+                ))}
+              </ul>
+            </section>
 
-          <section className="vault__group" aria-labelledby="vault-degrees">
-            <h3 id="vault-degrees" className="vault__label mono-label">
-              {ui.degreesHeading}
-            </h3>
-            <ul className="vault__degrees">
-              {education.degrees.map((d, i) => (
-                <Card key={d.id} credential={d} spec={spec(d.id)} store={store} className={i === 0 ? 'cred--hero' : 'cred--stone'} />
-              ))}
-            </ul>
-          </section>
+            <section className="vault__group vault__group--pub" aria-labelledby="vault-pub">
+              <h3 id="vault-pub" className="visually-hidden">
+                {education.publicationHeading}
+              </h3>
+              <ul className="vault__pubs">
+                <Card
+                  credential={{ id: education.publication.id, title: education.publication.title, issuer: education.publication.venue }}
+                  spec={spec(education.publication.id)}
+                  store={store}
+                  className="cred--paper"
+                  tag={education.publicationHeading}
+                  pinned={pinned === education.publication.id}
+                  onPin={pin}
+                >
+                  <ExternalLink href={education.publication.url} className="cred__link" icon>
+                    {ui.journalLabel}
+                  </ExternalLink>
+                </Card>
+              </ul>
+            </section>
+          </div>
 
-          <section className="vault__group" aria-labelledby="vault-certs">
+          <section className="vault__group vault__group--certs" aria-labelledby="vault-certs">
             <h3 id="vault-certs" className="vault__label mono-label">
               {education.certificationsHeading}
             </h3>
             <ul className="vault__certs">
               {education.certifications.map((c) => (
-                <Card key={c.id} credential={c} spec={spec(c.id)} store={store} className="cred--cert" />
+                <Card key={c.id} credential={c} spec={spec(c.id)} store={store} className="cred--cert" pinned={pinned === c.id} onPin={pin} />
               ))}
-            </ul>
-          </section>
-
-          <section className="vault__group" aria-labelledby="vault-pub">
-            <h3 id="vault-pub" className="vault__label mono-label">
-              {education.publicationHeading}
-            </h3>
-            <ul className="vault__pubs">
-              <Card
-                credential={{ id: education.publication.id, title: education.publication.title, issuer: education.publication.venue }}
-                spec={spec(education.publication.id)}
-                store={store}
-                className="cred--paper"
-              >
-                <ExternalLink href={education.publication.url} className="cred__link" icon>
-                  {ui.journalLabel}
-                </ExternalLink>
-              </Card>
             </ul>
           </section>
         </div>

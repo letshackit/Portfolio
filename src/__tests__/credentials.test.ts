@@ -23,18 +23,33 @@ describe('credentials vault', () => {
     expect(store.rects.has('pgp')).toBe(false);
   });
 
-  it('gives every credential in content.ts a badge, with the degrees and publication as their own kinds', () => {
+  it('gives every credential in content.ts an object, with the degrees and publication as their own kinds', () => {
     const { degrees, certifications, publication } = content.history.education;
-    expect(specFor(degrees[0].id, degrees[0].issuer).kind).toBe('hero');
-    expect(specFor(degrees[1].id, degrees[1].issuer).kind).toBe('stone');
+    expect(specFor(degrees[0].id, degrees[0].issuer, degrees[0].title).kind).toBe('hero');
+    expect(specFor(degrees[1].id, degrees[1].issuer, degrees[1].title).kind).toBe('stone');
     for (const c of certifications) {
-      const spec = specFor(c.id, c.issuer);
+      const spec = specFor(c.id, c.issuer, c.title);
       expect(spec.kind).toBe('cert');
-      expect(spec.main.length).toBeGreaterThan(0);
+      expect(spec.word.length).toBeGreaterThan(0);
+      // The medallion's rim reads as the credential's own title and issuer.
+      expect(spec.ring).toContain(c.title.toUpperCase());
+      expect(spec.ring).toContain(c.issuer.toUpperCase());
     }
-    expect(specFor(publication.id, '').kind).toBe('paper');
-    // Five certifications, five different silhouettes (the critic's "samey hexagons").
-    expect(new Set(certifications.map((c) => specFor(c.id, c.issuer).body)).size).toBe(certifications.length);
+    expect(specFor(publication.id, publication.venue, publication.title).kind).toBe('paper');
+    // Five certifications, five different emblems and wordmarks, alternating gold and steel along the shelf.
+    expect(new Set(certifications.map((c) => specFor(c.id, c.issuer, c.title).emblem)).size).toBe(certifications.length);
+    expect(new Set(certifications.map((c) => specFor(c.id, c.issuer, c.title).word)).size).toBe(certifications.length);
+    const metals = certifications.map((c) => specFor(c.id, c.issuer, c.title).metal);
+    metals.slice(1).forEach((m, i) => expect(m).not.toBe(metals[i]));
+  });
+
+  it('keeps the spotlight and the scroll progress in the store', () => {
+    const store = createVaultStore();
+    store.container = box(0, -300, 1000, 600);
+    Object.defineProperty(window, 'innerHeight', { value: 900, configurable: true });
+    store.updateProgress();
+    expect(store.progress).toBeCloseTo((900 + 300) / (600 + 900), 5);
+    expect(store.pinned).toBeNull();
   });
 
   it('degrades monotonically and never past the last tier', () => {

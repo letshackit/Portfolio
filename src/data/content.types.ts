@@ -213,6 +213,10 @@ export interface UiLabels {
   readonly proofLabel: string;
   readonly degreesHeading: string;
   readonly journalLabel: string;
+  readonly flagshipTag: string;
+  readonly degreeTag: string;
+  /** Accessible name of the button that holds a credential's 3D object in the spotlight; the credential's title follows. */
+  readonly spotlightLabel: string;
   readonly contactEmail: string;
   readonly contactPhone: string;
   readonly contactLocation: string;
